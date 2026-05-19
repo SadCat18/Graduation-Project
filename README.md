@@ -1,45 +1,45 @@
-﻿# Graduation Project
+﻿# 毕业设计项目
 
-A full-stack graduation project built with Spring Boot and Vue.
+一个基于 Spring Boot 和 Vue 的前后端分离毕业设计项目。
 
-## Tech Stack
-- Backend: Java, Spring Boot, Maven
-- Frontend: Vue, Vue Router
-- Database: MySQL
+## 技术栈
+- 后端：Java、Spring Boot、Maven
+- 前端：Vue、Vue Router
+- 数据库：MySQL
 
-## Project Structure
-- `src/`: Spring Boot backend source code
-- `frontend/`: Vue frontend source code
-- `database/`: SQL scripts
-- `deploy/`: deployment-related files
+## 项目结构
+- `src/`：Spring Boot 后端源码
+- `frontend/`：Vue 前端源码
+- `database/`：SQL 脚本
+- `deploy/`：部署相关文件
 
-## Local Development
+## 本地开发
 
-### Backend
+### 后端启动
 ```bash
 mvn spring-boot:run
 ```
 
-### Frontend
+### 前端启动
 ```bash
 cd frontend
 npm install
 npm run serve
 ```
 
-## Build
+## 构建
 
-### Backend
+### 后端打包
 ```bash
 mvn -DskipTests package
 ```
 
-### Frontend
+### 前端打包
 ```bash
 cd frontend
 npm run build
 ```
 
-## Notes
-- Configure database connection in backend config before first run.
-- If needed, initialize schema/data from `database/` scripts.
+## 说明
+- 首次运行前，请先在后端配置文件中设置数据库连接信息。
+- 如有需要，可执行 `database/` 目录下的脚本初始化表结构和基础数据。
