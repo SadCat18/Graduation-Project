@@ -1,4 +1,4 @@
-import http from './http'
+﻿import http from './http'
 
 export const api = {
   register: (data) => http.post('/api/auth/register', data),
@@ -43,6 +43,7 @@ export const api = {
   bulletinsAll: () => http.get('/api/public/bulletins/all'),
   bulletinDetail: (id) => http.get(`/api/public/bulletins/${id}`),
   news: () => http.get('/api/public/news'),
+  newsDetail: (id) => http.get(`/api/public/news/${id}`),
   places: () => http.get('/api/public/places'),
   videos: () => http.get('/api/public/videos'),
   publicBanners: () => http.get('/api/public/banners'),
@@ -86,3 +87,4 @@ export const api = {
   adminCreatePlace: (data) => http.post('/api/admin/places', data),
   adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`)
 }
+

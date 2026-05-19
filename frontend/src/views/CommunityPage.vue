@@ -222,7 +222,6 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 14px;
   align-items: center;
-  border: 2px solid var(--line-strong);
 }
 
 .hero-sub {
@@ -276,8 +275,8 @@ onMounted(async () => {
   width: 100%;
   height: 96px;
   object-fit: cover;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: 10px;
+  border: 1px solid var(--line);
 }
 
 .clickable-image {
@@ -289,23 +288,16 @@ onMounted(async () => {
 }
 
 .comment-block {
-  border: 2px solid var(--line-strong);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
 }
 
 .comment-item {
-  border-bottom: 1px dashed #9db7da;
+  border-bottom: 1px dashed #d1d5db;
   padding: 7px 0;
   font-size: 14px;
-}
-
-.post-card-item {
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
-  padding: 12px;
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
 }
 
 .comment-item:last-child {

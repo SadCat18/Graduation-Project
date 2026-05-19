@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import { getRole, getToken } from '../utils/auth'
 
 import LoginPage from '../views/LoginPage.vue'
@@ -11,6 +11,7 @@ import ActivityPublishPage from '../views/ActivityPublishPage.vue'
 import BulletinListPage from '../views/BulletinListPage.vue'
 import BulletinDetailPage from '../views/BulletinDetailPage.vue'
 import BulletinPublishPage from '../views/BulletinPublishPage.vue'
+import NewsDetailPage from '../views/NewsDetailPage.vue'
 import ProfilePage from '../views/ProfilePage.vue'
 import AdminPage from '../views/AdminPage.vue'
 
@@ -26,6 +27,7 @@ const routes = [
   { path: '/bulletins', component: BulletinListPage },
   { path: '/bulletins/:id', component: BulletinDetailPage },
   { path: '/bulletins/publish', component: BulletinPublishPage, meta: { requiresAuth: true } },
+  { path: '/news/:id', component: NewsDetailPage },
   { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true } }
 ]
@@ -50,3 +52,4 @@ router.beforeEach((to) => {
 })
 
 export default router
+

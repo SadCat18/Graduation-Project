@@ -14,6 +14,7 @@ const posts = ref([])
 const activities = ref([])
 const notices = ref([])
 const bulletins = ref([])
+const newsList = ref([])
 const currentSlide = ref(0)
 let timerId = null
 
@@ -56,6 +57,11 @@ function activityStatusText(item) {
 function goPostDetail(postId) {
   if (!postId) return
   router.push(`/community/post/${postId}`)
+}
+
+function goNewsDetail(newsId) {
+  if (!newsId) return
+  router.push(`/news/${newsId}`)
 }
 
 function goBannerTarget() {
@@ -109,18 +115,20 @@ function stopAutoplay() {
 async function loadHomeData() {
   loading.value = true
   try {
-    const [bannerData, postData, activityData, noticeData, bulletinData] = await Promise.all([
+    const [bannerData, postData, activityData, noticeData, bulletinData, newsData] = await Promise.all([
       api.publicBanners(),
       api.posts({ page: 1, size: 6 }),
       api.publicActivities({ page: 1, size: 6 }),
       api.notices(),
-      api.bulletins({ limit: 5 })
+      api.bulletins({ limit: 5 }),
+      api.news()
     ])
     bannerList.value = (bannerData || []).filter(item => item.status !== '1')
     posts.value = postData?.list || []
     activities.value = activityData?.list || []
     notices.value = noticeData || []
     bulletins.value = bulletinData || []
+    newsList.value = newsData || []
     currentSlide.value = 0
     startAutoplay()
   } finally {
@@ -137,47 +145,12 @@ watch(currentSlide, () => {
 
 <template>
   <div class="home-wrap">
-    <section class="card hero-card">
-      <div>
-        <p class="hero-sub">城市滑板社区</p>
-        <h1>城市滑板交流网站</h1>
-        <p class="hero-desc">发现本地板点、约滑同好和最新快讯。新手找组织，老手分享技巧，都能在这里快速连接。</p>
-        <div class="inline">
-          <button class="btn-primary" @click="$router.push('/community')">
-            <AppIcon name="community" :size="16" />
-            进入社区帖子
-          </button>
-          <button @click="$router.push('/activities')">
-            <AppIcon name="activity" :size="16" />
-            查看同城约板
-          </button>
-        </div>
-      </div>
-      <div class="hero-stats">
-        <div class="metric">
-          <span>精选帖子</span>
-          <strong>{{ posts.length }}</strong>
-        </div>
-        <div class="metric">
-          <span>推荐活动</span>
-          <strong>{{ activities.length }}</strong>
-        </div>
-        <div class="metric">
-          <span>平台公告</span>
-          <strong>{{ notices.length }}</strong>
-        </div>
-        <div class="metric">
-          <span>社区快讯</span>
-          <strong>{{ bulletins.length }}</strong>
-        </div>
-      </div>
-    </section>
-
-    <section class="card carousel-card" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
+    <section class="hero-stage" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
       <div class="carousel-main" @click="goBannerTarget">
         <transition name="carousel-fade" mode="out-in">
           <img :key="currentSlide" :src="currentBanner.imageUrl" :alt="currentBanner.title" />
         </transition>
+        <div class="hero-shade"></div>
         <button class="carousel-nav nav-prev" type="button" aria-label="上一张" @click.stop="prevBanner">
           <
         </button>
@@ -185,9 +158,25 @@ watch(currentSlide, () => {
           >
         </button>
         <div class="carousel-mask">
-          <h3>{{ currentBanner.title }}</h3>
+          <p class="hero-sub">SKATE COMMUNITY</p>
+          <h1>{{ currentBanner.title }}</h1>
           <p v-if="currentBanner.linkUrl" class="muted">点击前往：{{ bannerLinkText(currentBanner.linkUrl) }}</p>
+          <div class="inline hero-actions">
+            <button class="btn-primary" @click.stop="$router.push('/community')">社区帖子</button>
+            <button class="btn-soft" @click.stop="$router.push('/activities')">同城约板</button>
+          </div>
         </div>
+        <aside class="event-panel">
+          <h3>滑板资讯</h3>
+          <div v-for="item in newsList.slice(0, 5)" :key="item.newsId" class="event-row">
+            <span class="event-badge">资讯</span>
+            <div class="event-main">
+              <p class="event-title link" @click.stop="goNewsDetail(item.newsId)">{{ item.title }}</p>
+              <p class="event-meta">{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</p>
+            </div>
+          </div>
+          <p v-if="!newsList.length" class="event-meta">暂无滑板资讯，稍后将同步最新赛事与冠军动态。</p>
+        </aside>
         <div class="dots">
           <button
             v-for="(banner, index) in activeBanners"
@@ -200,7 +189,51 @@ watch(currentSlide, () => {
       </div>
     </section>
 
-    <section class="grid-3">
+    <section class="card info-stage">
+      <div class="section-head info-head">
+        <h3>社区帖子</h3>
+        <button class="btn-soft" @click="$router.push('/community')">更多</button>
+      </div>
+      <div class="info-grid">
+        <div class="featured-panel">
+          <div
+            v-for="item in posts.slice(0, 1)"
+            :key="item.postId"
+            class="featured-card"
+            @click="goPostDetail(item.postId)"
+          >
+            <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" />
+            <div class="featured-text">
+              <h4>{{ item.title }}</h4>
+              <p class="line-clamp">{{ item.content }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="bulletin-panel">
+          <h4 class="bulletin-title">社区快讯</h4>
+          <div v-for="item in bulletins.slice(0, 6)" :key="item.bulletinId" class="bulletin-row">
+            <p class="link" @click="$router.push(`/bulletins/${item.bulletinId}`)">◈ {{ item.title }}</p>
+            <span>{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="card news-stage">
+      <div class="section-head">
+        <h3>滑板资讯</h3>
+      </div>
+        <div class="news-list">
+          <div v-for="item in newsList.slice(0, 6)" :key="item.newsId" class="news-row">
+            <p class="link" @click="goNewsDetail(item.newsId)">• {{ item.title }}</p>
+            <span>{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</span>
+          </div>
+          <p v-if="!newsList.length" class="muted">暂无滑板资讯数据。</p>
+      </div>
+    </section>
+
+    <section class="grid-2">
       <div class="card">
         <div class="section-head">
           <h3>社区精选帖子</h3>
@@ -236,18 +269,6 @@ watch(currentSlide, () => {
         </div>
       </div>
 
-      <div class="card">
-        <div class="section-head">
-          <h3>社区快讯</h3>
-          <button class="btn-soft" @click="$router.push('/bulletins')">更多</button>
-        </div>
-        <p v-if="loading" class="muted">加载中...</p>
-        <div v-for="item in bulletins.slice(0, 5)" :key="item.bulletinId" class="activity-item">
-          <h4 @click="$router.push(`/bulletins/${item.bulletinId}`)" class="link">{{ item.title }}</h4>
-          <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
-          <p class="muted">{{ item.publisherName }} · {{ item.bulletinType }}</p>
-        </div>
-      </div>
     </section>
 
     <section class="card">
@@ -268,91 +289,39 @@ watch(currentSlide, () => {
 <style scoped>
 .home-wrap {
   display: grid;
-  gap: 16px;
-}
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.hero-card {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  align-items: center;
   gap: 18px;
-  border-color: var(--line-strong);
 }
 
-.hero-sub {
-  margin: 0 0 8px;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.hero-card h1 {
-  margin: 0;
-  font-size: 34px;
-  line-height: 1.2;
-}
-
-.hero-desc {
-  margin: 12px 0 16px;
-  color: var(--text-soft);
-}
-
-.hero-stats {
-  border: 2px solid var(--line-strong);
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  padding: 16px;
-  display: grid;
-  gap: 10px;
-  box-shadow: var(--shadow-1);
-}
-
-.metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  border-bottom: 1px dashed rgba(166, 255, 60, 0.55);
-  padding-bottom: 10px;
-}
-
-.metric:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-
-.metric span {
-  color: var(--text-soft);
-  font-size: 13px;
-}
-
-.metric strong {
-  font-size: 22px;
-}
-
-.carousel-card {
-  padding: 14px;
+.hero-stage {
+  position: relative;
+  min-height: 520px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .carousel-main {
   position: relative;
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  box-shadow: var(--shadow-2);
+  min-height: 520px;
 }
 
 .carousel-main img {
   width: 100%;
-  height: 320px;
+  height: 520px;
   object-fit: cover;
   display: block;
+  filter: saturate(1.02);
+}
+
+.hero-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.08) 42%, rgba(15, 23, 42, 0.24) 100%);
+  z-index: 1;
 }
 
 .carousel-fade-enter-active,
@@ -372,10 +341,9 @@ watch(currentSlide, () => {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid var(--line-strong);
-  color: var(--text-1);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #fff;
   font-size: 20px;
   line-height: 1;
   display: grid;
@@ -383,7 +351,7 @@ watch(currentSlide, () => {
   box-shadow: none;
   text-shadow: none;
   opacity: 0;
-  transition: opacity var(--motion-base) var(--ease-ui);
+  transition: opacity 0.25s ease;
   z-index: 3;
 }
 
@@ -405,45 +373,229 @@ watch(currentSlide, () => {
 
 .carousel-mask {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px;
-  color: var(--text-1);
-  background: linear-gradient(to top, rgba(242, 248, 255, 0.92), rgba(242, 248, 255, 0.55));
+  left: 46px;
+  top: 86px;
+  width: min(620px, 55%);
+  z-index: 4;
+  color: #ffffff;
 }
 
-.carousel-mask h3 {
+.hero-sub {
   margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.carousel-mask h1 {
+  margin: 12px 0 10px;
+  font-size: clamp(34px, 4.6vw, 62px);
+  line-height: 1.06;
 }
 
 .carousel-mask p {
   margin: 4px 0 0;
-  color: var(--text-2);
+  color: rgba(241, 245, 249, 0.92);
+}
+
+.hero-actions {
+  margin-top: 16px;
+}
+
+.event-panel {
+  position: absolute;
+  right: 20px;
+  top: 78px;
+  width: min(360px, 27%);
+  max-height: calc(100% - 96px);
+  overflow: auto;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--line);
+  padding: 18px 20px;
+  color: var(--text);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(8px);
+}
+
+.event-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-panel::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 999px;
+}
+
+.event-panel h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.event-badge {
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  background: var(--primary);
+  padding: 1px 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.event-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.event-meta {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
 }
 
 .dots {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: 16px;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  z-index: 4;
+  z-index: 6;
 }
 
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
-  background: rgba(227, 238, 255, 0.84);
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.78);
   transition: all 0.25s ease;
 }
 
 .dot.active {
   transform: scale(1.12);
-  background: linear-gradient(90deg, #22c9ff 0%, #a6ff3c 100%);
+}
+
+.info-stage {
+  padding: 20px 22px;
+}
+
+.info-head h3 {
+  font-size: 44px;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 18px;
+}
+
+.featured-card {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.featured-card img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.featured-text {
+  padding: 14px 16px;
+}
+
+.featured-text h4 {
+  margin: 0 0 10px;
+  font-size: 32px;
+}
+
+.bulletin-panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.bulletin-title {
+  margin: 0 0 10px;
+  font-size: 26px;
+}
+
+.bulletin-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding: 10px 0;
+}
+
+.bulletin-row span {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.panel-actions {
+  margin-top: 10px;
+}
+
+.news-stage {
+  padding-top: 14px;
+}
+
+.news-list {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.news-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.news-row:first-child {
+  border-top: 0;
+}
+
+.news-row p {
+  margin: 0;
+}
+
+.news-row span {
+  color: var(--text-soft);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .feed-item {
@@ -467,8 +619,7 @@ watch(currentSlide, () => {
 .feed-item img {
   width: 100%;
   height: 78px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: 10px;
   object-fit: cover;
 }
 
@@ -476,7 +627,6 @@ watch(currentSlide, () => {
 .activity-item h4,
 .notice-item h4 {
   margin: 0 0 4px;
-  color: var(--text-1);
 }
 
 .feed-item p,
@@ -499,10 +649,10 @@ watch(currentSlide, () => {
 }
 
 .notice-item {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 12px;
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+  background: #fcfcfc;
 }
 
 .line-clamp {
@@ -513,11 +663,25 @@ watch(currentSlide, () => {
 }
 
 @media (max-width: 980px) {
-  .hero-card {
-    grid-template-columns: 1fr;
+  .carousel-main,
+  .carousel-main img,
+  .hero-stage {
+    min-height: 420px;
+    height: 420px;
   }
 
-  .grid-3 {
+  .carousel-mask {
+    top: 42px;
+    left: 18px;
+    width: calc(100% - 36px);
+  }
+
+  .event-panel {
+    display: none;
+  }
+
+  .info-grid,
+  .grid-2 {
     grid-template-columns: 1fr;
   }
 
@@ -531,12 +695,11 @@ watch(currentSlide, () => {
     grid-template-columns: 1fr;
   }
 
-  .carousel-main img {
-    height: 220px;
-  }
-
-  .hero-card h1 {
-    font-size: 27px;
+  .carousel-main,
+  .carousel-main img,
+  .hero-stage {
+    min-height: 340px;
+    height: 340px;
   }
 }
 </style>

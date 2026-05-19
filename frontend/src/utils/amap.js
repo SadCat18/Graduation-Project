@@ -1,4 +1,4 @@
-﻿const AMAP_JS_URL = 'https://webapi.amap.com/maps'
+const AMAP_JS_URL = 'https://webapi.amap.com/maps'
 const DEFAULT_KEY = '6003345b78ed25b126a76cb9caf08a7b'
 const AMAP_KEY = (process.env.VUE_APP_AMAP_KEY || DEFAULT_KEY).trim()
 const AMAP_SECURITY_JS_CODE = (process.env.VUE_APP_AMAP_SECURITY_JS_CODE || '').trim()
@@ -38,56 +38,12 @@ export function loadAMap() {
   }
 
   mapLoaderPromise = new Promise((resolve, reject) => {
-    let settled = false
-
-    const cleanupFns = []
-    const cleanup = () => {
-      cleanupFns.forEach(fn => {
-        try {
-          fn()
-        } catch (_) {
-          // ignore cleanup failures
-        }
-      })
-      cleanupFns.length = 0
-    }
-
-    const fail = (message) => {
-      if (settled) return
-      settled = true
-      cleanup()
-      mapLoaderPromise = null
-      reject(new Error(message))
-    }
-
-    const succeed = () => {
-      if (settled) return
-      settled = true
-      cleanup()
-      resolve(window.AMap)
-    }
-
-    const onGlobalScriptError = (event) => {
-      const target = event?.target
-      const src = target?.src || event?.filename || ''
-      if (String(src).includes('webapi.amap.com/maps')) {
-        fail('高德地图脚本加载失败，请检查 Key、域名白名单或网络连接')
-      }
-    }
-
-    window.addEventListener('error', onGlobalScriptError, true)
-    cleanupFns.push(() => window.removeEventListener('error', onGlobalScriptError, true))
-
     ensureSecurityConfig()
 
     const existing = document.querySelector('script[data-amap-loader="1"]')
     if (existing) {
-      const onLoad = () => succeed()
-      const onError = () => fail('高德地图脚本加载失败，请检查网络连接')
-      existing.addEventListener('load', onLoad)
-      existing.addEventListener('error', onError)
-      cleanupFns.push(() => existing.removeEventListener('load', onLoad))
-      cleanupFns.push(() => existing.removeEventListener('error', onError))
+      existing.addEventListener('load', () => resolve(window.AMap))
+      existing.addEventListener('error', () => reject(new Error('高德地图脚本加载失败')))
       return
     }
 
@@ -95,19 +51,9 @@ export function loadAMap() {
     script.src = `${AMAP_JS_URL}?v=2.0&key=${AMAP_KEY}&plugin=AMap.PlaceSearch,AMap.Geocoder,AMap.CitySearch,AMap.DistrictSearch`
     script.async = true
     script.defer = true
-    script.crossOrigin = 'anonymous'
-    script.referrerPolicy = 'no-referrer-when-downgrade'
     script.setAttribute('data-amap-loader', '1')
-
-    script.onload = () => {
-      if (!window.AMap) {
-        fail('高德地图脚本已返回，但 SDK 未就绪')
-        return
-      }
-      succeed()
-    }
-    script.onerror = () => fail('高德地图脚本加载失败，请检查网络连接')
-
+    script.onload = () => resolve(window.AMap)
+    script.onerror = () => reject(new Error('高德地图脚本加载失败'))
     document.head.appendChild(script)
   })
 

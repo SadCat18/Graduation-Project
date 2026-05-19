@@ -489,9 +489,9 @@ onBeforeUnmount(() => {
 .avatar-preview {
   width: 92px;
   height: 92px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -514,8 +514,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  border: 2px solid var(--line-strong);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin-bottom: 10px;
 }
@@ -529,7 +529,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-2);
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -555,7 +555,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom: 1px dashed rgba(166, 255, 60, 0.55);
+  border-bottom: 1px solid var(--line);
   padding-bottom: 9px;
 }
 
@@ -574,17 +574,17 @@ onBeforeUnmount(() => {
 
 .empty-tip {
   color: var(--text-muted);
-  border: 2px dashed var(--line-strong);
-  border-radius: 2px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
   padding: 12px;
 }
 
 .signed-item {
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-top: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+  background: #fff;
 }
 
 .signed-top {

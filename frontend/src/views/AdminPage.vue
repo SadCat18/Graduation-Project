@@ -824,20 +824,20 @@ onMounted(refreshAll)
 }
 
 .left-nav {
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  border: 2px solid var(--line-strong);
+  background: #fff;
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 14px;
   min-height: 78vh;
   position: sticky;
   top: 74px;
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-sm);
 }
 
 .brand-block {
   margin-bottom: 14px;
   padding-bottom: 12px;
-  border-bottom: 2px dashed rgba(166, 255, 60, 0.55);
+  border-bottom: 1px solid var(--line);
 }
 
 .brand-block h2 {
@@ -852,10 +852,10 @@ onMounted(refreshAll)
 
 .nav-btn {
   width: 100%;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-soft);
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   padding: 10px 11px;
   display: flex;
   align-items: center;
@@ -865,10 +865,9 @@ onMounted(refreshAll)
 
 .nav-btn:hover,
 .nav-btn.active {
-  background: linear-gradient(95deg, var(--spray-1) 0%, var(--spray-2) 58%, var(--spray-3) 100%);
-  border-color: var(--line-strong);
-  color: #121a23;
-  font-weight: 700;
+  background: var(--surface-muted);
+  border-color: var(--line);
+  color: var(--text);
 }
 
 .main-panel {
@@ -900,10 +899,10 @@ onMounted(refreshAll)
 }
 
 .stat-card {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 12px;
-  background: var(--bg-2);
+  background: var(--surface-muted);
 }
 
 .stat-top {
@@ -919,7 +918,7 @@ onMounted(refreshAll)
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--bg-1);
+  background: #fff;
 }
 
 .stat-value {
@@ -936,10 +935,10 @@ onMounted(refreshAll)
 }
 
 .viz-card {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 12px;
-  background: var(--bg-1);
+  background: #fff;
 }
 
 .viz-card h3 {
@@ -961,15 +960,15 @@ onMounted(refreshAll)
 
 .bar-track {
   height: 8px;
-  border-radius: var(--radius-sm);
-  background: #d8e6f8;
+  border-radius: 999px;
+  background: #e5e7eb;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--brand);
+  border-radius: 999px;
+  background: #111827;
 }
 
 .overview-list {
@@ -1000,14 +999,14 @@ onMounted(refreshAll)
 }
 
 .data-row {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: var(--bg-1);
+  background: #fff;
 }
 
 .data-row p {
@@ -1018,10 +1017,10 @@ onMounted(refreshAll)
 
 .status-chip {
   padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  border: 2px solid var(--line-strong);
-  background: var(--bg-2);
-  color: var(--text-2);
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--text-soft);
   font-size: 12px;
 }
 
@@ -1076,7 +1075,7 @@ onMounted(refreshAll)
 }
 
 .mini-row {
-  border-top: 2px solid var(--line-strong);
+  border-top: 1px solid var(--line);
   padding-top: 8px;
   margin-top: 8px;
   display: flex;
@@ -1098,8 +1097,8 @@ onMounted(refreshAll)
 .banner-thumb {
   width: 84px;
   height: 54px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: 8px;
+  border: 1px solid var(--line);
   object-fit: cover;
 }
 

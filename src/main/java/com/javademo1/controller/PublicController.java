@@ -76,6 +76,11 @@ public class PublicController {
         return ApiResponse.success(publicContentService.news());
     }
 
+    @GetMapping("/news/{id}")
+    public ApiResponse<News> newsDetail(@PathVariable("id") Long newsId) {
+        return ApiResponse.success(publicContentService.newsDetail(newsId));
+    }
+
     @GetMapping("/places")
     public ApiResponse<List<Place>> places() {
         return ApiResponse.success(publicContentService.places());

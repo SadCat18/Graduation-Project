@@ -115,24 +115,23 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   z-index: 20;
-  background:
-    linear-gradient(120deg, rgba(207, 65, 84, .12) 0 16%, transparent 17%),
-    linear-gradient(180deg, rgba(255, 255, 255, .98) 0%, rgba(243, 249, 255, .98) 100%);
-  border-bottom: 2px solid var(--line-strong);
-  box-shadow: 0 3px 0 rgba(142, 164, 191, 0.45);
-  padding: 10px 18px;
+  background: rgba(243, 244, 246, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.34);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  padding: 12px 18px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  color: var(--text-1);
+  font-weight: 600;
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -141,17 +140,15 @@ onBeforeUnmount(() => {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--spray-1) 0%, var(--spray-2) 65%, var(--spray-3) 100%);
-  color: #0f1a23;
-  border: 2px solid var(--line-strong);
-  box-shadow: var(--shadow-1);
+  border-radius: 9px;
+  background: #111827;
+  color: #fff;
 }
 
 .nav-links {
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -159,30 +156,31 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
-  color: var(--text-2);
-  border: 2px solid var(--line-strong);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  color: #1a2b42;
+  padding: 7px 12px;
+  border-radius: 11px;
+  color: var(--text-soft);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(241, 245, 249, 0.62));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   font-size: 14px;
-  box-shadow: var(--shadow-1);
-  transition: transform var(--motion-base) var(--ease-ui), filter var(--motion-base) var(--ease-ui), border-color var(--motion-base) var(--ease-ui);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  transition: all 0.25s ease;
 }
 
 .nav-link:hover {
-  color: var(--text-1);
-  border-color: var(--line-strong);
-  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.72));
+  border-color: rgba(100, 116, 139, 0.4);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .nav-link.router-link-active {
-  background: linear-gradient(95deg, var(--spray-1) 0%, var(--spray-2) 58%, var(--spray-3) 100%);
-  border: 2px solid var(--line-strong);
-  color: #101a23;
-  box-shadow: var(--shadow-2);
-  font-weight: 700;
+  background: linear-gradient(180deg, rgba(45, 62, 92, 0.94), rgba(31, 41, 55, 0.92));
+  border-color: rgba(45, 62, 92, 0.6);
+  color: #f8fafc;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
 }
 
 .nav-right {
@@ -192,7 +190,7 @@ onBeforeUnmount(() => {
 }
 
 .user-name {
-  color: var(--text-2);
+  color: var(--text-soft);
   font-size: 14px;
 }
 
@@ -200,21 +198,21 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 0 11px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line-strong);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  color: var(--text-2);
+  padding: 7px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text);
   font-size: 14px;
-  box-shadow: var(--shadow-1);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .auth-btn-primary {
-  background: linear-gradient(95deg, var(--spray-1) 0%, var(--spray-2) 58%, var(--spray-3) 100%);
-  border: 2px solid var(--line-strong);
-  color: #101a23;
-  font-weight: 700;
+  background: linear-gradient(180deg, rgba(45, 62, 92, 0.94), rgba(31, 41, 55, 0.92));
+  border-color: rgba(45, 62, 92, 0.56);
+  color: #fff;
 }
 
 @media (max-width: 980px) {

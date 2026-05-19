@@ -10,6 +10,7 @@ import com.javademo1.dao.NewsRepository;
 import com.javademo1.dao.NoticeRepository;
 import com.javademo1.dao.PlaceRepository;
 import com.javademo1.dao.VideoRepository;
+import com.javademo1.util.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,10 @@ public class PublicContentService {
 
     public List<News> news() {
         return newsRepository.findAllByOrderByCreateTimeDesc();
+    }
+
+    public News newsDetail(Long newsId) {
+        return newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
     }
 
     public List<Place> places() {

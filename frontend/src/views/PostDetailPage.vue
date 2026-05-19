@@ -115,7 +115,7 @@ onMounted(loadPostDetail)
             :key="img"
             :href="img"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
           >
             <img :src="img" alt="帖子图片" />
           </a>

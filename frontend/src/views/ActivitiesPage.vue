@@ -381,33 +381,24 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="filter-row">
-          <div class="filter-group">
-            <span class="group-title">地区</span>
-            <select v-model="filter.province" @change="onProvinceChange">
-              <option value="">选择省份</option>
-              <option v-for="item in provinceOptions" :key="item" :value="item">{{ item }}</option>
-            </select>
-            <select v-model="filter.city" :disabled="!filter.province" @change="onCityChange">
-              <option value="">{{ filter.province ? '选择城市' : '请先选择省份' }}</option>
-              <option v-for="item in cityOptions" :key="item" :value="item">{{ item }}</option>
-            </select>
-            <select v-model="filter.district" :disabled="!filter.city">
-              <option value="">{{ filter.city ? '选择区县（可选）' : '请先选择城市' }}</option>
-              <option v-for="item in districtOptions" :key="item" :value="item">{{ item }}</option>
-            </select>
-          </div>
-          <div class="filter-group keyword-group">
-            <span class="group-title">关键词</span>
-            <input v-model="filter.keyword" placeholder="关键词（地点/动作/活动名）" @keyup.enter="applyFilter" />
-          </div>
-          <div class="filter-group action-group">
-            <span class="group-title">操作</span>
-            <button class="btn-soft" @click="applyFilter">
-              <AppIcon name="search" :size="15" />
-              筛选
-            </button>
-            <button @click="clearFilter">重置</button>
-          </div>
+          <select v-model="filter.province" @change="onProvinceChange">
+            <option value="">选择省份</option>
+            <option v-for="item in provinceOptions" :key="item" :value="item">{{ item }}</option>
+          </select>
+          <select v-model="filter.city" :disabled="!filter.province" @change="onCityChange">
+            <option value="">{{ filter.province ? '选择城市' : '请先选择省份' }}</option>
+            <option v-for="item in cityOptions" :key="item" :value="item">{{ item }}</option>
+          </select>
+          <select v-model="filter.district" :disabled="!filter.city">
+            <option value="">{{ filter.city ? '选择区县（可选）' : '请先选择城市' }}</option>
+            <option v-for="item in districtOptions" :key="item" :value="item">{{ item }}</option>
+          </select>
+          <input v-model="filter.keyword" placeholder="关键词（地点/动作/活动名）" @keyup.enter="applyFilter" />
+          <button class="btn-soft" @click="applyFilter">
+            <AppIcon name="search" :size="15" />
+            筛选
+          </button>
+          <button @click="clearFilter">重置</button>
         </div>
 
         <p class="muted" v-if="loading">正在加载活动...</p>
@@ -434,9 +425,9 @@ onBeforeUnmount(() => {
             </span>
           </div>
           <div class="meta-grid">
-            <span class="meta-chip"><AppIcon name="notice" :size="14" /> 时间：{{ formatTime(item) }}</span>
-            <span class="meta-chip"><AppIcon name="location" :size="14" /> 地点：{{ displayAddress(item) }}</span>
-            <span class="meta-chip"><AppIcon name="user" :size="14" /> 人数：{{ item.signNum }}/{{ item.maxNum || '不限' }} · {{ item.publisherName }}</span>
+            <span><AppIcon name="notice" :size="13" /> {{ formatTime(item) }}</span>
+            <span><AppIcon name="location" :size="13" /> {{ displayAddress(item) }}</span>
+            <span><AppIcon name="user" :size="13" /> {{ item.signNum }}/{{ item.maxNum || '不限' }} 人 · {{ item.publisherName }}</span>
           </div>
           <p class="content">{{ item.content || '暂无说明' }}</p>
           <div class="inline">
@@ -498,8 +489,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .activity-page {
   align-items: start;
-  grid-template-columns: minmax(0, 1.6fr) 360px;
-  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.9fr);
+  gap: 18px;
 }
 
 .left-pane,
@@ -509,8 +500,10 @@ onBeforeUnmount(() => {
 
 .list-card {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-6);
+  gap: 16px;
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  padding: 18px;
 }
 
 .list-toolbar {
@@ -522,8 +515,7 @@ onBeforeUnmount(() => {
 
 .list-toolbar h2 {
   margin: 0;
-  font-size: 32px;
-  line-height: 40px;
+  font-size: 28px;
 }
 
 .list-toolbar .muted {
@@ -532,67 +524,33 @@ onBeforeUnmount(() => {
 
 .filter-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr auto;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr auto auto;
   gap: 10px;
-}
-
-.filter-group {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(110px, 1fr);
-  gap: 8px;
-  align-items: end;
-  border: 2px solid var(--line-strong);
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  border-radius: var(--radius-md);
-  padding: 8px;
-  position: relative;
-}
-
-.group-title {
-  position: absolute;
-  left: 8px;
-  top: -10px;
-  background: var(--bg-0);
-  border: 2px solid var(--line-strong);
-  border-radius: 4px;
-  color: var(--text-3);
-  font-size: 12px;
-  line-height: 18px;
-  padding: 0 6px;
-}
-
-.keyword-group {
-  grid-auto-flow: row;
-  grid-auto-columns: 1fr;
-}
-
-.action-group {
-  grid-auto-columns: auto;
 }
 
 .filter-row :deep(select),
 .filter-row :deep(input),
 .filter-row :deep(button) {
-  min-height: var(--h-md);
+  min-height: 40px;
 }
 
 .activity-item {
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
-  padding: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  box-shadow: var(--shadow-1);
-  transition: transform var(--motion-base) var(--ease-ui), border-color var(--motion-base) var(--ease-ui);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 15px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .activity-item:hover {
   transform: translateY(-2px);
-  border-color: var(--line-strong);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09);
 }
 
 .activity-item.active {
-  border-color: var(--brand);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.18);
 }
 
 .item-top {
@@ -608,71 +566,63 @@ onBeforeUnmount(() => {
 }
 
 .item-top h4 {
-  font-size: 20px;
+  font-size: 19px;
   line-height: 1.35;
-  color: var(--text-1);
+  color: #0f172a;
 }
 
 .status-tag {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
-  border-radius: var(--radius-sm);
-  padding: 0 10px;
+  border-radius: 999px;
+  padding: 3px 10px;
   font-size: 12px;
   font-weight: 700;
-  border: 1px solid var(--line-strong);
-  box-shadow: var(--shadow-1);
+  border: 1px solid transparent;
 }
 
 .status-0,
 .status-signup_open {
-  color: #09151e;
-  background: var(--brand);
-  border-color: #68e4ff;
+  color: #0369a1;
+  background: #e0f2fe;
+  border-color: #bae6fd;
 }
 
 .status-1,
 .status-full {
-  color: #2a1d07;
-  background: var(--warning);
-  border-color: #ffcd68;
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
 }
 
 .status-2,
 .status-3,
 .status-ended,
 .status-canceled {
-  color: var(--text-2);
-  background: #e4eefc;
-  border-color: #8ba8ce;
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .meta-grid {
   display: grid;
-  gap: 6px;
-  margin-top: 10px;
-  color: var(--text-2);
+  grid-template-columns: 1.15fr 1.5fr 1fr;
+  gap: 8px 12px;
+  margin-top: 8px;
+  color: #475569;
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
 }
 
-.meta-chip {
+.meta-grid span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  min-height: 0;
-  padding: 0;
   min-width: 0;
-  color: var(--text-2);
 }
 
 .content {
   margin-top: 10px;
-  color: var(--text-2);
+  color: #334155;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -681,7 +631,7 @@ onBeforeUnmount(() => {
 
 .manage-box {
   margin-top: 10px;
-  border-top: 1px dashed var(--line-strong);
+  border-top: 1px dashed var(--line);
   padding-top: 10px;
   display: grid;
   gap: 8px;
@@ -692,37 +642,40 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   padding: 8px 10px;
-  background: var(--bg-2);
+  background: #fafafa;
 }
 
 .map-card {
   position: sticky;
   top: 74px;
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
 
 .amap-container {
   width: 100%;
   height: 380px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
   overflow: hidden;
-  background: #dfeaf8;
-  box-shadow: var(--shadow-1);
+  background: #f1f5f9;
 }
 
 .place-card {
   margin-top: 14px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .place-empty {
   margin: 2px 0 8px;
   padding: 10px 12px;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--bg-2);
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
 }
 
 .inline :deep(button) {
@@ -740,7 +693,7 @@ onBeforeUnmount(() => {
   }
 
   .filter-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .list-toolbar {
@@ -751,9 +704,8 @@ onBeforeUnmount(() => {
     position: static;
   }
 
-  .action-group {
-    grid-auto-flow: row;
-    grid-auto-columns: 1fr;
+  .meta-grid {
+    grid-template-columns: 1fr;
   }
 }
 

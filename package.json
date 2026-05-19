@@ -1,0 +1,9 @@
+{
+  "name": "javademo1-root",
+  "private": true,
+  "scripts": {
+    "serve": "npm --prefix frontend run serve",
+    "dev": "npm --prefix frontend run serve",
+    "build:web": "npm --prefix frontend run build"
+  }
+}

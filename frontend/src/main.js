@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import './design-tokens.css'
 import './styles.css'
 
 if (process.env.NODE_ENV === 'development') {
