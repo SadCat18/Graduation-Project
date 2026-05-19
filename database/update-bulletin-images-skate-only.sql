@@ -1,0 +1,21 @@
+﻿USE skate_exchange;
+
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/08/22/11/04/skate-7403432_1280.jpg' WHERE bulletin_id=1;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/01/27/22/57/skateboarding-6973365_640.jpg' WHERE bulletin_id=2;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2021/06/04/15/50/skateboarding-6310245_640.jpg' WHERE bulletin_id=3;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2018/06/17/20/14/skateboard-3481338_640.jpg' WHERE bulletin_id=4;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2019/11/11/16/49/skater-4618922_640.jpg' WHERE bulletin_id=5;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2020/09/11/15/32/skateboard-5563464_1280.jpg' WHERE bulletin_id=6;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2020/07/01/17/21/skater-5360306_640.jpg' WHERE bulletin_id=7;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2021/08/03/06/30/skateboard-6518594_640.jpg' WHERE bulletin_id=8;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/06/18/18/05/skateboard-7270418_640.jpg' WHERE bulletin_id=9;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/01/27/22/57/skateboarding-6973365_640.jpg' WHERE bulletin_id=10;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/08/22/11/04/skate-7403432_1280.jpg' WHERE bulletin_id=11;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2018/06/17/20/14/skateboard-3481338_640.jpg' WHERE bulletin_id=12;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2020/09/11/15/32/skateboard-5563464_1280.jpg' WHERE bulletin_id=13;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2021/06/04/15/50/skateboarding-6310245_640.jpg' WHERE bulletin_id=14;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2019/11/11/16/49/skater-4618922_640.jpg' WHERE bulletin_id=15;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2020/07/01/17/21/skater-5360306_640.jpg' WHERE bulletin_id=16;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2021/08/03/06/30/skateboard-6518594_640.jpg' WHERE bulletin_id=17;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/06/18/18/05/skateboard-7270418_640.jpg' WHERE bulletin_id=18;
+UPDATE tb_community_bulletin SET image_urls='https://cdn.pixabay.com/photo/2022/01/27/22/57/skateboarding-6973365_640.jpg' WHERE bulletin_id=19;

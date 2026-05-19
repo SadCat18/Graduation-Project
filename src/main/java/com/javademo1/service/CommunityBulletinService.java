@@ -14,13 +14,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CommunityBulletinService {
+    private static final List<String> BULLETIN_TYPE_ORDER = Arrays.asList(
+            "活动通知", "赛事快讯", "同城动态", "场地通知", "路线推荐", "安全提醒", "官方公告", "经验分享"
+    );
+    private static final Set<String> ALLOWED_BULLETIN_TYPES = new HashSet<>(BULLETIN_TYPE_ORDER);
 
     private final CommunityBulletinRepository communityBulletinRepository;
     private final UserRepository userRepository;
@@ -36,7 +44,7 @@ public class CommunityBulletinService {
         CommunityBulletin bulletin = new CommunityBulletin();
         bulletin.setTitle(request.getTitle());
         bulletin.setContent(request.getContent());
-        bulletin.setBulletinType(request.getBulletinType());
+        bulletin.setBulletinType(normalizeAndValidateType(request.getBulletinType()));
         bulletin.setImageUrls(trimToNull(request.getImageUrls()));
         bulletin.setPublisherUserId(currentUser.id());
         bulletin.setStatus("0");
@@ -66,9 +74,30 @@ public class CommunityBulletinService {
         return toViewMap(bulletin);
     }
 
-    public List<Map<String, Object>> adminList() {
+    public List<Map<String, Object>> adminList(String type, String status) {
+        String normalizedType = trimToNull(type);
+        String normalizedStatus = trimToNull(status);
         return communityBulletinRepository.findAllByOrderByCreateTimeDesc().stream()
+                .filter(item -> normalizedType == null || normalizeForView(item.getBulletinType()).equals(normalizedType))
+                .filter(item -> normalizedStatus == null || normalizedStatus.equals(item.getStatus()))
                 .map(this::toViewMap)
+                .toList();
+    }
+
+    public List<Map<String, Object>> adminTypeStats() {
+        Map<String, Long> grouped = communityBulletinRepository.findAllByOrderByCreateTimeDesc().stream()
+                .collect(Collectors.groupingBy(
+                        item -> normalizeForView(item.getBulletinType()),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+        return BULLETIN_TYPE_ORDER.stream()
+                .map(type -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("type", type);
+                    row.put("count", grouped.getOrDefault(type, 0L));
+                    return row;
+                })
                 .toList();
     }
 
@@ -93,7 +122,7 @@ public class CommunityBulletinService {
         map.put("title", bulletin.getTitle());
         map.put("content", bulletin.getContent());
         map.put("imageUrls", bulletin.getImageUrls());
-        map.put("bulletinType", bulletin.getBulletinType());
+        map.put("bulletinType", normalizeForView(bulletin.getBulletinType()));
         map.put("status", bulletin.getStatus());
         map.put("publisherUserId", bulletin.getPublisherUserId());
         String publisherName = userRepository.findById(bulletin.getPublisherUserId())
@@ -113,5 +142,22 @@ public class CommunityBulletinService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeAndValidateType(String type) {
+        String normalized = trimToNull(type);
+        if (normalized == null) {
+            throw new BizException("快讯类型不能为空");
+        }
+        if (!ALLOWED_BULLETIN_TYPES.contains(normalized)) {
+            throw new BizException("快讯类型不合法，请从固定分类中选择");
+        }
+        return normalized;
+    }
+
+    private String normalizeForView(String type) {
+        String normalized = trimToNull(type);
+        if (normalized == null) return "经验分享";
+        return ALLOWED_BULLETIN_TYPES.contains(normalized) ? normalized : "经验分享";
     }
 }

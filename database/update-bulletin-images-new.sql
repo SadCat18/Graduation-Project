@@ -1,0 +1,21 @@
+﻿USE skate_exchange;
+
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/10131745/pexels-photo-10131745.jpeg' WHERE bulletin_id=1;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/34981342/pexels-photo-34981342.jpeg' WHERE bulletin_id=2;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/34001815/pexels-photo-34001815.jpeg' WHERE bulletin_id=3;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1263348/pexels-photo-1263348.jpeg' WHERE bulletin_id=4;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/159108/skateboard-skater-skating-jump-159108.jpeg' WHERE bulletin_id=5;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/114296/pexels-photo-114296.jpeg' WHERE bulletin_id=6;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1308713/pexels-photo-1308713.jpeg' WHERE bulletin_id=7;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1478442/pexels-photo-1478442.jpeg' WHERE bulletin_id=8;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1579661/pexels-photo-1579661.jpeg' WHERE bulletin_id=9;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/172292/pexels-photo-172292.jpeg' WHERE bulletin_id=10;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/257227/pexels-photo-257227.jpeg' WHERE bulletin_id=11;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg' WHERE bulletin_id=12;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/733745/pexels-photo-733745.jpeg' WHERE bulletin_id=13;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1051075/pexels-photo-1051075.jpeg' WHERE bulletin_id=14;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1124465/pexels-photo-1124465.jpeg' WHERE bulletin_id=15;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg' WHERE bulletin_id=16;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/1834399/pexels-photo-1834399.jpeg' WHERE bulletin_id=17;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/2331837/pexels-photo-2331837.jpeg' WHERE bulletin_id=18;
+UPDATE tb_community_bulletin SET image_urls='https://images.pexels.com/photos/2962789/pexels-photo-2962789.jpeg' WHERE bulletin_id=19;

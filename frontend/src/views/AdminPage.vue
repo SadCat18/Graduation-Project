@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
+import { BULLETIN_TYPES } from '../constants/bulletin'
 
 const tab = ref('stats')
 const ADMIN_PAGE_SIZE = 10
@@ -13,6 +14,9 @@ const activities = ref([])
 const activityReviewFilter = ref('0')
 const notices = ref([])
 const bulletins = ref([])
+const bulletinTypeFilter = ref('全部')
+const bulletinStatusFilter = ref('全部')
+const bulletinTypeStats = ref([])
 const newsList = ref([])
 const places = ref([])
 const banners = ref([])
@@ -82,6 +86,13 @@ const pagedBulletins = computed(() => sliceByPage(bulletins.value, contentPageSt
 const pagedNews = computed(() => sliceByPage(newsList.value, contentPageState.news))
 const pagedPlaces = computed(() => sliceByPage(places.value, contentPageState.places))
 const pagedBanners = computed(() => sliceByPage(banners.value, contentPageState.banners))
+const bulletinFilterOptions = computed(() => ['全部', ...BULLETIN_TYPES])
+const bulletinStatusOptions = [
+  { label: '全部', value: '全部' },
+  { label: '待审核', value: '0' },
+  { label: '已通过', value: '1' },
+  { label: '已驳回', value: '2' }
+]
 
 function sliceByPage(list, page) {
   const start = (page - 1) * ADMIN_PAGE_SIZE
@@ -246,19 +257,34 @@ async function deleteActivity(id) {
 }
 
 async function loadContentData() {
-  const [noticeData, bulletinData, newsData, placeData, bannerData] = await Promise.all([
+  const [noticeData, bulletinData, bulletinTypeStatData, newsData, placeData, bannerData] = await Promise.all([
     api.adminNotices(),
-    api.adminBulletins(),
+    api.adminBulletins({
+      type: bulletinTypeFilter.value === '全部' ? null : bulletinTypeFilter.value,
+      status: bulletinStatusFilter.value === '全部' ? null : bulletinStatusFilter.value
+    }),
+    api.adminBulletinTypeStats(),
     api.adminNews(),
     api.adminPlaces(),
     api.adminBanners()
   ])
   notices.value = noticeData
   bulletins.value = bulletinData
+  bulletinTypeStats.value = bulletinTypeStatData || []
   newsList.value = newsData
   places.value = placeData
   banners.value = bannerData
   normalizeContentPages()
+}
+
+async function applyBulletinTypeFilter() {
+  contentPageState.bulletins = 1
+  await loadContentData()
+}
+
+async function applyBulletinStatusFilter() {
+  contentPageState.bulletins = 1
+  await loadContentData()
 }
 
 async function changeUsersPage(next) {
@@ -635,6 +661,19 @@ onMounted(refreshAll)
 
         <div class="card form-card">
           <h3>社区快讯审核</h3>
+          <div class="inline bulletin-tools">
+            <select v-model="bulletinTypeFilter" @change="applyBulletinTypeFilter">
+              <option v-for="item in bulletinFilterOptions" :key="item" :value="item">{{ item }}</option>
+            </select>
+            <select v-model="bulletinStatusFilter" @change="applyBulletinStatusFilter">
+              <option v-for="item in bulletinStatusOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+            </select>
+            <span class="muted">当前分类：{{ bulletinTypeFilter }}</span>
+            <span class="muted">审核状态：{{ bulletinStatusOptions.find(i => i.value === bulletinStatusFilter)?.label }}</span>
+          </div>
+          <div class="bulletin-stats">
+            <span v-for="item in bulletinTypeStats" :key="item.type" class="stat-chip">{{ item.type }}：{{ item.count }}</span>
+          </div>
           <div v-for="b in pagedBulletins" :key="b.bulletinId" class="mini-row">
             <div>
               <strong>{{ b.title }}</strong>
@@ -1116,6 +1155,32 @@ onMounted(refreshAll)
 
 .pagination-bar.compact {
   margin-top: 10px;
+}
+
+.bulletin-tools {
+  margin-bottom: 8px;
+}
+
+.bulletin-tools select {
+  width: 200px;
+}
+
+.bulletin-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: #334155;
+  background: #f8fafc;
 }
 
 @media (max-width: 1120px) {

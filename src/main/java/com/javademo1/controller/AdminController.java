@@ -131,8 +131,14 @@ public class AdminController {
     }
 
     @GetMapping("/bulletins")
-    public ApiResponse<List<Map<String, Object>>> bulletins() {
-        return ApiResponse.success(adminService.listCommunityBulletins());
+    public ApiResponse<List<Map<String, Object>>> bulletins(@RequestParam(required = false) String type,
+                                                            @RequestParam(required = false) String status) {
+        return ApiResponse.success(adminService.listCommunityBulletins(type, status));
+    }
+
+    @GetMapping("/bulletins/type-stats")
+    public ApiResponse<List<Map<String, Object>>> bulletinTypeStats() {
+        return ApiResponse.success(adminService.communityBulletinTypeStats());
     }
 
     @PutMapping("/bulletins/{id}/review")

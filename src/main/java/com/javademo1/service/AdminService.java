@@ -102,8 +102,12 @@ public class AdminService {
         noticeRepository.deleteById(noticeId);
     }
 
-    public List<Map<String, Object>> listCommunityBulletins() {
-        return communityBulletinService.adminList();
+    public List<Map<String, Object>> listCommunityBulletins(String type, String status) {
+        return communityBulletinService.adminList(type, status);
+    }
+
+    public List<Map<String, Object>> communityBulletinTypeStats() {
+        return communityBulletinService.adminTypeStats();
     }
 
     public CommunityBulletin reviewCommunityBulletin(Long bulletinId, CurrentUser currentUser, CommunityBulletinReviewRequest request) {
