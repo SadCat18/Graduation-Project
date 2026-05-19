@@ -1,0 +1,33 @@
+﻿# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Spring Boot
+*.pid
+*.pid.lock
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+frontend/.eslintcache
+
+# Env files
+.env
+.env.*
+
+# Upload/generated data (optional)
+upload/tmp/
