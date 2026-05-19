@@ -1,23 +1,23 @@
-# javademo1 (Spring Boot + Vue)
+﻿# SE1 滑板社区系统（Spring Boot + Vue）
 
-## Project Structure
+## 项目结构
 
-- Backend: `src/main/java/com/javademo1`
-- Frontend: `frontend`
-- SQL: `database/init.sql`
-- Nginx (AMap proxy example): `deploy/nginx/amap-security.conf.example`
+- 后端：`src/main/java/com/javademo1`
+- 前端：`frontend`
+- 数据库脚本：`database/init.sql`
+- 高德安全代理（Nginx 示例）：`deploy/nginx/amap-security.conf.example`
 
-## Backend Run
+## 后端启动
 
-1. Execute SQL: `database/init.sql`
-2. Configure DB: `src/main/resources/application.yml`
-3. Start backend:
+1. 执行建库建表与初始化脚本：`database/init.sql`
+2. 配置数据库连接：`src/main/resources/application.yml`
+3. 启动后端：
 
 ```bash
 mvn spring-boot:run
 ```
 
-Or start with explicit database credentials (PowerShell):
+如果希望通过环境变量覆盖数据库配置（PowerShell）：
 
 ```powershell
 $env:DB_URL="jdbc:mysql://127.0.0.1:3306/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true"
@@ -26,9 +26,9 @@ $env:DB_PASSWORD="你的MySQL密码"
 mvn spring-boot:run
 ```
 
-Backend URL: `http://localhost:8080`
+后端默认地址：`http://localhost:8080`
 
-## Frontend Run (Vue CLI)
+## 前端启动（Vue CLI）
 
 ```bash
 cd frontend
@@ -36,65 +36,81 @@ npm install
 npm run serve
 ```
 
-Frontend URL: `http://localhost:5173`
+前端默认地址：`http://localhost:5173`
 
-## AMap JS API Security (Official Proxy Mode)
+## 高德地图 JS API 安全接入（官方代理模式）
 
-Current integration uses:
+当前项目使用：
 
-- Key: `6003345b78ed25b126a76cb9caf08a7b`
-- securityJsCode: `04038403ad1a9bbe9320ee87939b86f2`
+- Key：`6003345b78ed25b126a76cb9caf08a7b`
+- securityJsCode：`04038403ad1a9bbe9320ee87939b86f2`
 
-### 1) Configure Nginx reverse proxy
+### 1）配置 Nginx 反向代理
 
-Use the example file:
+参考示例配置文件：
 
 - `deploy/nginx/amap-security.conf.example`
 
-After saving your nginx config, reload:
+修改并保存 Nginx 配置后重载：
 
 ```bash
 nginx -s reload
 ```
 
-### 2) Configure frontend environment
+### 2）配置前端环境变量
 
-Copy `frontend/.env.development.example` to `frontend/.env.development` and edit if needed.
+将 `frontend/.env.development.example` 复制为 `frontend/.env.development`，按需修改：
 
-Key fields:
+- `VUE_APP_AMAP_KEY`：高德 JS Key
+- `VUE_APP_AMAP_SERVICE_HOST`：必须以 `/_AMapService` 结尾
+- `VUE_APP_AMAP_NGINX`：Vue 开发代理目标（`/_AMapService`）
 
-- `VUE_APP_AMAP_KEY`: AMap JS key
-- `VUE_APP_AMAP_SERVICE_HOST`: must end with `/_AMapService`
-- `VUE_APP_AMAP_NGINX`: Vue dev-server proxy target for `/_AMapService`
+### 3）关键加载顺序
 
-### 3) Important loading order
+项目中 `frontend/src/utils/amap.js` 已按官方要求处理：
 
-In this project, `frontend/src/utils/amap.js` already ensures:
+1. 先设置 `window._AMapSecurityConfig.serviceHost`
+2. 再加载 `https://webapi.amap.com/maps?...`
 
-1. Set `window._AMapSecurityConfig.serviceHost`
-2. Then load `https://webapi.amap.com/maps?...`
+即：必须先注入安全配置，再加载高德 JS API 脚本。
 
-This follows official requirement: security config must be set before JS API script loading.
+## 模块入口
 
-## Module Entry
+- 同城约板地图页：`/activities`
+- 社区快讯列表页：`/bulletins`
+- 社区快讯发布页：`/bulletins/publish`
 
-- 同城约板地图页: `/activities`
+## 社区快讯模块说明（已完善）
 
-## Change Record (2026-04-30)
+- 快讯分类固定为：
+  - 活动通知
+  - 赛事快讯
+  - 同城动态
+  - 场地通知
+  - 路线推荐
+  - 安全提醒
+  - 官方公告
+  - 经验分享
+- 前端发布页使用固定分类下拉选择。
+- 后端发布接口对分类做白名单校验，非法分类会拒绝提交。
+- 管理端支持按“分类 + 审核状态（全部/待审核/已通过/已驳回）”组合筛选。
+- 管理端提供分类统计接口与展示。
 
-- Added Redis dependency: `spring-boot-starter-data-redis` (`pom.xml`).
-- Added Redis config in `src/main/resources/application.yml`:
+## 更新记录（2026-04-30）
+
+- 新增 Redis 依赖：`spring-boot-starter-data-redis`（`pom.xml`）。
+- 在 `src/main/resources/application.yml` 新增 Redis 配置：
   - `spring.data.redis.host: 127.0.0.1`
   - `spring.data.redis.port: 6379`
   - `spring.data.redis.timeout: 3000ms`
-- Migrated login captcha from `HttpSession` to Redis (300s TTL, one-time consume):
+- 登录验证码由 `HttpSession` 迁移到 Redis（TTL 300 秒，使用后即失效）：
   - `GET /api/auth/captcha?captchaId=xxx`
   - `POST /api/auth/login/user`
   - `POST /api/auth/login/admin`
-- Login API request now requires `captchaId` and `captchaCode`.
-- Frontend `frontend/src/views/LoginPage.vue` now generates and submits `captchaId`.
+- 登录请求需提交 `captchaId` 与 `captchaCode`。
+- 前端 `frontend/src/views/LoginPage.vue` 已支持生成并提交 `captchaId`。
 
-Redis connectivity check used:
+Redis 连通性检查命令：
 
 ```powershell
 Test-NetConnection -ComputerName 127.0.0.1 -Port 6379
