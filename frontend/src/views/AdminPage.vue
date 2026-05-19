@@ -825,7 +825,7 @@ onMounted(refreshAll)
 
 .left-nav {
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   padding: 14px;
   min-height: 78vh;
@@ -900,7 +900,7 @@ onMounted(refreshAll)
 }
 
 .stat-card {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   padding: 12px;
   background: var(--bg-2);
@@ -936,7 +936,7 @@ onMounted(refreshAll)
 }
 
 .viz-card {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   padding: 12px;
   background: var(--bg-1);
@@ -1000,7 +1000,7 @@ onMounted(refreshAll)
 }
 
 .data-row {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   padding: 12px;
   display: flex;
@@ -1019,7 +1019,7 @@ onMounted(refreshAll)
 .status-chip {
   padding: 4px 10px;
   border-radius: var(--radius-sm);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   background: var(--bg-2);
   color: var(--text-2);
   font-size: 12px;
@@ -1076,7 +1076,7 @@ onMounted(refreshAll)
 }
 
 .mini-row {
-  border-top: 2px solid var(--line-strong);
+  border-top: 1px solid var(--line-strong);
   padding-top: 8px;
   margin-top: 8px;
   display: flex;
@@ -1098,8 +1098,8 @@ onMounted(refreshAll)
 .banner-thumb {
   width: 84px;
   height: 54px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   object-fit: cover;
 }
 
@@ -1147,3 +1147,5 @@ onMounted(refreshAll)
   }
 }
 </style>
+
+

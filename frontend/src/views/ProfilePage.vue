@@ -489,8 +489,8 @@ onBeforeUnmount(() => {
 .avatar-preview {
   width: 92px;
   height: 92px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
   display: grid;
   place-items: center;
@@ -514,7 +514,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   padding: 10px 12px;
   margin-bottom: 10px;
@@ -575,13 +575,13 @@ onBeforeUnmount(() => {
 .empty-tip {
   color: var(--text-muted);
   border: 2px dashed var(--line-strong);
-  border-radius: 2px;
+  border-radius: var(--radius-md);
   padding: 12px;
 }
 
 .signed-item {
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 12px;
   margin-top: 10px;
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
@@ -595,5 +595,7 @@ onBeforeUnmount(() => {
   margin-bottom: 4px;
 }
 </style>
+
+
 
 

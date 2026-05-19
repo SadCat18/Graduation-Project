@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
@@ -51,22 +51,31 @@ async function submit() {
 <template>
   <div class="card">
     <h3>发布社区快讯</h3>
-    <p class="muted">支持本地上传图片或填写图片 URL（多个用英文逗号分隔）。</p>
+    <p class="muted">支持本地上传图片，或填写图片 URL（多个用英文逗号分隔）。</p>
+
     <label>标题</label>
     <input v-model="form.title" placeholder="例如：周末街式赛报名开启" />
+
     <label>类型</label>
     <input v-model="form.bulletinType" placeholder="例如：活动预告 / 比赛信息 / 同城动态 / 店铺活动" />
+
     <label>内容</label>
     <textarea v-model="form.content" rows="8" placeholder="请输入完整快讯内容" />
+
     <label>图片 URL</label>
     <input v-model="form.imageUrls" placeholder="https://a.jpg,https://b.jpg" />
+
     <input ref="fileInputRef" type="file" class="hidden" accept="image/*" @change="uploadImage" />
     <div class="inline">
-      <button class="btn-soft" type="button" :disabled="uploading" @click="triggerSelect">{{ uploading ? '上传中...' : '本地上传图片' }}</button>
+      <button class="btn-soft" type="button" :disabled="uploading" @click="triggerSelect">
+        {{ uploading ? '上传中...' : '本地上传图片' }}
+      </button>
     </div>
+
     <div v-if="parseImages(form.imageUrls).length" class="preview-grid">
       <img v-for="img in parseImages(form.imageUrls)" :key="img" :src="img" alt="预览图" />
     </div>
+
     <div class="inline">
       <button class="btn-primary" @click="submit">提交审核</button>
       <button class="btn-soft" @click="$router.push('/bulletins')">返回列表</button>
@@ -77,5 +86,5 @@ async function submit() {
 <style scoped>
 .hidden { display: none; }
 .preview-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap: 8px; margin-top: 8px; }
-.preview-grid img { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.preview-grid img { width: 100%; height: 90px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--line); }
 </style>

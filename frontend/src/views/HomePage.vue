@@ -304,7 +304,7 @@ watch(currentSlide, () => {
 }
 
 .hero-stats {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
   padding: 16px;
@@ -341,8 +341,8 @@ watch(currentSlide, () => {
 
 .carousel-main {
   position: relative;
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
   box-shadow: var(--shadow-2);
@@ -372,9 +372,9 @@ watch(currentSlide, () => {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 2px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.92);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   color: var(--text-1);
   font-size: 20px;
   line-height: 1;
@@ -435,8 +435,8 @@ watch(currentSlide, () => {
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   background: rgba(227, 238, 255, 0.84);
   transition: all 0.25s ease;
 }
@@ -467,8 +467,8 @@ watch(currentSlide, () => {
 .feed-item img {
   width: 100%;
   height: 78px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   object-fit: cover;
 }
 
@@ -499,7 +499,7 @@ watch(currentSlide, () => {
 }
 
 .notice-item {
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   padding: 12px;
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
@@ -540,3 +540,5 @@ watch(currentSlide, () => {
   }
 }
 </style>
+
+

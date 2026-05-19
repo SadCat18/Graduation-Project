@@ -266,7 +266,7 @@ watch(
 
 .brand-panel {
   padding: 42px;
-  border-right: 2px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
   background: var(--bg-1);
   display: grid;
   align-content: center;
@@ -300,8 +300,8 @@ watch(
 .brand-points span {
   font-size: 14px;
   color: var(--text-soft);
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 9px 10px;
   background: var(--bg-2);
 }
@@ -346,7 +346,7 @@ watch(
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 4px;
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
   background: var(--bg-2);
   margin-bottom: 8px;
@@ -362,7 +362,7 @@ watch(
 .login-switch button.active {
   background: var(--brand);
   color: #07131a;
-  border-radius: 2px;
+  border-radius: var(--radius-md);
 }
 
 .field-label {
@@ -385,8 +385,8 @@ watch(
 .captcha-image {
   width: 120px;
   height: 42px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   object-fit: cover;
   cursor: pointer;
   background: var(--bg-2);
@@ -446,7 +446,7 @@ watch(
 
   .brand-panel {
     border-right: 0;
-    border-bottom: 2px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
     padding: 24px 20px;
   }
 
@@ -455,3 +455,5 @@ watch(
   }
 }
 </style>
+
+

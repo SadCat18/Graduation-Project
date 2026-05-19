@@ -118,8 +118,8 @@ onBeforeUnmount(() => {
   background:
     linear-gradient(120deg, rgba(111, 126, 139, .12) 0 16%, transparent 17%),
     linear-gradient(180deg, rgba(252, 252, 250, .98) 0%, rgba(242, 243, 240, .98) 100%);
-  border-bottom: 2px solid var(--line-strong);
-  box-shadow: 0 3px 0 rgba(142, 164, 191, 0.45);
+  border-bottom: 1px solid var(--line-strong);
+  box-shadow: 0 6px 18px rgba(80, 92, 103, 0.1);
   padding: 10px 18px;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   background: linear-gradient(90deg, #d8e0e6 0%, #c1ced7 65%, #aab8c4 100%);
   color: #0f1a23;
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-1);
 }
 
@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
   padding: 0 12px;
   border-radius: var(--radius-sm);
   color: var(--text-2);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
   color: #1a2b42;
   font-size: 14px;
@@ -179,7 +179,7 @@ onBeforeUnmount(() => {
 
 .nav-link.router-link-active {
   background: linear-gradient(95deg, #d3dde4 0%, #bdccd6 58%, #a8b9c6 100%);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   color: #101a23;
   box-shadow: var(--shadow-2);
   font-weight: 700;
@@ -212,7 +212,7 @@ onBeforeUnmount(() => {
 
 .auth-btn-primary {
   background: linear-gradient(95deg, #d3dde4 0%, #bdccd6 58%, #a8b9c6 100%);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   color: #101a23;
   font-weight: 700;
 }

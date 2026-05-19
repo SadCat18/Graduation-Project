@@ -542,7 +542,7 @@ onBeforeUnmount(() => {
   grid-auto-columns: minmax(110px, 1fr);
   gap: 8px;
   align-items: end;
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
   border-radius: var(--radius-md);
   padding: 8px;
@@ -554,7 +554,7 @@ onBeforeUnmount(() => {
   left: 8px;
   top: -10px;
   background: var(--bg-0);
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: 4px;
   color: var(--text-3);
   font-size: 12px;
@@ -578,8 +578,8 @@ onBeforeUnmount(() => {
 }
 
 .activity-item {
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
   box-shadow: var(--shadow-1);
@@ -692,8 +692,8 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 8px 10px;
   background: var(--bg-2);
 }
@@ -706,8 +706,8 @@ onBeforeUnmount(() => {
 .amap-container {
   width: 100%;
   height: 380px;
-  border-radius: 2px;
-  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
   overflow: hidden;
   background: #dfeaf8;
   box-shadow: var(--shadow-1);
@@ -763,3 +763,5 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+
+

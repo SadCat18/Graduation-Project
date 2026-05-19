@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api'
@@ -28,12 +28,12 @@ onMounted(loadData)
 
 <template>
   <div class="card">
-    <p v-if="loading" class="muted">加载中...</p>
+    <p v-if="loading" class="muted">鍔犺浇涓?..</p>
     <template v-if="detail">
       <h2>{{ detail.title }}</h2>
-      <p class="muted">{{ detail.createTime?.replace('T', ' ') }} · {{ detail.publisherName }} · {{ detail.bulletinType }}</p>
+      <p class="muted">{{ detail.createTime?.replace('T', ' ') }} 路 {{ detail.publisherName }} 路 {{ detail.bulletinType }}</p>
       <div v-if="imageList.length" class="image-grid">
-        <img v-for="img in imageList" :key="img" :src="img" alt="快讯图片" />
+        <img v-for="img in imageList" :key="img" :src="img" alt="蹇鍥剧墖" />
       </div>
       <p class="content">{{ detail.content }}</p>
     </template>
@@ -45,3 +45,4 @@ onMounted(loadData)
 .image-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 10px; margin: 10px 0; }
 .image-grid img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
 </style>
+

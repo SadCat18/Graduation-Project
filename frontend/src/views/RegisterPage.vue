@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
@@ -16,14 +16,14 @@ async function submit() {
   error.value = ''
   try {
     if (form.value.password !== form.value.confirmPassword) {
-      error.value = '两次输入的密码不一致'
+      error.value = '涓ゆ杈撳叆鐨勫瘑鐮佷笉涓€鑷?
       return
     }
     await api.register({ username: form.value.username, password: form.value.password })
-    message.value = '注册成功，正在跳转登录页...'
+    message.value = '娉ㄥ唽鎴愬姛锛屾鍦ㄨ烦杞櫥褰曢〉...'
     setTimeout(() => router.push('/login'), 700)
   } catch (e) {
-    error.value = e.message || '注册失败，请稍后重试'
+    error.value = e.message || '娉ㄥ唽澶辫触锛岃绋嶅悗閲嶈瘯'
   } finally {
     loading.value = false
   }
@@ -34,41 +34,40 @@ async function submit() {
   <div class="auth-shell">
     <div class="auth-card card">
       <section class="brand-panel">
-        <p class="brand-sub">加入滑板交流网站</p>
-        <h1>创建账号</h1>
-        <p class="brand-desc">注册后可发布帖子、参加活动、完善你的滑板档案。</p>
+        <p class="brand-sub">鍔犲叆婊戞澘浜ゆ祦缃戠珯</p>
+        <h1>鍒涘缓璐﹀彿</h1>
+        <p class="brand-desc">娉ㄥ唽鍚庡彲鍙戝竷甯栧瓙銆佸弬鍔犳椿鍔ㄣ€佸畬鍠勪綘鐨勬粦鏉挎。妗堛€?/p>
         <div class="brand-points">
-          <span>发帖分享动作与路线</span>
-          <span>同城约板活动报名签到</span>
-          <span>个人资料与头像本地上传</span>
+          <span>鍙戝笘鍒嗕韩鍔ㄤ綔涓庤矾绾?/span>
+          <span>鍚屽煄绾︽澘娲诲姩鎶ュ悕绛惧埌</span>
+          <span>涓汉璧勬枡涓庡ご鍍忔湰鍦颁笂浼?/span>
         </div>
       </section>
 
       <section class="form-panel">
         <div class="section-head">
-          <h2>注册</h2>
+          <h2>娉ㄥ唽</h2>
         </div>
 
-        <label class="field-label">用户名</label>
-        <input v-model.trim="form.username" placeholder="请输入用户名" />
+        <label class="field-label">鐢ㄦ埛鍚?/label>
+        <input v-model.trim="form.username" placeholder="璇疯緭鍏ョ敤鎴峰悕" />
 
-        <label class="field-label">密码</label>
-        <input v-model.trim="form.password" type="password" placeholder="请输入密码（6-20位）" />
+        <label class="field-label">瀵嗙爜</label>
+        <input v-model.trim="form.password" type="password" placeholder="璇疯緭鍏ュ瘑鐮侊紙6-20浣嶏級" />
 
-        <label class="field-label">确认密码</label>
-        <input v-model.trim="form.confirmPassword" type="password" placeholder="请再次输入密码" />
+        <label class="field-label">纭瀵嗙爜</label>
+        <input v-model.trim="form.confirmPassword" type="password" placeholder="璇峰啀娆¤緭鍏ュ瘑鐮? />
 
         <button class="btn-primary submit-btn" :disabled="loading" @click="submit">
           <AppIcon name="user" :size="15" />
-          {{ loading ? '提交中...' : '立即注册' }}
+          {{ loading ? '鎻愪氦涓?..' : '绔嬪嵆娉ㄥ唽' }}
         </button>
 
         <p v-if="message" class="success">{{ message }}</p>
         <p v-if="error" class="error">{{ error }}</p>
 
         <p class="jump-tip">
-          已有账号？
-          <router-link to="/login">去登录</router-link>
+          宸叉湁璐﹀彿锛?          <router-link to="/login">鍘荤櫥褰?/router-link>
         </p>
       </section>
     </div>
@@ -94,7 +93,7 @@ async function submit() {
 
 .brand-panel {
   padding: 42px;
-  border-right: 2px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
   background: var(--bg-1);
   display: grid;
   align-content: center;
@@ -128,8 +127,8 @@ async function submit() {
 .brand-points span {
   font-size: 14px;
   color: var(--text-soft);
-  border: 2px solid var(--line-strong);
-  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 9px 10px;
   background: var(--bg-2);
 }
@@ -176,7 +175,7 @@ async function submit() {
 
   .brand-panel {
     border-right: 0;
-    border-bottom: 2px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
     padding: 24px 20px;
   }
 
@@ -185,3 +184,5 @@ async function submit() {
   }
 }
 </style>
+
+

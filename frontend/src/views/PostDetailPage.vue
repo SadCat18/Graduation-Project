@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
@@ -185,7 +185,7 @@ onMounted(loadPostDetail)
 .post-images img {
   width: 100%;
   height: 110px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   border: 1px solid var(--line);
 }
