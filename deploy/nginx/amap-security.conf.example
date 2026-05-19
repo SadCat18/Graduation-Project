@@ -1,0 +1,22 @@
+# Include this server block in your nginx configuration (http{} scope).
+# Then run: nginx -s reload
+server {
+  listen       80;
+  server_name  127.0.0.1;
+
+  # Optional: custom map style proxy (keep this rule before /_AMapService/)
+  location /_AMapService/v4/map/styles {
+    set $args "$args&jscode=04038403ad1a9bbe9320ee87939b86f2";
+    proxy_ssl_server_name on;
+    proxy_set_header Host webapi.amap.com;
+    proxy_pass https://webapi.amap.com/v4/map/styles;
+  }
+
+  # Required: Web service proxy
+  location /_AMapService/ {
+    set $args "$args&jscode=04038403ad1a9bbe9320ee87939b86f2";
+    proxy_ssl_server_name on;
+    proxy_set_header Host restapi.amap.com;
+    proxy_pass https://restapi.amap.com/;
+  }
+}

@@ -1,0 +1,88 @@
+import http from './http'
+
+export const api = {
+  register: (data) => http.post('/api/auth/register', data),
+  userLogin: (data) => http.post('/api/auth/login/user', data),
+  adminLogin: (data) => http.post('/api/auth/login/admin', data),
+
+  posts: (params) => http.get('/api/public/posts', { params }),
+  postDetail: (id) => http.get(`/api/public/posts/${id}`),
+  comments: (id) => http.get(`/api/public/posts/${id}/comments`),
+  uploadPostImage: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return http.post('/api/files/upload/image', formData)
+  },
+  uploadVideoFile: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return http.post('/api/files/upload/video', formData)
+  },
+  createPost: (data) => http.post('/api/posts', data),
+  updatePost: (id, data) => http.put(`/api/posts/${id}`, data),
+  deletePost: (id) => http.delete(`/api/posts/${id}`),
+  createComment: (id, data) => http.post(`/api/posts/${id}/comments`, data),
+  likePost: (id) => http.post(`/api/posts/${id}/like`),
+  collectPost: (id) => http.post(`/api/posts/${id}/collect`),
+
+  publicActivities: (params) => http.get('/api/public/activities', { params }),
+  myActivities: (params) => http.get('/api/activities', { params }),
+  mySignedActivities: () => http.get('/api/activities/signed/me'),
+  createActivity: (data) => http.post('/api/activities', data),
+  createBulletin: (data) => http.post('/api/bulletins', data),
+  signActivity: (id) => http.post(`/api/activities/${id}/sign`),
+  activitySigns: (id) => http.get(`/api/activities/${id}/signs`),
+  closeSignupActivity: (id) => http.put(`/api/activities/${id}/close-signup`),
+  cancelSignActivity: (id) => http.put(`/api/activities/${id}/sign/cancel`),
+  checkinActivity: (id) => http.post(`/api/activities/${id}/checkin`),
+  updateActivitySignStatus: (activityId, signId, data) => http.put(`/api/activities/${activityId}/signs/${signId}/status`, data),
+  deleteActivity: (id) => http.delete(`/api/activities/${id}`),
+
+  notices: () => http.get('/api/public/notices'),
+  bulletins: (params) => http.get('/api/public/bulletins', { params }),
+  bulletinsAll: () => http.get('/api/public/bulletins/all'),
+  bulletinDetail: (id) => http.get(`/api/public/bulletins/${id}`),
+  news: () => http.get('/api/public/news'),
+  places: () => http.get('/api/public/places'),
+  videos: () => http.get('/api/public/videos'),
+  publicBanners: () => http.get('/api/public/banners'),
+  createVideo: (data) => http.post('/api/videos', data),
+
+  profile: () => http.get('/api/user/profile'),
+  updateProfile: (data) => http.put('/api/user/profile', data),
+  updatePassword: (data) => http.put('/api/user/password', data),
+  dashboard: () => http.get('/api/user/dashboard'),
+  messages: () => http.get('/api/user/messages'),
+  readMessage: (id) => http.put(`/api/user/messages/${id}/read`),
+
+  adminUsers: (params) => http.get('/api/admin/users', { params }),
+  adminUserStatus: (id, status) => http.put(`/api/admin/users/${id}/status`, null, { params: { status } }),
+  adminUserBulletinPermission: (id, permission) => http.put(`/api/admin/users/${id}/bulletin-permission`, null, { params: { permission } }),
+  adminPosts: (params) => http.get('/api/admin/posts', { params }),
+  adminDeletePost: (id) => http.delete(`/api/admin/posts/${id}`),
+  adminTopPost: (id, top) => http.put(`/api/admin/posts/${id}/top`, null, { params: { top } }),
+  adminComments: (params) => http.get('/api/admin/comments', { params }),
+  adminDeleteComment: (id) => http.delete(`/api/admin/comments/${id}`),
+  adminActivities: (params) => http.get('/api/admin/activities', { params }),
+  adminActivityStatus: (id, status) => http.put(`/api/admin/activities/${id}/status`, null, { params: { status } }),
+  adminReviewActivity: (id, data) => http.put(`/api/admin/activities/${id}/review`, data),
+  adminDeleteActivity: (id) => http.delete(`/api/admin/activities/${id}`),
+  adminStats: () => http.get('/api/admin/stats'),
+  adminNotices: () => http.get('/api/admin/notices'),
+  adminCreateNotice: (data) => http.post('/api/admin/notices', data),
+  adminUpdateNotice: (id, data) => http.put(`/api/admin/notices/${id}`, data),
+  adminDeleteNotice: (id) => http.delete(`/api/admin/notices/${id}`),
+  adminBulletins: () => http.get('/api/admin/bulletins'),
+  adminReviewBulletin: (id, data) => http.put(`/api/admin/bulletins/${id}/review`, data),
+  adminDeleteBulletin: (id) => http.delete(`/api/admin/bulletins/${id}`),
+  adminNews: () => http.get('/api/admin/news'),
+  adminCreateNews: (data) => http.post('/api/admin/news', data),
+  adminDeleteNews: (id) => http.delete(`/api/admin/news/${id}`),
+  adminBanners: () => http.get('/api/admin/banners'),
+  adminCreateBanner: (data) => http.post('/api/admin/banners', data),
+  adminUpdateBanner: (id, data) => http.put(`/api/admin/banners/${id}`, data),
+  adminDeleteBanner: (id) => http.delete(`/api/admin/banners/${id}`),
+  adminPlaces: () => http.get('/api/admin/places'),
+  adminCreatePlace: (data) => http.post('/api/admin/places', data),
+  adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`)
+}
