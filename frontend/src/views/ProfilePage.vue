@@ -74,7 +74,7 @@ async function loadOthers() {
 async function saveProfile() {
   const phone = String(profile.phone || '').trim()
   if (phone && !/^1\d{10}$/.test(phone)) {
-    alert('鎵嬫満鍙锋牸寮忎笉姝ｇ‘锛岃杈撳叆 11 浣嶆墜鏈哄彿')
+    alert('手机号格式不正确，请输入 11 位手机号')
     return
   }
 
@@ -97,7 +97,7 @@ async function saveProfile() {
     await loadProfile()
     alert('个人资料已保存')
   } catch (e) {
-    alert(e?.message || '淇濆瓨澶辫触锛岃绋嶅悗閲嶈瘯')
+    alert(e?.message || '保存失败，请稍后重试')
   } finally {
     savingProfile.value = false
   }
@@ -132,11 +132,11 @@ function onSelectAvatar(event) {
   const file = (event.target.files || [])[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    alert('璇烽€夋嫨鍥剧墖鏂囦欢')
+    alert('请选择图片文件')
     return
   }
   if (file.size > 10 * 1024 * 1024) {
-    alert('澶村儚鍥剧墖涓嶈兘瓒呰繃 10MB')
+    alert('头像图片不能超过 10MB')
     return
   }
 
@@ -157,11 +157,11 @@ function onSelectVideo(event) {
   const file = (event.target.files || [])[0]
   if (!file) return
   if (!file.type.startsWith('video/')) {
-    alert('璇烽€夋嫨瑙嗛鏂囦欢')
+    alert('请选择视频文件')
     return
   }
   if (file.size > 300 * 1024 * 1024) {
-    alert('瑙嗛澶у皬涓嶈兘瓒呰繃 300MB')
+    alert('视频大小不能超过 300MB')
     return
   }
   selectedVideoFile.value = file
@@ -172,11 +172,11 @@ function onSelectCover(event) {
   const file = (event.target.files || [])[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    alert('璇烽€夋嫨鍥剧墖鏂囦欢')
+    alert('请选择图片文件')
     return
   }
   if (file.size > 10 * 1024 * 1024) {
-    alert('灏侀潰鍥剧墖涓嶈兘瓒呰繃 10MB')
+    alert('封面图片不能超过 10MB')
     return
   }
   selectedCoverFile.value = file
@@ -197,7 +197,7 @@ async function createVideo() {
     return
   }
   if (!selectedVideoFile.value && !videoForm.url.trim()) {
-    alert('璇蜂笂浼犳湰鍦拌棰戞枃浠舵垨濉啓瑙嗛鍦板潃')
+    alert('请上传本地视频文件或填写视频地址')
     return
   }
 
@@ -227,9 +227,9 @@ async function createVideo() {
     selectedVideoFile.value = null
     selectedCoverFile.value = null
     await loadOthers()
-    alert('瑙嗛鎻愪氦鎴愬姛')
+    alert('视频提交成功')
   } catch (e) {
-    alert(e?.message || '瑙嗛鎻愪氦澶辫触锛岃绋嶅悗閲嶈瘯')
+    alert(e?.message || '视频提交失败，请稍后重试')
   } finally {
     videoUploading.value = false
   }
@@ -295,17 +295,17 @@ onBeforeUnmount(() => {
   <div v-if="role !== 'ADMIN'" class="page-grid profile-page">
     <section>
       <div class="card">
-        <div class="section-head"><h3>涓汉璧勬枡</h3></div>
+        <div class="section-head"><h3>个人资料</h3></div>
 
         <div class="avatar-upload-block">
           <div class="avatar-preview">
             <img
               v-if="avatarPreviewUrl || profile.avatar"
               :src="avatarPreviewUrl || profile.avatar"
-              alt="澶村儚棰勮"
+              alt="头像预览"
               @error="handleAvatarError"
             />
-            <span v-else>鏆傛棤澶村儚</span>
+            <span v-else>暂无头像</span>
           </div>
 
           <input
@@ -319,15 +319,15 @@ onBeforeUnmount(() => {
           <div class="inline">
             <button type="button" class="btn-soft" @click="triggerAvatarSelect">
               <AppIcon name="upload" :size="15" />
-              閫夋嫨鏈湴澶村儚
+              选择本地头像
             </button>
-            <button v-if="selectedAvatarFile" type="button" @click="clearSelectedAvatar">鍙栨秷閫夋嫨</button>
+            <button v-if="selectedAvatarFile" type="button" @click="clearSelectedAvatar">取消选择</button>
           </div>
           <p class="muted">仅支持本地图片，保存资料时自动上传。</p>
         </div>
 
         <div class="gender-row">
-          <span class="field-title">鎬у埆</span>
+          <span class="field-title">性别</span>
           <label class="radio-option">
             <input v-model="profile.gender" type="radio" value="男" />
             <span>男</span>
@@ -339,34 +339,34 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="form-grid">
-          <input v-model="profile.skateStyle" placeholder="婊戞澘椋庢牸锛堣寮?纰楁睜绛夛級" />
+          <input v-model="profile.skateStyle" placeholder="滑板风格（街式、碗池等）" />
           <input
             v-model="profile.phone"
             maxlength="11"
             inputmode="numeric"
-            placeholder="鎵嬫満鍙凤紙11浣嶏級"
+            placeholder="手机号（11位）"
           />
         </div>
 
         <textarea v-model="profile.bio" placeholder="个人简介" />
         <button class="btn-primary" :disabled="savingProfile" @click="saveProfile">
-          {{ savingProfile ? '淇濆瓨涓?..' : '淇濆瓨璧勬枡' }}
+          {{ savingProfile ? '保存中...' : '保存资料' }}
         </button>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>淇敼瀵嗙爜</h3></div>
+        <div class="section-head"><h3>修改密码</h3></div>
         <div class="form-grid">
           <input v-model="passwordForm.oldPassword" type="password" placeholder="旧密码" />
           <input v-model="passwordForm.newPassword" type="password" placeholder="新密码" />
         </div>
-        <button @click="savePassword">鏇存柊瀵嗙爜</button>
+        <button @click="savePassword">更新密码</button>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>涓婁紶鏁欏瑙嗛</h3></div>
+        <div class="section-head"><h3>上传教学视频</h3></div>
         <div class="form-grid">
-          <input v-model="videoForm.title" placeholder="瑙嗛鏍囬锛堝繀濉級" />
+          <input v-model="videoForm.title" placeholder="视频标题（必填）" />
           <input v-model="videoForm.url" placeholder="视频地址 URL（可选，不上传本地视频时填写）" />
         </div>
 
@@ -380,7 +380,7 @@ onBeforeUnmount(() => {
           />
           <button type="button" class="btn-soft" @click="triggerVideoSelect">
             <AppIcon name="upload" :size="15" />
-            閫夋嫨鏈湴瑙嗛
+            选择本地视频
           </button>
           <span class="file-name" v-if="selectedVideoFile">{{ selectedVideoFile.name }}</span>
           <button v-if="selectedVideoFile" type="button" @click="clearVideoSelection">鍙栨秷</button>
@@ -388,7 +388,7 @@ onBeforeUnmount(() => {
         <p class="muted">支持本地视频上传（推荐 mp4），最大 300MB。</p>
 
         <div class="form-grid">
-          <input v-model="videoForm.cover" placeholder="灏侀潰 URL锛堝彲閫夛級" />
+          <input v-model="videoForm.cover" placeholder="封面 URL（可选）" />
           <div class="upload-row">
             <input
               ref="coverFileInputRef"
@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
             />
             <button type="button" class="btn-soft" @click="triggerCoverSelect">
               <AppIcon name="upload" :size="15" />
-              閫夋嫨鏈湴灏侀潰
+              选择本地封面
             </button>
             <span class="file-name" v-if="selectedCoverFile">{{ selectedCoverFile.name }}</span>
             <button v-if="selectedCoverFile" type="button" @click="clearCoverSelection">鍙栨秷</button>
@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
 
         <textarea v-model="videoForm.intro" placeholder="视频简介" />
         <button class="btn-primary" :disabled="videoUploading" @click="createVideo">
-          {{ videoUploading ? '涓婁紶骞舵彁浜や腑...' : '鎻愪氦瑙嗛' }}
+          {{ videoUploading ? '上传并提交中...' : '提交视频' }}
         </button>
       </div>
 
@@ -439,25 +439,25 @@ onBeforeUnmount(() => {
 
     <aside>
       <div class="card">
-        <div class="section-head"><h3>鎴戠殑姒傝</h3></div>
+        <div class="section-head"><h3>我的概览</h3></div>
         <div class="stats-box">
-          <div><span>鎴戠殑甯栧瓙</span><strong>{{ dashboard.postCount || 0 }}</strong></div>
-          <div><span>鎴戠殑娲诲姩</span><strong>{{ dashboard.activityCount || 0 }}</strong></div>
-          <div><span>鏈娑堟伅</span><strong>{{ dashboard.unreadMsgCount || 0 }}</strong></div>
+          <div><span>我的帖子</span><strong>{{ dashboard.postCount || 0 }}</strong></div>
+          <div><span>我的活动</span><strong>{{ dashboard.activityCount || 0 }}</strong></div>
+          <div><span>未读消息</span><strong>{{ dashboard.unreadMsgCount || 0 }}</strong></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>鎴戠殑娑堟伅</h3></div>
+        <div class="section-head"><h3>我的消息</h3></div>
         <div v-for="m in messages" :key="m.msgId" class="list-item">
           <p>{{ m.content }}</p>
           <p class="muted">{{ m.createTime?.replace('T', ' ') }}</p>
-          <button v-if="m.isRead === '0'" class="btn-soft" @click="markRead(m.msgId)">鏍囪宸茶</button>
+          <button v-if="m.isRead === '0'" class="btn-soft" @click="markRead(m.msgId)">标记已读</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>鏁欏瑙嗛</h3></div>
+        <div class="section-head"><h3>教学视频</h3></div>
         <div v-for="v in videos" :key="v.videoId" class="list-item">
           <strong>{{ v.title }}</strong>
           <p class="muted">{{ v.intro }}</p>
