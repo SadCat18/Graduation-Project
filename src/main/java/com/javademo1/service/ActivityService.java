@@ -50,7 +50,8 @@ public class ActivityService {
             List<Predicate> predicates = new ArrayList<>();
             Predicate publicVisiblePredicate = builder.and(
                     builder.equal(root.get("reviewStatus"), ActivityReviewStatus.APPROVED),
-                    root.get("activityStatus").in(ActivityStatus.SIGNUP_OPEN, ActivityStatus.FULL, ActivityStatus.CANCELED, ActivityStatus.ENDED)
+                    builder.coalesce(root.get("activityStatus"), root.get("status"))
+                            .in(ActivityStatus.SIGNUP_OPEN, ActivityStatus.FULL, ActivityStatus.ENDED)
             );
             predicates.add(publicVisiblePredicate);
 
@@ -252,6 +253,12 @@ public class ActivityService {
                 .collect(Collectors.toList());
     }
 
+    public List<Map<String, Object>> myPublishedActivities(Long userId) {
+        return activityRepository.findByUserIdOrderByCreateTimeDesc(userId).stream()
+                .map(activity -> toActivityVO(activity, userId))
+                .collect(Collectors.toList());
+    }
+
     public Activity updateStatus(Long activityId, String status) {
         Activity activity = getActivity(activityId);
         String normalizedStatus = normalizeActivityStatus(status);
@@ -285,10 +292,12 @@ public class ActivityService {
 
     public void delete(CurrentUser currentUser, Long activityId, boolean isAdmin) {
         Activity activity = getActivity(activityId);
-        if (!isAdmin && !activity.getUserId().equals(currentUser.id())) {
+        boolean isRealAdmin = "ADMIN".equalsIgnoreCase(currentUser.role());
+        boolean isOwner = activity.getUserId().equals(currentUser.id());
+        if (!isOwner && !isRealAdmin) {
             throw new BizException("无权删除活动");
         }
-        if (isAdmin && "ADMIN".equals(currentUser.role())) {
+        if (isRealAdmin && isAdmin) {
             activityRepository.delete(activity);
             return;
         }

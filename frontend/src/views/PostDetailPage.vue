@@ -20,6 +20,10 @@ const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违
 const isLoggedIn = computed(() => !!getToken())
 const postId = computed(() => Number(route.params.id))
 
+function showActionError(e, fallback = '操作失败，请稍后重试') {
+  alert(e?.message || fallback)
+}
+
 function parseImages(images) {
   if (!images) return []
   return String(images)
@@ -58,6 +62,8 @@ async function sendComment() {
     await api.createComment(postId.value, { content, parentId: 0 })
     commentInput.value = ''
     await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '评论发送失败，请稍后重试')
   } finally {
     postingComment.value = false
   }
@@ -65,20 +71,32 @@ async function sendComment() {
 
 async function toggleLike() {
   if (!isLoggedIn.value) return router.push('/login')
-  await api.likePost(postId.value)
-  await loadPostDetail()
+  try {
+    await api.likePost(postId.value)
+    await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '点赞失败，请稍后重试')
+  }
 }
 
 async function toggleCollect() {
   if (!isLoggedIn.value) return router.push('/login')
-  await api.collectPost(postId.value)
-  await loadPostDetail()
+  try {
+    await api.collectPost(postId.value)
+    await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '收藏失败，请稍后重试')
+  }
 }
 
 async function toggleWatchLater() {
   if (!isLoggedIn.value) return router.push('/login')
-  await api.watchLaterPost(postId.value)
-  await loadPostDetail()
+  try {
+    await api.watchLaterPost(postId.value)
+    await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '操作失败，请稍后重试')
+  }
 }
 
 function chooseReportReason() {
@@ -94,8 +112,12 @@ async function reportPost() {
   const reason = chooseReportReason()
   if (!reason) return
   const detail = window.prompt('可补充举报说明（可留空）', '') || ''
-  await api.createReport({ targetType: 'POST', targetId: postId.value, reason, detail })
-  alert('举报已提交，感谢反馈')
+  try {
+    await api.createReport({ targetType: 'POST', targetId: postId.value, reason, detail })
+    alert('举报已提交，感谢反馈')
+  } catch (e) {
+    showActionError(e, '举报失败，请稍后重试')
+  }
 }
 
 async function reportComment(commentId) {
@@ -103,8 +125,12 @@ async function reportComment(commentId) {
   const reason = chooseReportReason()
   if (!reason) return
   const detail = window.prompt('可补充举报说明（可留空）', '') || ''
-  await api.createReport({ targetType: 'COMMENT', targetId: commentId, reason, detail })
-  alert('举报已提交，感谢反馈')
+  try {
+    await api.createReport({ targetType: 'COMMENT', targetId: commentId, reason, detail })
+    alert('举报已提交，感谢反馈')
+  } catch (e) {
+    showActionError(e, '举报失败，请稍后重试')
+  }
 }
 
 onMounted(loadPostDetail)

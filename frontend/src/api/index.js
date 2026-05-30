@@ -28,6 +28,7 @@ export const api = {
 
   publicActivities: (params) => http.get('/api/public/activities', { params }),
   myActivities: (params) => http.get('/api/activities', { params }),
+  myPublishedActivities: () => http.get('/api/activities/published/me'),
   mySignedActivities: () => http.get('/api/activities/signed/me'),
   createActivity: (data) => http.post('/api/activities', data),
   createBulletin: (data) => http.post('/api/bulletins', data),

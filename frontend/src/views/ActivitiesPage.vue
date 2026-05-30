@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
-import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, SIGN_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
+import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { getToken } from '../utils/auth'
 import { amapKeyTail, loadAMap } from '../utils/amap'
 
@@ -16,10 +16,6 @@ const loadError = ref('')
 const mapReady = ref(false)
 const mapError = ref('')
 const selectedActivityId = ref(null)
-const currentUserId = ref(null)
-const managingActivityId = ref(null)
-const signListLoading = ref(false)
-const signListMap = ref({})
 const mobilePanel = ref('list')
 const isCompact = ref(false)
 
@@ -87,26 +83,16 @@ async function loadData() {
     }
 
     const placeList = await api.places()
-    list.value = activities.list || []
+    list.value = (activities.list || []).filter((item) => {
+      const status = normalizeActivityStatus(item.activityStatus ?? item.status)
+      return status !== ACTIVITY_STATUS.CANCELED
+    })
     places.value = placeList || []
     renderActivityMarkers()
   } catch (e) {
     loadError.value = e?.message || '活动加载失败，请稍后重试'
   } finally {
     loading.value = false
-  }
-}
-
-async function loadCurrentUser() {
-  if (!isLoggedIn.value) {
-    currentUserId.value = null
-    return
-  }
-  try {
-    const profile = await api.profile()
-    currentUserId.value = profile?.userId || null
-  } catch (_) {
-    currentUserId.value = null
   }
 }
 
@@ -139,56 +125,6 @@ async function cancelSign(item) {
     return
   }
   await api.cancelSignActivity(item.activityId)
-  await loadData()
-}
-
-async function remove(item) {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
-  await api.deleteActivity(item.activityId)
-  await loadData()
-}
-
-function isOwner(item) {
-  return isLoggedIn.value && currentUserId.value && Number(item.userId) === Number(currentUserId.value)
-}
-
-async function toggleManageSigns(item) {
-  if (!isOwner(item)) return
-  if (managingActivityId.value === item.activityId) {
-    managingActivityId.value = null
-    return
-  }
-  managingActivityId.value = item.activityId
-  await loadActivitySigns(item.activityId)
-}
-
-async function loadActivitySigns(activityId) {
-  signListLoading.value = true
-  try {
-    const data = await api.activitySigns(activityId)
-    signListMap.value = {
-      ...signListMap.value,
-      [activityId]: data || []
-    }
-  } finally {
-    signListLoading.value = false
-  }
-}
-
-function signStatusText(sign) {
-  return SIGN_STATUS_LABEL[sign.signStatus] || '未知'
-}
-
-async function reviewSign(item, sign, signStatus) {
-  await api.updateActivitySignStatus(item.activityId, sign.signId, { signStatus })
-  await Promise.all([loadActivitySigns(item.activityId), loadData()])
-}
-
-async function closeSignup(item) {
-  await api.closeSignupActivity(item.activityId)
   await loadData()
 }
 
@@ -363,7 +299,6 @@ watch(() => filter.city, (city) => {
 onMounted(async () => {
   onResize()
   window.addEventListener('resize', onResize)
-  await loadCurrentUser()
   await loadData()
   await initMap()
 })
@@ -459,24 +394,6 @@ onBeforeUnmount(() => {
               <AppIcon name="location" :size="14" />
               地图定位
             </button>
-            <button v-if="isOwner(item)" class="btn-soft" @click="toggleManageSigns(item)">
-              {{ managingActivityId === item.activityId ? '收起报名管理' : '报名管理' }}
-            </button>
-            <button v-if="isOwner(item)" class="btn-soft" @click="closeSignup(item)">提前关闭报名</button>
-            <button v-if="isOwner(item)" class="btn-danger" @click="remove(item)">取消活动</button>
-          </div>
-
-          <div v-if="managingActivityId === item.activityId" class="manage-box">
-            <p class="muted">报名名单管理</p>
-            <p v-if="signListLoading" class="muted">加载报名名单中...</p>
-            <div v-for="sign in (signListMap[item.activityId] || [])" :key="sign.signId" class="sign-row">
-              <span>#{{ sign.signId }} · 用户 {{ sign.userId }} · {{ signStatusText(sign) }}</span>
-              <div class="inline">
-                <button v-if="sign.signStatus === '0'" class="btn-soft" @click="reviewSign(item, sign, '1')">同意</button>
-                <button v-if="sign.signStatus === '0'" class="btn-soft" @click="reviewSign(item, sign, '2')">拒绝</button>
-                <button v-if="sign.signStatus === '1'" class="btn-soft" @click="reviewSign(item, sign, '3')">移除</button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

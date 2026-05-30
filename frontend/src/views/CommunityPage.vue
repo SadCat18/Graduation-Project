@@ -37,6 +37,10 @@ function goLogin(message = '请先登录后再进行互动操作') {
   router.push('/login')
 }
 
+function showActionError(e, fallback = '操作失败，请稍后重试') {
+  alert(e?.message || fallback)
+}
+
 function parseImages(images) {
   if (!images) return []
   return String(images)
@@ -109,39 +113,63 @@ async function loadSideData() {
 
 async function deletePost(postId) {
   if (!getToken()) return goLogin()
-  await api.deletePost(postId)
-  await loadPosts()
+  try {
+    await api.deletePost(postId)
+    await loadPosts()
+  } catch (e) {
+    showActionError(e, '删除失败，请稍后重试')
+  }
 }
 
 async function toggleLike(postId) {
   if (!getToken()) return goLogin()
-  await api.likePost(postId)
-  await loadPosts()
+  try {
+    await api.likePost(postId)
+    await loadPosts()
+  } catch (e) {
+    showActionError(e, '点赞失败，请稍后重试')
+  }
 }
 
 async function toggleCollect(postId) {
   if (!getToken()) return goLogin()
-  await api.collectPost(postId)
-  await loadPosts()
+  try {
+    await api.collectPost(postId)
+    await loadPosts()
+  } catch (e) {
+    showActionError(e, '收藏失败，请稍后重试')
+  }
 }
 
 async function toggleWatchLater(postId) {
   if (!getToken()) return goLogin()
-  await api.watchLaterPost(postId)
-  await loadPosts()
+  try {
+    await api.watchLaterPost(postId)
+    await loadPosts()
+  } catch (e) {
+    showActionError(e, '操作失败，请稍后重试')
+  }
 }
 
 async function loadComments(postId) {
-  commentMap[postId] = await api.comments(postId)
+  try {
+    commentMap[postId] = await api.comments(postId)
+  } catch (e) {
+    showActionError(e, '评论加载失败，请稍后重试')
+  }
 }
 
 async function sendComment(postId) {
   if (!getToken()) return goLogin()
   if (!commentInputs[postId]) return
-  await api.createComment(postId, { content: commentInputs[postId], parentId: 0 })
-  commentInputs[postId] = ''
-  await loadComments(postId)
-  await loadPosts()
+  try {
+    await api.createComment(postId, { content: commentInputs[postId], parentId: 0 })
+    commentInputs[postId] = ''
+    await loadComments(postId)
+    await loadPosts()
+  } catch (e) {
+    showActionError(e, '评论发送失败，请稍后重试')
+  }
 }
 
 watch([selectedCategory, selectedSort], async () => {
@@ -234,7 +262,6 @@ onMounted(async () => {
               评论 {{ item.commentCount }}
             </button>
             <button class="btn-soft" @click="goPostDetail(item.postId)">查看详情</button>
-            <button v-if="isLoggedIn" class="btn-danger" @click="deletePost(item.postId)">删除</button>
           </div>
 
           <div v-if="commentMap[item.postId]" class="comment-block">

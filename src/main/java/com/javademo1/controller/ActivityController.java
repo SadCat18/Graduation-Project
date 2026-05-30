@@ -85,6 +85,12 @@ public class ActivityController {
         return ApiResponse.success(activityService.mySignedActivities(currentUser.id()));
     }
 
+    @GetMapping("/published/me")
+    public ApiResponse<List<Map<String, Object>>> myPublishedActivities() {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(activityService.myPublishedActivities(currentUser.id()));
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable("id") Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
