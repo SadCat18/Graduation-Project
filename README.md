@@ -6,6 +6,7 @@
 - 前端：`frontend`
 - 数据库脚本：`database/init.sql`
 - 高德安全代理（Nginx 示例）：`deploy/nginx/amap-security.conf.example`
+- 腾讯云 Docker 部署：`docs/tencent-cloud-deploy.md`
 
 ## 后端启动
 
@@ -115,3 +116,14 @@ Redis 连通性检查命令：
 ```powershell
 Test-NetConnection -ComputerName 127.0.0.1 -Port 6379
 ```
+
+## 腾讯云一键部署
+
+仓库已补充 Docker Compose 部署文件，可在腾讯云 CVM 上使用：
+
+```bash
+chmod +x scripts/deploy-tencent.sh
+./scripts/deploy-tencent.sh
+```
+
+首次运行会自动生成 `deploy/docker/.env`，补齐配置后再次执行即可。详细说明见 `docs/tencent-cloud-deploy.md`。

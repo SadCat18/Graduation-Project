@@ -1,19 +1,20 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: javademo1
   datasource:
-    url: jdbc:mysql://localhost:3306/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: appuser
-    password: App@123456
+    url: ${DB_URL:jdbc:mysql://localhost:3306/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:appuser}
+    password: ${DB_PASSWORD:App@123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: 127.0.0.1
-      port: 6379
-      timeout: 3000ms
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:3000ms}
   servlet:
     multipart:
       max-file-size: 10MB
@@ -28,5 +29,5 @@ spring:
     show-sql: false
 
 jwt:
-  secret: 4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a
-  expiration-hours: 24
+  secret: ${JWT_SECRET:4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a}
+  expiration-hours: ${JWT_EXPIRATION_HOURS:24}
