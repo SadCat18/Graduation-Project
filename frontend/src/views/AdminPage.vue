@@ -6,6 +6,14 @@ import { BULLETIN_TYPES } from '../constants/bulletin'
 
 const tab = ref('stats')
 const reviewCenterTab = ref('all')
+const contentTab = ref('notice')
+const reviewStatusFilter = ref('all')
+const reviewTypeFilter = ref('all')
+const reviewTimeFilter = ref('all')
+const reviewKeyword = ref('')
+const selectedReviewIds = ref([])
+const reviewDrawerVisible = ref(false)
+const reviewDrawerId = ref('')
 const ADMIN_PAGE_SIZE = 10
 const stats = ref({})
 const analytics = ref({
@@ -29,6 +37,7 @@ const newsList = ref([])
 const places = ref([])
 const placeReviews = ref([])
 const banners = ref([])
+const videos = ref([])
 const reports = ref([])
 const reviewActivities = ref([])
 const pageState = reactive({
@@ -39,11 +48,18 @@ const pageState = reactive({
 })
 const contentPageState = reactive({
   notices: 1,
-  bulletins: 1,
   news: 1,
   places: 1,
-  banners: 1
+  banners: 1,
+  videos: 1
 })
+const contentTabs = [
+  { key: 'notice', label: '公告' },
+  { key: 'news', label: '资讯' },
+  { key: 'place', label: '场地' },
+  { key: 'banner', label: '轮播图' },
+  { key: 'video', label: '视频' }
+]
 
 const noticeForm = reactive({ title: '', content: '', status: '0' })
 const newsForm = reactive({ title: '', content: '', category: '', cover: '' })
@@ -108,15 +124,15 @@ const postsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.posts.to
 const commentsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.comments.total || 0) / ADMIN_PAGE_SIZE)))
 const activitiesTotalPages = computed(() => Math.max(1, Math.ceil((pageState.activities.total || 0) / ADMIN_PAGE_SIZE)))
 const noticesTotalPages = computed(() => Math.max(1, Math.ceil((notices.value.length || 0) / ADMIN_PAGE_SIZE)))
-const bulletinsTotalPages = computed(() => Math.max(1, Math.ceil((bulletins.value.length || 0) / ADMIN_PAGE_SIZE)))
 const newsTotalPages = computed(() => Math.max(1, Math.ceil((newsList.value.length || 0) / ADMIN_PAGE_SIZE)))
 const placesTotalPages = computed(() => Math.max(1, Math.ceil((places.value.length || 0) / ADMIN_PAGE_SIZE)))
 const bannersTotalPages = computed(() => Math.max(1, Math.ceil((banners.value.length || 0) / ADMIN_PAGE_SIZE)))
+const videosTotalPages = computed(() => Math.max(1, Math.ceil((videos.value.length || 0) / ADMIN_PAGE_SIZE)))
 const pagedNotices = computed(() => sliceByPage(notices.value, contentPageState.notices))
-const pagedBulletins = computed(() => sliceByPage(bulletins.value, contentPageState.bulletins))
 const pagedNews = computed(() => sliceByPage(newsList.value, contentPageState.news))
 const pagedPlaces = computed(() => sliceByPage(places.value, contentPageState.places))
 const pagedBanners = computed(() => sliceByPage(banners.value, contentPageState.banners))
+const pagedVideos = computed(() => sliceByPage(videos.value, contentPageState.videos))
 const bulletinFilterOptions = computed(() => ['全部', ...BULLETIN_TYPES])
 const bulletinStatusOptions = [
   { label: '全部', value: '全部' },
@@ -137,11 +153,38 @@ function fmtTime(value) {
   return String(value || '').replace('T', ' ') || '-'
 }
 
+function isApprovedStatus(item) {
+  if (item.type === 'placeReview') return false
+  return item.status === '1'
+}
+
+function isRejectedStatus(item) {
+  if (item.type === 'placeReview') return false
+  return item.status === '2'
+}
+
+function toTimestamp(value) {
+  const t = new Date(value || '').getTime()
+  return Number.isFinite(t) ? t : 0
+}
+
+function keywordMatch(item, keyword) {
+  const k = String(keyword || '').trim().toLowerCase()
+  if (!k) return true
+  const text = [
+    item.title,
+    item.actor,
+    item.summary,
+    item.searchText
+  ].join(' ').toLowerCase()
+  return text.includes(k)
+}
+
 const pendingCounts = computed(() => {
-  const activity = reviewActivities.value.filter(item => item.reviewStatus === '0').length
-  const bulletin = reviewBulletins.value.filter(item => item.status === '0').length
-  const report = reports.value.filter(item => item.status === '0').length
-  const placeReview = placeReviews.value.length
+  const activity = filteredReviewCards.value.filter(item => item.type === 'activity').length
+  const bulletin = filteredReviewCards.value.filter(item => item.type === 'bulletin').length
+  const report = filteredReviewCards.value.filter(item => item.type === 'report').length
+  const placeReview = filteredReviewCards.value.filter(item => item.type === 'placeReview').length
   return { activity, bulletin, report, placeReview }
 })
 
@@ -156,7 +199,25 @@ const reviewCards = computed(() => {
     actor: item.publisherName || item.username || '未知发布人',
     time: fmtTime(item.createTime),
     summary: item.content || item.description || '暂无活动简介',
-    biz: `时间：${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}；地点：${item.address || '未填写'}`
+    fullContent: item.content || item.description || '暂无正文',
+    imageUrl: item.cover || item.imageUrl || '',
+    historyNote: item.rejectReason || '',
+    searchText: `${item.reason || ''} ${item.publisherName || ''} ${item.username || ''}`,
+    facts: [
+      { label: '活动时间', value: `${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}` },
+      { label: '地点', value: item.address || '未填写' },
+      { label: '报名人数', value: `${Number(item.signNum || 0)} / ${item.maxNum || '不限'}` },
+      { label: '审核状态', value: activityReviewLabel(item) },
+      { label: '活动状态', value: activityStatusLabel(item) }
+    ],
+    detailFacts: [
+      { label: '活动ID', value: String(item.activityId || '-') },
+      { label: '活动时间', value: `${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}` },
+      { label: '地点', value: item.address || '未填写' },
+      { label: '报名人数', value: `${Number(item.signNum || 0)} / ${item.maxNum || '不限'}` },
+      { label: '审核状态', value: activityReviewLabel(item) },
+      { label: '活动状态', value: activityStatusLabel(item) }
+    ]
   }))
   const bulletinCards = reviewBulletins.value.map(item => ({
     id: `bulletin-${item.bulletinId}`,
@@ -168,7 +229,21 @@ const reviewCards = computed(() => {
     actor: item.publisherName || '未知发布人',
     time: fmtTime(item.createTime),
     summary: item.content || '暂无摘要',
-    biz: `分类：${item.bulletinType || '未分类'}`
+    fullContent: item.content || '暂无正文',
+    imageUrl: item.cover || item.imageUrl || '',
+    historyNote: item.rejectReason || '',
+    searchText: `${item.bulletinType || ''} ${item.publisherName || ''}`,
+    facts: [
+      { label: '快讯分类', value: item.bulletinType || '未分类' },
+      { label: '发布人', value: item.publisherName || '未知发布人' },
+      { label: '发布时间', value: fmtTime(item.createTime) }
+    ],
+    detailFacts: [
+      { label: '快讯ID', value: String(item.bulletinId || '-') },
+      { label: '快讯分类', value: item.bulletinType || '未分类' },
+      { label: '发布人', value: item.publisherName || '未知发布人' },
+      { label: '发布时间', value: fmtTime(item.createTime) }
+    ]
   }))
   const reportCards = reports.value.map(item => ({
     id: `report-${item.reportId}`,
@@ -180,7 +255,25 @@ const reviewCards = computed(() => {
     actor: item.reporterName || '未知举报人',
     time: fmtTime(item.createTime),
     summary: item.detail || item.handleNote || '无补充说明',
-    biz: `举报类型：${item.targetType || '未知'}；原因：${item.reason || '未填写'}`
+    fullContent: item.detail || item.targetContent || item.handleNote || '暂无正文',
+    imageUrl: item.targetCover || '',
+    historyNote: item.handleNote || '',
+    searchText: `${item.reason || ''} ${item.detail || ''} ${item.reporterName || ''} ${item.targetTitle || ''}`,
+    facts: [
+      { label: '举报对象', value: `${item.targetType || '未知'} / ${item.targetTitle || '内容已删除'}` },
+      { label: '举报原因', value: item.reason || '未填写' },
+      { label: '举报人', value: item.reporterName || '未知举报人' },
+      { label: '补充说明', value: item.detail || '无' },
+      { label: '处理状态', value: item.statusLabel || (item.status === '0' ? '待处理' : '已处理') }
+    ],
+    detailFacts: [
+      { label: '举报ID', value: String(item.reportId || '-') },
+      { label: '举报对象', value: `${item.targetType || '未知'} / ${item.targetTitle || '内容已删除'}` },
+      { label: '举报原因', value: item.reason || '未填写' },
+      { label: '举报人', value: item.reporterName || '未知举报人' },
+      { label: '补充说明', value: item.detail || '无' },
+      { label: '处理状态', value: item.statusLabel || (item.status === '0' ? '待处理' : '已处理') }
+    ]
   }))
   const placeReviewCards = placeReviews.value.map(item => ({
     id: `place-review-${item.reviewId}`,
@@ -192,33 +285,172 @@ const reviewCards = computed(() => {
     actor: item.username || '匿名用户',
     time: fmtTime(item.createTime),
     summary: item.content || '无文字评价',
-    biz: `场地：${item.placeName || '未知'}`
+    fullContent: item.content || '无文字评价',
+    imageUrl: item.imageUrl || '',
+    historyNote: '',
+    searchText: `${item.placeName || ''} ${item.username || ''}`,
+    facts: [
+      { label: '场地名称', value: item.placeName || '未知' },
+      { label: '评分', value: `${item.score || '-'} 分` },
+      { label: '评价人', value: item.username || '匿名用户' }
+    ],
+    detailFacts: [
+      { label: '评价ID', value: String(item.reviewId || '-') },
+      { label: '场地名称', value: item.placeName || '未知' },
+      { label: '评分', value: `${item.score || '-'} 分` },
+      { label: '评价人', value: item.username || '匿名用户' }
+    ]
   }))
   return [...activityCards, ...bulletinCards, ...reportCards, ...placeReviewCards]
 })
 
 const filteredReviewCards = computed(() => {
+  let list = reviewCards.value
+
   if (reviewCenterTab.value === 'all') {
-    return reviewCards.value.filter(item =>
+    list = list.filter(item =>
       (item.type === 'activity' && item.status === '0') ||
       (item.type === 'bulletin' && item.status === '0') ||
       (item.type === 'report' && item.status === '0') ||
       item.type === 'placeReview'
     )
-  }
-  if (reviewCenterTab.value === 'done') {
-    return reviewCards.value.filter(item =>
+  } else if (reviewCenterTab.value === 'done') {
+    list = list.filter(item =>
       (item.type === 'activity' && item.status !== '0') ||
       (item.type === 'bulletin' && item.status !== '0') ||
       (item.type === 'report' && item.status !== '0')
     )
+  } else if (reviewCenterTab.value === 'activity') {
+    list = list.filter(item => item.type === 'activity' && item.status === '0')
+  } else if (reviewCenterTab.value === 'bulletin') {
+    list = list.filter(item => item.type === 'bulletin' && item.status === '0')
+  } else if (reviewCenterTab.value === 'report') {
+    list = list.filter(item => item.type === 'report' && item.status === '0')
+  } else if (reviewCenterTab.value === 'placeReview') {
+    list = list.filter(item => item.type === 'placeReview')
   }
-  if (reviewCenterTab.value === 'activity') return reviewCards.value.filter(item => item.type === 'activity' && item.status === '0')
-  if (reviewCenterTab.value === 'bulletin') return reviewCards.value.filter(item => item.type === 'bulletin' && item.status === '0')
-  if (reviewCenterTab.value === 'report') return reviewCards.value.filter(item => item.type === 'report' && item.status === '0')
-  if (reviewCenterTab.value === 'placeReview') return reviewCards.value.filter(item => item.type === 'placeReview')
-  return reviewCards.value
+
+  if (reviewTypeFilter.value !== 'all') {
+    list = list.filter(item => item.type === reviewTypeFilter.value)
+  }
+
+  if (reviewStatusFilter.value === 'pending') {
+    list = list.filter(item => item.type === 'placeReview' || item.status === '0')
+  } else if (reviewStatusFilter.value === 'approved') {
+    list = list.filter(item => isApprovedStatus(item) || (item.type === 'report' && item.status === '1'))
+  } else if (reviewStatusFilter.value === 'rejected') {
+    list = list.filter(item => isRejectedStatus(item))
+  }
+
+  if (reviewTimeFilter.value !== 'all') {
+    const now = new Date()
+    const nowTs = now.getTime()
+    let startTs = 0
+    if (reviewTimeFilter.value === 'today') {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      startTs = start.getTime()
+    } else if (reviewTimeFilter.value === '7d') {
+      startTs = nowTs - 7 * 24 * 60 * 60 * 1000
+    } else if (reviewTimeFilter.value === '30d') {
+      startTs = nowTs - 30 * 24 * 60 * 60 * 1000
+    }
+    list = list.filter(item => toTimestamp(item.time) >= startTs)
+  }
+
+  list = list.filter(item => keywordMatch(item, reviewKeyword.value))
+  if (selectedReviewIds.value.length) {
+    const ids = new Set(list.map(item => item.id))
+    selectedReviewIds.value = selectedReviewIds.value.filter(id => ids.has(id))
+  }
+  return list
 })
+
+const selectedReviewCards = computed(() => {
+  const ids = new Set(selectedReviewIds.value)
+  return filteredReviewCards.value.filter(item => ids.has(item.id))
+})
+
+const batchTypeLabel = computed(() => {
+  const types = [...new Set(selectedReviewCards.value.map(item => item.type))]
+  if (types.length !== 1) return ''
+  return types[0] === 'activity' ? '活动' : (types[0] === 'bulletin' ? '快讯' : '')
+})
+
+const canBatchApproveOrReject = computed(() => {
+  if (!selectedReviewCards.value.length) return false
+  const types = [...new Set(selectedReviewCards.value.map(item => item.type))]
+  if (types.length !== 1) return false
+  if (!['activity', 'bulletin'].includes(types[0])) return false
+  return selectedReviewCards.value.every(item => item.status === '0')
+})
+
+const allFilteredSelected = computed(() => {
+  if (!filteredReviewCards.value.length) return false
+  return filteredReviewCards.value.every(item => selectedReviewIds.value.includes(item.id))
+})
+
+const reviewDrawerItem = computed(() => reviewCards.value.find(item => item.id === reviewDrawerId.value) || null)
+
+function resetReviewFilters() {
+  reviewStatusFilter.value = 'all'
+  reviewTypeFilter.value = 'all'
+  reviewTimeFilter.value = 'all'
+  reviewKeyword.value = ''
+  reviewCenterTab.value = 'all'
+}
+
+function toggleSelectAllFiltered(checked) {
+  if (checked) {
+    selectedReviewIds.value = filteredReviewCards.value.map(item => item.id)
+  } else {
+    selectedReviewIds.value = []
+  }
+}
+
+function toggleSelectReview(id, checked) {
+  if (checked) {
+    if (!selectedReviewIds.value.includes(id)) selectedReviewIds.value.push(id)
+  } else {
+    selectedReviewIds.value = selectedReviewIds.value.filter(i => i !== id)
+  }
+}
+
+function openReviewDrawer(item) {
+  reviewDrawerId.value = item.id
+  reviewDrawerVisible.value = true
+}
+
+function closeReviewDrawer() {
+  reviewDrawerVisible.value = false
+}
+
+async function batchReview(action) {
+  if (!selectedReviewCards.value.length) {
+    alert('请先勾选要批量处理的内容')
+    return
+  }
+  if (!canBatchApproveOrReject.value) {
+    alert('仅支持同类型（活动或快讯）且待审核内容的批量处理，请重新选择')
+    return
+  }
+  const isApprove = action === 'approve'
+  const actionLabel = isApprove ? '通过' : '驳回'
+  const typeLabel = batchTypeLabel.value || '内容'
+  if (!confirm(`确认批量${actionLabel}${selectedReviewCards.value.length}条${typeLabel}吗？`)) return
+
+  const targets = [...selectedReviewCards.value]
+  for (const item of targets) {
+    if (item.type === 'activity') {
+      const source = reviewActivities.value.find(i => `activity-${i.activityId}` === item.id)
+      if (source) await api.adminReviewActivity(source.activityId, { status: isApprove ? '1' : '2' })
+    } else if (item.type === 'bulletin') {
+      const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
+      if (source) await api.adminReviewBulletin(source.bulletinId, { status: isApprove ? '1' : '2', rejectReason: '' })
+    }
+  }
+  selectedReviewIds.value = []
+  await Promise.all([loadActivities(), loadContentData(), loadReviewCenterData()])
+}
 
 function sliceByPage(list, page) {
   const start = (page - 1) * ADMIN_PAGE_SIZE
@@ -240,10 +472,10 @@ function normalizeServerPage(key) {
 
 function normalizeContentPages() {
   if (contentPageState.notices > noticesTotalPages.value) contentPageState.notices = noticesTotalPages.value
-  if (contentPageState.bulletins > bulletinsTotalPages.value) contentPageState.bulletins = bulletinsTotalPages.value
   if (contentPageState.news > newsTotalPages.value) contentPageState.news = newsTotalPages.value
   if (contentPageState.places > placesTotalPages.value) contentPageState.places = placesTotalPages.value
   if (contentPageState.banners > bannersTotalPages.value) contentPageState.banners = bannersTotalPages.value
+  if (contentPageState.videos > videosTotalPages.value) contentPageState.videos = videosTotalPages.value
 }
 
 function clearError(group, field) {
@@ -387,25 +619,20 @@ async function deleteActivity(id) {
 }
 
 async function loadContentData() {
-  const [noticeData, bulletinData, bulletinTypeStatData, newsData, placeData, bannerData, placeReviewData] = await Promise.all([
+  const [noticeData, newsData, placeData, bannerData, placeReviewData, videoData] = await Promise.all([
     api.adminNotices(),
-    api.adminBulletins({
-      type: bulletinTypeFilter.value === '全部' ? null : bulletinTypeFilter.value,
-      status: bulletinStatusFilter.value === '全部' ? null : bulletinStatusFilter.value
-    }),
-    api.adminBulletinTypeStats(),
     api.adminNews(),
     api.adminPlaces(),
     api.adminBanners(),
-    api.adminPlaceReviews()
+    api.adminPlaceReviews(),
+    api.adminVideos()
   ])
   notices.value = noticeData
-  bulletins.value = bulletinData
-  bulletinTypeStats.value = bulletinTypeStatData || []
   newsList.value = newsData
   places.value = placeData
   banners.value = bannerData
   placeReviews.value = placeReviewData || []
+  videos.value = videoData || []
   normalizeContentPages()
 }
 
@@ -555,16 +782,13 @@ async function deletePlaceReview(id) {
   await Promise.all([loadContentData(), loadReviewCenterData()])
 }
 
+async function deleteVideo(id) {
+  await api.adminDeleteVideo(id)
+  await loadContentData()
+}
+
 function viewReviewItem(item) {
-  alert([
-    `类型：${item.typeLabel}`,
-    `状态：${item.statusLabel}`,
-    `标题：${item.title}`,
-    `发布人/举报人：${item.actor}`,
-    `时间：${item.time}`,
-    `摘要：${item.summary}`,
-    `业务信息：${item.biz}`
-  ].join('\n'))
+  openReviewDrawer(item)
 }
 
 async function handleReviewCardAction(item, action) {
@@ -837,21 +1061,49 @@ onMounted(refreshAll)
       </div>
 
       <div v-if="tab === 'reviewCenter'" class="review-center">
+        <div class="card review-filter-bar">
+          <select v-model="reviewStatusFilter">
+            <option value="all">状态：全部</option>
+            <option value="pending">状态：待处理</option>
+            <option value="approved">状态：已通过/已处理</option>
+            <option value="rejected">状态：已驳回</option>
+          </select>
+          <select v-model="reviewTypeFilter">
+            <option value="all">类型：全部</option>
+            <option value="activity">活动</option>
+            <option value="bulletin">快讯</option>
+            <option value="report">举报</option>
+            <option value="placeReview">场地评价</option>
+          </select>
+          <select v-model="reviewTimeFilter">
+            <option value="all">时间：全部</option>
+            <option value="today">今天</option>
+            <option value="7d">近 7 天</option>
+            <option value="30d">近 30 天</option>
+          </select>
+          <input
+            v-model="reviewKeyword"
+            type="text"
+            placeholder="关键词：标题/发布人/举报原因"
+          />
+          <button class="btn-soft" @click="resetReviewFilters">重置筛选</button>
+        </div>
+
         <div class="card review-kpi-grid">
           <div class="review-kpi-card">
-            <p>待审活动</p>
+            <p>活动（当前结果）</p>
             <strong>{{ pendingCounts.activity }}</strong>
           </div>
           <div class="review-kpi-card">
-            <p>待审快讯</p>
+            <p>快讯（当前结果）</p>
             <strong>{{ pendingCounts.bulletin }}</strong>
           </div>
           <div class="review-kpi-card">
-            <p>待处理举报</p>
+            <p>举报（当前结果）</p>
             <strong>{{ pendingCounts.report }}</strong>
           </div>
           <div class="review-kpi-card">
-            <p>待审/待处理场地评价</p>
+            <p>场地评价（当前结果）</p>
             <strong>{{ pendingCounts.placeReview }}</strong>
           </div>
         </div>
@@ -869,38 +1121,118 @@ onMounted(refreshAll)
         </div>
 
         <div class="card content-list">
-          <div v-if="!filteredReviewCards.length" class="muted">当前筛选下暂无数据</div>
+          <div class="review-batch-bar">
+            <label class="review-check-all">
+              <input
+                type="checkbox"
+                :checked="allFilteredSelected"
+                @change="toggleSelectAllFiltered($event.target.checked)"
+              />
+              <span>全选当前列表</span>
+            </label>
+            <span class="muted">已选 {{ selectedReviewCards.length }} 条</span>
+            <button class="btn-primary" :disabled="!canBatchApproveOrReject" @click="batchReview('approve')">批量通过</button>
+            <button class="btn-soft" :disabled="!canBatchApproveOrReject" @click="batchReview('reject')">批量驳回</button>
+          </div>
+          <div v-if="!filteredReviewCards.length" class="muted">未找到匹配项，请调整筛选条件或关键词。</div>
           <div v-for="item in filteredReviewCards" :key="item.id" class="review-card">
-            <div class="review-card-head">
-              <span class="status-chip">{{ item.typeLabel }}</span>
-              <span class="status-chip">{{ item.statusLabel }}</span>
+            <div class="review-card-main">
+              <div class="review-card-head">
+                <label class="review-select">
+                  <input
+                    type="checkbox"
+                    :checked="selectedReviewIds.includes(item.id)"
+                    @change="toggleSelectReview(item.id, $event.target.checked)"
+                  />
+                </label>
+                <span class="status-chip">{{ item.typeLabel }}</span>
+                <span class="status-chip">{{ item.statusLabel }}</span>
+              </div>
+              <h3 class="review-title clamp-2">{{ item.title }}</h3>
+              <p class="review-meta">发布人：{{ item.actor }}</p>
             </div>
-            <h3>{{ item.title }}</h3>
-            <p class="review-meta">发布人/举报人：{{ item.actor }} · 发布时间：{{ item.time }}</p>
-            <p class="review-summary">{{ item.summary }}</p>
-            <p class="review-biz">{{ item.biz }}</p>
-            <div class="row-actions">
+
+            <div class="review-card-judge">
+              <p class="review-meta">发布时间：{{ item.time }}</p>
+              <p class="review-summary clamp-3">{{ item.summary }}</p>
+              <div class="review-facts">
+                <p v-for="fact in item.facts" :key="`${item.id}-${fact.label}`">
+                  <span>{{ fact.label }}：</span>{{ fact.value }}
+                </p>
+              </div>
+            </div>
+
+            <div class="review-card-actions">
               <template v-if="item.type === 'activity'">
-                <button v-if="item.status === '0'" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
+                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
               </template>
               <template v-else-if="item.type === 'bulletin'">
-                <button v-if="item.status === '0'" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
+                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
               </template>
               <template v-else-if="item.type === 'report'">
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'done')">标记已处理</button>
+                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'done')">标记已处理</button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
                 <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回举报</button>
                 <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除违规内容</button>
               </template>
               <template v-else-if="item.type === 'placeReview'">
-                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
               </template>
             </div>
           </div>
+        </div>
+
+        <div v-if="reviewDrawerVisible && reviewDrawerItem" class="review-drawer-mask" @click.self="closeReviewDrawer">
+          <aside class="review-drawer">
+            <div class="review-drawer-head">
+              <h3>审核详情</h3>
+              <button class="btn-soft" @click="closeReviewDrawer">关闭</button>
+            </div>
+            <div class="review-drawer-body">
+              <h4 class="review-drawer-title">{{ reviewDrawerItem.title }}</h4>
+              <p>类型：{{ reviewDrawerItem.typeLabel }} · 状态：{{ reviewDrawerItem.statusLabel }}</p>
+              <p>发布人/举报人：{{ reviewDrawerItem.actor }}</p>
+              <p>发布时间：{{ reviewDrawerItem.time }}</p>
+              <img v-if="reviewDrawerItem.imageUrl" :src="reviewDrawerItem.imageUrl" alt="详情图片" class="review-drawer-image" />
+              <div class="review-drawer-block">
+                <strong>完整正文</strong>
+                <p>{{ reviewDrawerItem.fullContent }}</p>
+              </div>
+              <div class="review-drawer-block">
+                <strong>业务信息</strong>
+                <p v-for="fact in reviewDrawerItem.detailFacts" :key="`drawer-${reviewDrawerItem.id}-${fact.label}`">
+                  <span>{{ fact.label }}：</span>{{ fact.value }}
+                </p>
+              </div>
+              <div v-if="reviewDrawerItem.historyNote" class="review-drawer-block">
+                <strong>历史处理备注</strong>
+                <p>{{ reviewDrawerItem.historyNote }}</p>
+              </div>
+            </div>
+            <div class="review-drawer-actions">
+              <template v-if="reviewDrawerItem.type === 'activity'">
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
+              </template>
+              <template v-else-if="reviewDrawerItem.type === 'bulletin'">
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
+              </template>
+              <template v-else-if="reviewDrawerItem.type === 'report'">
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'done')">标记已处理</button>
+                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回举报</button>
+                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除违规内容</button>
+              </template>
+              <template v-else-if="reviewDrawerItem.type === 'placeReview'">
+                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除</button>
+              </template>
+            </div>
+          </aside>
         </div>
       </div>
 
@@ -1002,8 +1334,20 @@ onMounted(refreshAll)
         </div>
       </div>
 
-      <div v-if="tab === 'content'" class="content-grid">
-        <div class="card form-card">
+      <div v-if="tab === 'content'" class="content-tab-panel">
+        <div class="card review-tabs">
+          <button
+            v-for="item in contentTabs"
+            :key="item.key"
+            class="btn-soft"
+            :class="{ active: contentTab === item.key }"
+            @click="contentTab = item.key"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+
+        <div v-if="contentTab === 'notice'" class="card form-card">
           <h3>公告管理</h3>
           <label class="field-caption">公告标题 <span class="required">*</span></label>
           <input
@@ -1033,41 +1377,9 @@ onMounted(refreshAll)
           </div>
         </div>
 
-        <div class="card form-card">
-          <h3>社区快讯审核</h3>
-          <div class="inline bulletin-tools">
-            <select v-model="bulletinTypeFilter" @change="applyBulletinTypeFilter">
-              <option v-for="item in bulletinFilterOptions" :key="item" :value="item">{{ item }}</option>
-            </select>
-            <select v-model="bulletinStatusFilter" @change="applyBulletinStatusFilter">
-              <option v-for="item in bulletinStatusOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
-            </select>
-            <span class="muted">当前分类：{{ bulletinTypeFilter }}</span>
-            <span class="muted">审核状态：{{ bulletinStatusOptions.find(i => i.value === bulletinStatusFilter)?.label }}</span>
-          </div>
-          <div class="bulletin-stats">
-            <span v-for="item in bulletinTypeStats" :key="item.type" class="stat-chip">{{ item.type }}：{{ item.count }}</span>
-          </div>
-          <div v-for="b in pagedBulletins" :key="b.bulletinId" class="mini-row">
-            <div>
-              <strong>{{ b.title }}</strong>
-              <p>{{ b.publisherName }} · {{ b.bulletinType }} · {{ b.status === '0' ? '待审核' : (b.status === '1' ? '已通过' : '已驳回') }}</p>
-            </div>
-            <div class="row-actions">
-              <button class="btn-soft" @click="reviewBulletin(b, '1')">通过</button>
-              <button class="btn-soft" @click="reviewBulletin(b, '2')">驳回</button>
-              <button class="btn-danger" @click="deleteBulletin(b.bulletinId)">删除</button>
-            </div>
-          </div>
-          <div class="pagination-bar compact">
-            <button class="btn-soft" :disabled="contentPageState.bulletins <= 1" @click="changeContentPage('bulletins', contentPageState.bulletins - 1, bulletinsTotalPages)">上一页</button>
-            <span class="muted">第 {{ contentPageState.bulletins }} / {{ bulletinsTotalPages }} 页</span>
-            <button class="btn-soft" :disabled="contentPageState.bulletins >= bulletinsTotalPages" @click="changeContentPage('bulletins', contentPageState.bulletins + 1, bulletinsTotalPages)">下一页</button>
-          </div>
-        </div>
-
-        <div class="card form-card">
+        <div v-if="contentTab === 'news'" class="card form-card">
           <h3>资讯管理</h3>
+          <p class="muted">快讯审核已迁移至“审核中心”。</p>
           <label class="field-caption">资讯标题 <span class="required">*</span></label>
           <input
             v-model="newsForm.title"
@@ -1098,7 +1410,7 @@ onMounted(refreshAll)
           </div>
         </div>
 
-        <div class="card form-card">
+        <div v-if="contentTab === 'place'" class="card form-card">
           <h3>场地管理</h3>
           <label class="field-caption">场地名称 <span class="required">*</span></label>
           <input
@@ -1136,16 +1448,6 @@ onMounted(refreshAll)
             <strong>{{ p.name }}（{{ p.score }}）</strong>
             <button class="btn-danger" @click="deletePlace(p.placeId)">删除</button>
           </div>
-          <h4>场地评价治理</h4>
-          <div v-if="!placeReviews.length" class="empty-tip">暂无场地评价记录。</div>
-          <div v-for="r in placeReviews.slice(0, 20)" :key="r.reviewId" class="mini-row">
-            <div>
-              <strong>{{ r.placeName }} · {{ r.score }} 分</strong>
-              <p>{{ r.username }} · {{ String(r.createTime || '').replace('T', ' ') }}</p>
-              <p>{{ r.content || '无文字内容' }}</p>
-            </div>
-            <button class="btn-danger" @click="deletePlaceReview(r.reviewId)">删除评价</button>
-          </div>
           <div class="pagination-bar compact">
             <button class="btn-soft" :disabled="contentPageState.places <= 1" @click="changeContentPage('places', contentPageState.places - 1, placesTotalPages)">上一页</button>
             <span class="muted">第 {{ contentPageState.places }} / {{ placesTotalPages }} 页</span>
@@ -1153,7 +1455,7 @@ onMounted(refreshAll)
           </div>
         </div>
 
-        <div class="card form-card">
+        <div v-if="contentTab === 'banner'" class="card form-card">
           <h3>轮播图管理</h3>
           <label class="field-caption">轮播标题 <span class="required">*</span></label>
           <input
@@ -1232,6 +1534,23 @@ onMounted(refreshAll)
             <button class="btn-soft" :disabled="contentPageState.banners <= 1" @click="changeContentPage('banners', contentPageState.banners - 1, bannersTotalPages)">上一页</button>
             <span class="muted">第 {{ contentPageState.banners }} / {{ bannersTotalPages }} 页</span>
             <button class="btn-soft" :disabled="contentPageState.banners >= bannersTotalPages" @click="changeContentPage('banners', contentPageState.banners + 1, bannersTotalPages)">下一页</button>
+          </div>
+        </div>
+
+        <div v-if="contentTab === 'video'" class="card form-card">
+          <h3>视频管理</h3>
+          <div v-if="!pagedVideos.length" class="muted">暂无视频数据</div>
+          <div v-for="v in pagedVideos" :key="v.videoId" class="mini-row">
+            <div>
+              <strong>{{ v.title || `视频 #${v.videoId}` }}</strong>
+              <p>{{ (v.username || v.publisherName || '未知发布人') }} · {{ String(v.createTime || '').replace('T', ' ') }}</p>
+            </div>
+            <button class="btn-danger" @click="deleteVideo(v.videoId)">删除</button>
+          </div>
+          <div class="pagination-bar compact">
+            <button class="btn-soft" :disabled="contentPageState.videos <= 1" @click="changeContentPage('videos', contentPageState.videos - 1, videosTotalPages)">上一页</button>
+            <span class="muted">第 {{ contentPageState.videos }} / {{ videosTotalPages }} 页</span>
+            <button class="btn-soft" :disabled="contentPageState.videos >= videosTotalPages" @click="changeContentPage('videos', contentPageState.videos + 1, videosTotalPages)">下一页</button>
           </div>
         </div>
       </div>
@@ -1429,6 +1748,18 @@ onMounted(refreshAll)
   gap: 12px;
 }
 
+.review-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr)) 220px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.review-filter-bar input,
+.review-filter-bar select {
+  width: 100%;
+}
+
 .review-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));
@@ -1460,21 +1791,99 @@ onMounted(refreshAll)
   flex-wrap: wrap;
 }
 
+.review-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+}
+
+.review-check-all,
+.review-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .review-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 12px;
   background: #fff;
+  display: grid;
+  gap: 10px;
 }
 
-.review-card h3 {
-  margin: 8px 0 6px;
+.review-title {
+  margin: 6px 0 0;
   font-size: 16px;
+  line-height: 1.4;
 }
 
 .review-card-head {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-card-main {
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.review-card-judge {
+  display: grid;
+  gap: 6px;
+}
+
+.review-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 6px 12px;
+}
+
+.review-facts p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.review-facts span {
+  color: var(--text-soft);
+}
+
+.review-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-card-actions .btn-primary {
+  font-weight: 700;
+}
+
+.review-card-actions .btn-danger {
+  border-width: 1px;
+}
+
+.clamp-2,
+.clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+.clamp-2 {
+  -webkit-line-clamp: 2;
+}
+
+.clamp-3 {
+  -webkit-line-clamp: 3;
+  word-break: break-word;
 }
 
 .review-meta,
@@ -1483,6 +1892,86 @@ onMounted(refreshAll)
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.review-drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.review-drawer {
+  width: min(640px, 92vw);
+  height: 100vh;
+  background: #fff;
+  border-left: 1px solid var(--line);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.review-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-drawer-head h3 {
+  margin: 0;
+}
+
+.review-drawer-body {
+  padding: 14px 16px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.review-drawer-title {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.review-drawer-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.review-drawer-block {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.review-drawer-block strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.review-drawer-block p {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.review-drawer-block p:last-child {
+  margin-bottom: 0;
+}
+
+.review-drawer-actions {
+  border-top: 1px solid var(--line);
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .trend-table-wrap {
@@ -1570,6 +2059,11 @@ onMounted(refreshAll)
 .content-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.content-tab-panel {
+  display: grid;
   gap: 12px;
 }
 
@@ -1704,6 +2198,31 @@ onMounted(refreshAll)
 
   .review-kpi-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .review-filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .review-batch-bar {
+    align-items: flex-start;
+  }
+
+  .review-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .review-drawer-mask {
+    align-items: flex-end;
+  }
+
+  .review-drawer {
+    width: 100vw;
+    height: min(88vh, 100vh);
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
   }
 
   .content-grid {

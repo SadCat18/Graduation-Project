@@ -102,6 +102,8 @@ export const api = {
   adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`)
   ,
   adminPlaceReviews: () => http.get('/api/admin/place-reviews'),
-  adminDeletePlaceReview: (id) => http.delete(`/api/admin/place-reviews/${id}`)
+  adminDeletePlaceReview: (id) => http.delete(`/api/admin/place-reviews/${id}`),
+  adminVideos: () => http.get('/api/admin/videos'),
+  adminDeleteVideo: (id) => http.delete(`/api/admin/videos/${id}`)
 }
 

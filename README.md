@@ -42,8 +42,8 @@ npm run serve
 
 当前项目使用：
 
-- Key：`6003345b78ed25b126a76cb9caf08a7b`
-- securityJsCode：`04038403ad1a9bbe9320ee87939b86f2`
+- Key：`YOUR_AMAP_KEY`
+- securityJsCode：`YOUR_AMAP_SECURITY_JS_CODE`
 
 ### 1）配置 Nginx 反向代理
 
