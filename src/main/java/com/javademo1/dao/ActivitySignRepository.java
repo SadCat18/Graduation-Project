@@ -3,6 +3,7 @@ package com.javademo1.dao;
 import com.javademo1.pojo.ActivitySign;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +20,7 @@ public interface ActivitySignRepository extends JpaRepository<ActivitySign, Long
     long countByActivityIdAndSignStatus(Long activityId, String signStatus);
 
     Optional<ActivitySign> findBySignIdAndActivityId(Long signId, Long activityId);
+
+    long countBySignTimeBetween(LocalDateTime start, LocalDateTime end);
 }
 

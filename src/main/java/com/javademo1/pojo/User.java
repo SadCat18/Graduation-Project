@@ -43,6 +43,17 @@ public class User {
     @Column(length = 200)
     private String bio;
 
+    private Integer exp = 0;
+
+    @Transient
+    private Integer level;
+
+    @Transient
+    private Integer nextLevelNeedExp;
+
+    @Transient
+    private Integer remainToNextLevel;
+
     private LocalDateTime createTime;
 
     @PrePersist
@@ -55,6 +66,9 @@ public class User {
         }
         if (bulletinPermission == null) {
             bulletinPermission = "0";
+        }
+        if (exp == null) {
+            exp = 0;
         }
     }
 }

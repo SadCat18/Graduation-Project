@@ -9,3 +9,8 @@ export const BULLETIN_TYPES = [
   '经验分享'
 ]
 
+export const BULLETIN_SORT_OPTIONS = [
+  { label: '最新发布', value: 'latest' },
+  { label: '热门快讯', value: 'hot' },
+  { label: '同城优先', value: 'city' }
+]

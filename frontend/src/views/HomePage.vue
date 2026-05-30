@@ -5,6 +5,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { normalizeMediaUrl } from '../utils/url'
+import { getToken } from '../utils/auth'
 
 const router = useRouter()
 
@@ -15,6 +16,8 @@ const activities = ref([])
 const notices = ref([])
 const bulletins = ref([])
 const newsList = ref([])
+const recommendPosts = ref([])
+const recommendActivities = ref([])
 const currentSlide = ref(0)
 let timerId = null
 
@@ -129,6 +132,19 @@ async function loadHomeData() {
     notices.value = noticeData || []
     bulletins.value = bulletinData || []
     newsList.value = newsData || []
+    if (getToken()) {
+      try {
+        const rec = await api.recommendations()
+        recommendPosts.value = rec?.posts || []
+        recommendActivities.value = rec?.activities || []
+      } catch (_) {
+        recommendPosts.value = []
+        recommendActivities.value = []
+      }
+    } else {
+      recommendPosts.value = []
+      recommendActivities.value = []
+    }
     currentSlide.value = 0
     startAutoplay()
   } finally {
@@ -234,6 +250,28 @@ watch(currentSlide, () => {
     </section>
 
     <section class="grid-2">
+      <div class="card" v-if="recommendPosts.length || recommendActivities.length">
+        <div class="section-head">
+          <h3>为你推荐</h3>
+        </div>
+        <div
+          v-for="item in recommendPosts.slice(0, 3)"
+          :key="`rp-${item.postId}`"
+          class="feed-item clickable-feed-item"
+          @click="goPostDetail(item.postId)"
+        >
+          <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="推荐帖子封面" />
+          <div>
+            <h4>{{ item.title }}</h4>
+            <p class="muted">{{ item.authorName }} · {{ item.category || '未分类' }}</p>
+          </div>
+        </div>
+        <div v-for="item in recommendActivities.slice(0, 2)" :key="`ra-${item.activityId}`" class="activity-item">
+          <h4>{{ item.title }}</h4>
+          <p class="muted">{{ item.city || '未设置城市' }} {{ item.district || '' }} · {{ activityStatusText(item) }}</p>
+        </div>
+      </div>
+
       <div class="card">
         <div class="section-head">
           <h3>社区精选帖子</h3>
@@ -391,6 +429,7 @@ watch(currentSlide, () => {
   margin: 12px 0 10px;
   font-size: clamp(34px, 4.6vw, 62px);
   line-height: 1.06;
+  word-break: break-word;
 }
 
 .carousel-mask p {
@@ -462,6 +501,7 @@ watch(currentSlide, () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .event-meta {
@@ -584,6 +624,7 @@ watch(currentSlide, () => {
 
 .news-row p {
   margin: 0;
+  word-break: break-word;
 }
 
 .news-row span {
@@ -700,6 +741,56 @@ watch(currentSlide, () => {
   .hero-stage {
     min-height: 340px;
     height: 340px;
+  }
+
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-actions button {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-wrap {
+    gap: 12px;
+  }
+
+  .carousel-main,
+  .carousel-main img,
+  .hero-stage {
+    min-height: 290px;
+    height: 290px;
+  }
+
+  .carousel-mask {
+    top: 20px;
+    left: 12px;
+    width: calc(100% - 24px);
+  }
+
+  .carousel-mask h1 {
+    margin: 8px 0;
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .hero-actions {
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .hero-actions button {
+    flex: 1 1 100%;
+  }
+
+  .info-head h3 {
+    font-size: 32px;
+  }
+
+  .featured-text h4 {
+    font-size: 24px;
   }
 }
 </style>

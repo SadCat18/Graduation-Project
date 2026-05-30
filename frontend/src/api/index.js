@@ -24,6 +24,7 @@ export const api = {
   createComment: (id, data) => http.post(`/api/posts/${id}/comments`, data),
   likePost: (id) => http.post(`/api/posts/${id}/like`),
   collectPost: (id) => http.post(`/api/posts/${id}/collect`),
+  watchLaterPost: (id) => http.post(`/api/posts/${id}/watch-later`),
 
   publicActivities: (params) => http.get('/api/public/activities', { params }),
   myActivities: (params) => http.get('/api/activities', { params }),
@@ -45,6 +46,8 @@ export const api = {
   news: () => http.get('/api/public/news'),
   newsDetail: (id) => http.get(`/api/public/news/${id}`),
   places: () => http.get('/api/public/places'),
+  placeDetail: (id) => http.get(`/api/public/places/${id}`),
+  placeReviews: (id) => http.get(`/api/public/places/${id}/reviews`),
   videos: () => http.get('/api/public/videos'),
   publicBanners: () => http.get('/api/public/banners'),
   createVideo: (data) => http.post('/api/videos', data),
@@ -53,8 +56,14 @@ export const api = {
   updateProfile: (data) => http.put('/api/user/profile', data),
   updatePassword: (data) => http.put('/api/user/password', data),
   dashboard: () => http.get('/api/user/dashboard'),
+  myContent: () => http.get('/api/user/my-content'),
+  createReport: (data) => http.post('/api/user/reports', data),
+  createPlaceReview: (data) => http.post('/api/user/place-reviews', data),
   messages: () => http.get('/api/user/messages'),
+  notifications: (params) => http.get('/api/user/notifications', { params }),
+  recommendations: () => http.get('/api/user/recommendations'),
   readMessage: (id) => http.put(`/api/user/messages/${id}/read`),
+  readAllMessages: () => http.put('/api/user/messages/read-all'),
 
   adminUsers: (params) => http.get('/api/admin/users', { params }),
   adminUserStatus: (id, status) => http.put(`/api/admin/users/${id}/status`, null, { params: { status } }),
@@ -69,6 +78,10 @@ export const api = {
   adminReviewActivity: (id, data) => http.put(`/api/admin/activities/${id}/review`, data),
   adminDeleteActivity: (id) => http.delete(`/api/admin/activities/${id}`),
   adminStats: () => http.get('/api/admin/stats'),
+  adminAnalytics: () => http.get('/api/admin/analytics'),
+  adminReports: () => http.get('/api/admin/reports'),
+  adminHandleReport: (id, data) => http.put(`/api/admin/reports/${id}/handle`, data),
+  adminDeleteReportedTarget: (id) => http.delete(`/api/admin/reports/${id}/target`),
   adminNotices: () => http.get('/api/admin/notices'),
   adminCreateNotice: (data) => http.post('/api/admin/notices', data),
   adminUpdateNotice: (id, data) => http.put(`/api/admin/notices/${id}`, data),
@@ -87,5 +100,8 @@ export const api = {
   adminPlaces: () => http.get('/api/admin/places'),
   adminCreatePlace: (data) => http.post('/api/admin/places', data),
   adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`)
+  ,
+  adminPlaceReviews: () => http.get('/api/admin/place-reviews'),
+  adminDeletePlaceReview: (id) => http.delete(`/api/admin/place-reviews/${id}`)
 }
 

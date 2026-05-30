@@ -15,6 +15,7 @@ const loading = ref(false)
 const error = ref('')
 const commentInput = ref('')
 const postingComment = ref(false)
+const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违法违规', '其他']
 
 const isLoggedIn = computed(() => !!getToken())
 const postId = computed(() => Number(route.params.id))
@@ -23,8 +24,7 @@ function parseImages(images) {
   if (!images) return []
   return String(images)
     .split(',')
-    .map(item => item.trim())
-    .map(item => normalizeMediaUrl(item))
+    .map(item => normalizeMediaUrl(item.trim()))
     .filter(Boolean)
 }
 
@@ -50,13 +50,9 @@ async function loadPostDetail() {
 }
 
 async function sendComment() {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   const content = commentInput.value.trim()
   if (!content) return
-
   postingComment.value = true
   try {
     await api.createComment(postId.value, { content, parentId: 0 })
@@ -68,21 +64,47 @@ async function sendComment() {
 }
 
 async function toggleLike() {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   await api.likePost(postId.value)
   await loadPostDetail()
 }
 
 async function toggleCollect() {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   await api.collectPost(postId.value)
   await loadPostDetail()
+}
+
+async function toggleWatchLater() {
+  if (!isLoggedIn.value) return router.push('/login')
+  await api.watchLaterPost(postId.value)
+  await loadPostDetail()
+}
+
+function chooseReportReason() {
+  const tip = REPORT_REASONS.map((item, idx) => `${idx + 1}. ${item}`).join('\n')
+  const picked = window.prompt(`请选择举报原因，输入序号：\n${tip}`, '1')
+  const idx = Number(picked) - 1
+  if (!Number.isInteger(idx) || idx < 0 || idx >= REPORT_REASONS.length) return ''
+  return REPORT_REASONS[idx]
+}
+
+async function reportPost() {
+  if (!isLoggedIn.value) return router.push('/login')
+  const reason = chooseReportReason()
+  if (!reason) return
+  const detail = window.prompt('可补充举报说明（可留空）', '') || ''
+  await api.createReport({ targetType: 'POST', targetId: postId.value, reason, detail })
+  alert('举报已提交，感谢反馈')
+}
+
+async function reportComment(commentId) {
+  if (!isLoggedIn.value) return router.push('/login')
+  const reason = chooseReportReason()
+  if (!reason) return
+  const detail = window.prompt('可补充举报说明（可留空）', '') || ''
+  await api.createReport({ targetType: 'COMMENT', targetId: commentId, reason, detail })
+  alert('举报已提交，感谢反馈')
 }
 
 onMounted(loadPostDetail)
@@ -106,7 +128,7 @@ onMounted(loadPostDetail)
           <h2>{{ post.title }}</h2>
           <span class="tag">{{ post.category || '未分类' }}</span>
         </div>
-        <p class="muted">作者：{{ post.authorName }} · {{ post.createTime?.replace('T', ' ') }}</p>
+        <p class="muted">作者：{{ post.authorName }} · Lv{{ post.authorLevel || 1 }} · {{ post.createTime?.replace('T', ' ') }}</p>
         <p class="post-content">{{ post.content }}</p>
 
         <div v-if="parseImages(post.images).length" class="post-images">
@@ -122,14 +144,10 @@ onMounted(loadPostDetail)
         </div>
 
         <div class="inline action-row">
-          <button class="btn-soft" @click="toggleLike">
-            <AppIcon name="like" :size="14" />
-            点赞 {{ post.likeCount || 0 }}
-          </button>
-          <button class="btn-soft" @click="toggleCollect">
-            <AppIcon name="collect" :size="14" />
-            收藏 {{ post.collectCount || 0 }}
-          </button>
+          <button class="btn-soft" @click="toggleLike">点赞 {{ post.likeCount || 0 }}</button>
+          <button class="btn-soft" @click="toggleCollect">收藏 {{ post.collectCount || 0 }}</button>
+          <button class="btn-soft" @click="toggleWatchLater">稍后再看</button>
+          <button class="btn-soft" @click="reportPost">举报帖子</button>
           <span class="muted">评论 {{ post.commentCount || comments.length }}</span>
         </div>
       </template>
@@ -140,7 +158,10 @@ onMounted(loadPostDetail)
       <div v-if="!comments.length" class="empty-state">还没有评论，快来抢沙发吧。</div>
       <div v-for="item in comments" :key="item.commentId" class="list-item">
         <p><strong>{{ item.username }}：</strong>{{ item.content }}</p>
-        <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
+        <div class="inline">
+          <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
+          <button class="btn-soft" @click="reportComment(item.commentId)">举报</button>
+        </div>
       </div>
 
       <div class="inline comment-row">
@@ -154,62 +175,13 @@ onMounted(loadPostDetail)
 </template>
 
 <style scoped>
-.detail-wrap {
-  display: grid;
-  gap: 14px;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.post-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.post-head h2 {
-  margin: 0;
-}
-
-.post-content {
-  white-space: pre-wrap;
-}
-
-.post-images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
-}
-
-.post-images img {
-  width: 100%;
-  height: 110px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid var(--line);
-}
-
-.action-row {
-  margin-top: 8px;
-}
-
-.comment-row {
-  margin-top: 10px;
-  align-items: stretch;
-}
-
-.comment-row input {
-  flex: 1;
-}
-
-@media (max-width: 768px) {
-  .post-images {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .comment-row {
-    flex-direction: column;
-  }
-}
+.detail-wrap { display: grid; gap: 14px; max-width: 960px; margin: 0 auto; }
+.post-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.post-head h2 { margin: 0; }
+.post-content { white-space: pre-wrap; }
+.post-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.post-images img { width: 100%; height: 110px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+.action-row { margin-top: 8px; }
+.comment-row { margin-top: 10px; align-items: stretch; }
+.comment-row input { flex: 1; }
 </style>

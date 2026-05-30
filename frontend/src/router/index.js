@@ -14,6 +14,7 @@ import BulletinPublishPage from '../views/BulletinPublishPage.vue'
 import NewsDetailPage from '../views/NewsDetailPage.vue'
 import ProfilePage from '../views/ProfilePage.vue'
 import AdminPage from '../views/AdminPage.vue'
+import PlaceDetailPage from '../views/PlaceDetailPage.vue'
 
 const routes = [
   { path: '/login', component: LoginPage },
@@ -24,6 +25,7 @@ const routes = [
   { path: '/community/publish', component: PostPublishPage, meta: { requiresAuth: true } },
   { path: '/activities', component: ActivitiesPage },
   { path: '/activities/publish', component: ActivityPublishPage, meta: { requiresAuth: true } },
+  { path: '/places/:id', component: PlaceDetailPage },
   { path: '/bulletins', component: BulletinListPage },
   { path: '/bulletins/:id', component: BulletinDetailPage },
   { path: '/bulletins/publish', component: BulletinPublishPage, meta: { requiresAuth: true } },
@@ -52,4 +54,3 @@ router.beforeEach((to) => {
 })
 
 export default router
-

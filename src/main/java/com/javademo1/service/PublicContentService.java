@@ -26,6 +26,7 @@ public class PublicContentService {
     private final VideoRepository videoRepository;
     private final BannerRepository bannerRepository;
     private final CommunityBulletinService communityBulletinService;
+    private final PlaceReviewService placeReviewService;
 
     public List<Notice> notices() {
         return noticeRepository.findByStatusOrderByCreateTimeDesc("0");
@@ -53,6 +54,25 @@ public class PublicContentService {
 
     public List<Place> places() {
         return placeRepository.findAllByOrderByScoreDescCreateTimeDesc();
+    }
+
+    public java.util.Map<String, Object> placeDetail(Long placeId) {
+        Place place = placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        map.put("placeId", place.getPlaceId());
+        map.put("name", place.getName());
+        map.put("address", place.getAddress());
+        map.put("intro", place.getIntro());
+        map.put("score", place.getScore());
+        map.put("reviewCount", place.getReviewCount());
+        map.put("createTime", place.getCreateTime());
+        map.put("latestReview", placeReviewService.latestReview(placeId));
+        return map;
+    }
+
+    public List<java.util.Map<String, Object>> placeReviews(Long placeId) {
+        placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
+        return placeReviewService.listByPlace(placeId);
     }
 
     public List<Video> videos() {

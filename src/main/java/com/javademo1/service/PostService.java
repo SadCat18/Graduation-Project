@@ -32,14 +32,25 @@ public class PostService {
     private final UserRepository userRepository;
     private final InteractionRepository interactionRepository;
     private final MessageNotifyService messageNotifyService;
+    private final UserGrowthService userGrowthService;
 
-    public PageResult<Map<String, Object>> list(String category, Integer page, Integer size) {
+    public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
         int currentPage = page == null || page < 1 ? 1 : page;
         int currentSize = size == null || size < 1 ? 10 : Math.min(size, 50);
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        String normalizedCategory = category == null ? "" : category.trim();
+        String normalizedSort = sort == null ? "latest" : sort.trim().toLowerCase();
+        if (!"latest".equals(normalizedSort) && !"hot".equals(normalizedSort)
+                && !"likes".equals(normalizedSort) && !"comments".equals(normalizedSort)) {
+            normalizedSort = "latest";
+        }
         PageRequest pageRequest = PageRequest.of(currentPage - 1, currentSize);
-        Page<Post> postPage = (category == null || category.isBlank())
-                ? postRepository.findAllByOrderByIsTopDescCreateTimeDesc(pageRequest)
-                : postRepository.findByCategoryOrderByIsTopDescCreateTimeDesc(category, pageRequest);
+        Page<Post> postPage = postRepository.searchPublicPosts(
+                normalizedKeyword,
+                normalizedCategory,
+                normalizedSort,
+                pageRequest
+        );
         List<Map<String, Object>> list = postPage.getContent().stream().map(this::toPostVO).toList();
         return new PageResult<>(postPage.getTotalElements(), list);
     }
@@ -56,13 +67,15 @@ public class PostService {
         post.setContent(request.getContent());
         post.setImages(request.getImages());
         post.setCategory(request.getCategory());
-        return postRepository.save(post);
+        Post saved = postRepository.save(post);
+        userGrowthService.grantExp(currentUser.id(), "POST_CREATE", "POST", saved.getPostId(), 20);
+        return saved;
     }
 
     public Post update(CurrentUser currentUser, Long postId, PostUpdateRequest request) {
         Post post = getPost(postId);
         if (!post.getUserId().equals(currentUser.id())) {
-            throw new BizException("只能编辑自己的帖子");
+            throw new BizException("只能编辑自己发布的帖子");
         }
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
@@ -74,7 +87,7 @@ public class PostService {
     public void delete(CurrentUser currentUser, Long postId, boolean isAdmin) {
         Post post = getPost(postId);
         if (!isAdmin && !post.getUserId().equals(currentUser.id())) {
-            throw new BizException("无权限删除");
+            throw new BizException("无权删除该帖子");
         }
         postRepository.delete(post);
     }
@@ -94,8 +107,9 @@ public class PostService {
         comment.setParentId(request.getParentId() == null ? 0L : request.getParentId());
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
+        userGrowthService.grantExp(currentUser.id(), "POST_COMMENT", "COMMENT", saved.getCommentId(), 8);
         if (!post.getUserId().equals(currentUser.id())) {
-            messageNotifyService.send(post.getUserId(), "COMMENT", "你的帖子收到新评论：" + post.getTitle());
+            messageNotifyService.send(post.getUserId(), "COMMENT", "你的帖子收到新评论：" + post.getTitle(), "POST", post.getPostId());
         }
         return saved;
     }
@@ -111,7 +125,7 @@ public class PostService {
             commentRepository.delete(comment);
             return;
         }
-        throw new BizException("无权限删除评论");
+        throw new BizException("无权删除该评论");
     }
 
     public Map<String, Object> toggleLike(CurrentUser currentUser, Long postId) {
@@ -120,6 +134,10 @@ public class PostService {
 
     public Map<String, Object> toggleCollect(CurrentUser currentUser, Long postId) {
         return toggleInteraction(currentUser, postId, "COLLECT");
+    }
+
+    public Map<String, Object> toggleWatchLater(CurrentUser currentUser, Long postId) {
+        return toggleInteraction(currentUser, postId, "WATCH_LATER");
     }
 
     public Post top(Long postId, String top) {
@@ -143,7 +161,10 @@ public class PostService {
             interactionRepository.save(interaction);
             active = true;
             if (!post.getUserId().equals(currentUser.id()) && "LIKE".equals(type)) {
-                messageNotifyService.send(post.getUserId(), "LIKE", "你的帖子收到一个赞：" + post.getTitle());
+                messageNotifyService.send(post.getUserId(), "LIKE", "你的帖子收到一个赞：" + post.getTitle(), "POST", post.getPostId());
+            }
+            if ("LIKE".equals(type)) {
+                userGrowthService.grantExp(currentUser.id(), "POST_LIKE", "POST", postId, 2);
             }
         } else {
             interactionRepository.delete(exists);
@@ -182,6 +203,12 @@ public class PostService {
         User user = userRepository.findById(post.getUserId()).orElse(null);
         map.put("authorName", user == null ? "已注销用户" : user.getUsername());
         map.put("authorAvatar", user == null ? null : user.getAvatar());
+        if (user != null) {
+            userGrowthService.fillGrowthInfo(user);
+            map.put("authorLevel", user.getLevel());
+        } else {
+            map.put("authorLevel", 1);
+        }
         return map;
     }
 

@@ -29,6 +29,8 @@ public class Activity {
     @Column(length = 100)
     private String place;
 
+    private Long placeId;
+
     @Column(length = 200)
     private String address;
 

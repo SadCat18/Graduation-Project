@@ -26,10 +26,12 @@ public class PublicController {
     private final PublicContentService publicContentService;
 
     @GetMapping("/posts")
-    public ApiResponse<PageResult<Map<String, Object>>> posts(@RequestParam(required = false) String category,
+    public ApiResponse<PageResult<Map<String, Object>>> posts(@RequestParam(required = false) String keyword,
+                                                              @RequestParam(required = false) String category,
+                                                              @RequestParam(required = false) String sort,
                                                               @RequestParam(required = false) Integer page,
                                                               @RequestParam(required = false) Integer size) {
-        return ApiResponse.success(postService.list(category, page, size));
+        return ApiResponse.success(postService.list(keyword, category, sort, page, size));
     }
 
     @GetMapping("/posts/{id}")
@@ -84,6 +86,16 @@ public class PublicController {
     @GetMapping("/places")
     public ApiResponse<List<Place>> places() {
         return ApiResponse.success(publicContentService.places());
+    }
+
+    @GetMapping("/places/{id}")
+    public ApiResponse<Map<String, Object>> placeDetail(@PathVariable("id") Long placeId) {
+        return ApiResponse.success(publicContentService.placeDetail(placeId));
+    }
+
+    @GetMapping("/places/{id}/reviews")
+    public ApiResponse<List<Map<String, Object>>> placeReviews(@PathVariable("id") Long placeId) {
+        return ApiResponse.success(publicContentService.placeReviews(placeId));
     }
 
     @GetMapping("/videos")

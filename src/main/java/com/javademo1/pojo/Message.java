@@ -25,6 +25,11 @@ public class Message {
     @Column(length = 200)
     private String content;
 
+    @Column(length = 20)
+    private String targetType;
+
+    private Long targetId;
+
     @Column(length = 1)
     private String isRead = "0";
 

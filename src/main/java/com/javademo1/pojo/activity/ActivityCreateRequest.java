@@ -11,20 +11,22 @@ import java.time.LocalDateTime;
 @Data
 public class ActivityCreateRequest {
 
-    @NotBlank(message = "活动标题不能为空")
+    @NotBlank(message = "娲诲姩鏍囬涓嶈兘涓虹┖")
     private String title;
 
     private String content;
 
-    @NotBlank(message = "活动说明不能为空")
-    @Size(min = 10, message = "活动说明不能过短")
+    @NotBlank(message = "娲诲姩璇存槑涓嶈兘涓虹┖")
+    @Size(min = 10, message = "娲诲姩璇存槑涓嶈兘杩囩煭")
     private String activityDesc;
 
-    @NotBlank(message = "活动类型不能为空")
+    @NotBlank(message = "娲诲姩绫诲瀷涓嶈兘涓虹┖")
     private String activityType;
 
     @NotBlank(message = "活动地点不能为空")
     private String place;
+
+    private Long placeId;
 
     private String address;
     private String city;
@@ -32,9 +34,10 @@ public class ActivityCreateRequest {
     private BigDecimal longitude;
     private BigDecimal latitude;
 
-    @NotNull(message = "活动时间不能为空")
+    @NotNull(message = "娲诲姩鏃堕棿涓嶈兘涓虹┖")
     private LocalDateTime activityTime;
 
-    @NotNull(message = "人数上限不能为空")
+    @NotNull(message = "浜烘暟涓婇檺涓嶈兘涓虹┖")
     private Integer maxNum;
 }
+

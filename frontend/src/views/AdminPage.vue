@@ -5,8 +5,15 @@ import { api } from '../api'
 import { BULLETIN_TYPES } from '../constants/bulletin'
 
 const tab = ref('stats')
+const reviewCenterTab = ref('all')
 const ADMIN_PAGE_SIZE = 10
 const stats = ref({})
+const analytics = ref({
+  trend7d: [],
+  hotPosts: [],
+  hotActivities: [],
+  bulletinTypeRatio: []
+})
 const users = ref([])
 const posts = ref([])
 const comments = ref([])
@@ -14,12 +21,16 @@ const activities = ref([])
 const activityReviewFilter = ref('0')
 const notices = ref([])
 const bulletins = ref([])
+const reviewBulletins = ref([])
 const bulletinTypeFilter = ref('全部')
 const bulletinStatusFilter = ref('全部')
 const bulletinTypeStats = ref([])
 const newsList = ref([])
 const places = ref([])
+const placeReviews = ref([])
 const banners = ref([])
+const reports = ref([])
+const reviewActivities = ref([])
 const pageState = reactive({
   users: { page: 1, total: 0 },
   posts: { page: 1, total: 0 },
@@ -49,10 +60,13 @@ const formErrors = reactive({
 
 const navItems = [
   { key: 'stats', label: '数据统计', icon: 'stats' },
+  { key: 'analytics', label: '运营分析', icon: 'stats' },
+  { key: 'reviewCenter', label: '审核中心', icon: 'notice' },
   { key: 'users', label: '用户管理', icon: 'users' },
   { key: 'posts', label: '帖子管理', icon: 'posts' },
   { key: 'comments', label: '评论管理', icon: 'comments' },
   { key: 'activities', label: '活动管理', icon: 'activities' },
+  { key: 'reports', label: '举报管理', icon: 'notice' },
   { key: 'content', label: '内容管理', icon: 'content' }
 ]
 
@@ -72,6 +86,23 @@ const statBarData = computed(() => statCards.value.map(item => ({
   ...item,
   width: `${Math.round((item.value / maxStatValue.value) * 100)}%`
 })))
+const trendBarMax = computed(() => {
+  const rows = analytics.value?.trend7d || []
+  const maxValue = rows.reduce((acc, item) => {
+    const values = [
+      Number(item.newUsers || 0),
+      Number(item.newPosts || 0),
+      Number(item.newActivities || 0),
+      Number(item.newSigns || 0)
+    ]
+    return Math.max(acc, ...values)
+  }, 1)
+  return Math.max(1, maxValue)
+})
+const bulletinRatioMax = computed(() => {
+  const rows = analytics.value?.bulletinTypeRatio || []
+  return Math.max(1, ...rows.map(item => Number(item.count || 0)))
+})
 const usersTotalPages = computed(() => Math.max(1, Math.ceil((pageState.users.total || 0) / ADMIN_PAGE_SIZE)))
 const postsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.posts.total || 0) / ADMIN_PAGE_SIZE)))
 const commentsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.comments.total || 0) / ADMIN_PAGE_SIZE)))
@@ -93,6 +124,101 @@ const bulletinStatusOptions = [
   { label: '已通过', value: '1' },
   { label: '已驳回', value: '2' }
 ]
+const reviewCenterTabs = [
+  { key: 'all', label: '全部待办' },
+  { key: 'activity', label: '活动' },
+  { key: 'bulletin', label: '快讯' },
+  { key: 'report', label: '举报' },
+  { key: 'placeReview', label: '场地评价' },
+  { key: 'done', label: '已处理' }
+]
+
+function fmtTime(value) {
+  return String(value || '').replace('T', ' ') || '-'
+}
+
+const pendingCounts = computed(() => {
+  const activity = reviewActivities.value.filter(item => item.reviewStatus === '0').length
+  const bulletin = reviewBulletins.value.filter(item => item.status === '0').length
+  const report = reports.value.filter(item => item.status === '0').length
+  const placeReview = placeReviews.value.length
+  return { activity, bulletin, report, placeReview }
+})
+
+const reviewCards = computed(() => {
+  const activityCards = reviewActivities.value.map(item => ({
+    id: `activity-${item.activityId}`,
+    type: 'activity',
+    typeLabel: '活动',
+    status: item.reviewStatus,
+    statusLabel: activityReviewLabel(item),
+    title: item.title || `活动 #${item.activityId}`,
+    actor: item.publisherName || item.username || '未知发布人',
+    time: fmtTime(item.createTime),
+    summary: item.content || item.description || '暂无活动简介',
+    biz: `时间：${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}；地点：${item.address || '未填写'}`
+  }))
+  const bulletinCards = reviewBulletins.value.map(item => ({
+    id: `bulletin-${item.bulletinId}`,
+    type: 'bulletin',
+    typeLabel: '快讯',
+    status: item.status,
+    statusLabel: item.status === '0' ? '待审核' : (item.status === '1' ? '已通过' : '已驳回'),
+    title: item.title || `快讯 #${item.bulletinId}`,
+    actor: item.publisherName || '未知发布人',
+    time: fmtTime(item.createTime),
+    summary: item.content || '暂无摘要',
+    biz: `分类：${item.bulletinType || '未分类'}`
+  }))
+  const reportCards = reports.value.map(item => ({
+    id: `report-${item.reportId}`,
+    type: 'report',
+    typeLabel: '举报',
+    status: item.status,
+    statusLabel: item.statusLabel || (item.status === '0' ? '待处理' : '已处理'),
+    title: item.targetTitle || `举报 #${item.reportId}`,
+    actor: item.reporterName || '未知举报人',
+    time: fmtTime(item.createTime),
+    summary: item.detail || item.handleNote || '无补充说明',
+    biz: `举报类型：${item.targetType || '未知'}；原因：${item.reason || '未填写'}`
+  }))
+  const placeReviewCards = placeReviews.value.map(item => ({
+    id: `place-review-${item.reviewId}`,
+    type: 'placeReview',
+    typeLabel: '场地评价',
+    status: '0',
+    statusLabel: '待处理',
+    title: `${item.placeName || '未知场地'} · ${item.score || '-'}分`,
+    actor: item.username || '匿名用户',
+    time: fmtTime(item.createTime),
+    summary: item.content || '无文字评价',
+    biz: `场地：${item.placeName || '未知'}`
+  }))
+  return [...activityCards, ...bulletinCards, ...reportCards, ...placeReviewCards]
+})
+
+const filteredReviewCards = computed(() => {
+  if (reviewCenterTab.value === 'all') {
+    return reviewCards.value.filter(item =>
+      (item.type === 'activity' && item.status === '0') ||
+      (item.type === 'bulletin' && item.status === '0') ||
+      (item.type === 'report' && item.status === '0') ||
+      item.type === 'placeReview'
+    )
+  }
+  if (reviewCenterTab.value === 'done') {
+    return reviewCards.value.filter(item =>
+      (item.type === 'activity' && item.status !== '0') ||
+      (item.type === 'bulletin' && item.status !== '0') ||
+      (item.type === 'report' && item.status !== '0')
+    )
+  }
+  if (reviewCenterTab.value === 'activity') return reviewCards.value.filter(item => item.type === 'activity' && item.status === '0')
+  if (reviewCenterTab.value === 'bulletin') return reviewCards.value.filter(item => item.type === 'bulletin' && item.status === '0')
+  if (reviewCenterTab.value === 'report') return reviewCards.value.filter(item => item.type === 'report' && item.status === '0')
+  if (reviewCenterTab.value === 'placeReview') return reviewCards.value.filter(item => item.type === 'placeReview')
+  return reviewCards.value
+})
 
 function sliceByPage(list, page) {
   const start = (page - 1) * ADMIN_PAGE_SIZE
@@ -148,6 +274,10 @@ function inputClass(group, field) {
 
 async function loadStats() {
   stats.value = await api.adminStats()
+}
+
+async function loadAnalytics() {
+  analytics.value = await api.adminAnalytics()
 }
 
 async function loadUsers() {
@@ -243,21 +373,21 @@ function activityStatusLabel(item) {
 
 async function reviewActivity(item, status) {
   await api.adminReviewActivity(item.activityId, { status })
-  await loadActivities()
+  await Promise.all([loadActivities(), loadReviewCenterData()])
 }
 
 async function forceActivityStatus(item, status) {
   await api.adminActivityStatus(item.activityId, status)
-  await loadActivities()
+  await Promise.all([loadActivities(), loadReviewCenterData()])
 }
 
 async function deleteActivity(id) {
   await api.adminDeleteActivity(id)
-  await loadActivities()
+  await Promise.all([loadActivities(), loadReviewCenterData()])
 }
 
 async function loadContentData() {
-  const [noticeData, bulletinData, bulletinTypeStatData, newsData, placeData, bannerData] = await Promise.all([
+  const [noticeData, bulletinData, bulletinTypeStatData, newsData, placeData, bannerData, placeReviewData] = await Promise.all([
     api.adminNotices(),
     api.adminBulletins({
       type: bulletinTypeFilter.value === '全部' ? null : bulletinTypeFilter.value,
@@ -266,7 +396,8 @@ async function loadContentData() {
     api.adminBulletinTypeStats(),
     api.adminNews(),
     api.adminPlaces(),
-    api.adminBanners()
+    api.adminBanners(),
+    api.adminPlaceReviews()
   ])
   notices.value = noticeData
   bulletins.value = bulletinData
@@ -274,7 +405,36 @@ async function loadContentData() {
   newsList.value = newsData
   places.value = placeData
   banners.value = bannerData
+  placeReviews.value = placeReviewData || []
   normalizeContentPages()
+}
+
+async function loadReports() {
+  reports.value = await api.adminReports()
+}
+
+async function loadReviewCenterData() {
+  const [activityData, reportData, bulletinData, placeReviewData] = await Promise.all([
+    api.adminActivities({ page: 1, size: 200 }),
+    api.adminReports(),
+    api.adminBulletins({ type: null, status: null }),
+    api.adminPlaceReviews()
+  ])
+  reviewActivities.value = activityData.list || []
+  reports.value = reportData || []
+  reviewBulletins.value = bulletinData || []
+  placeReviews.value = placeReviewData || []
+}
+
+async function handleReport(item, status) {
+  const handleNote = status === '2' ? (prompt('请输入驳回说明（可选）') || '') : (prompt('请输入处理说明（可选）') || '')
+  await api.adminHandleReport(item.reportId, { status, handleNote })
+  await Promise.all([loadReports(), loadReviewCenterData()])
+}
+
+async function deleteReportedTarget(item) {
+  await api.adminDeleteReportedTarget(item.reportId)
+  await Promise.all([loadReports(), loadPosts(), loadComments(), loadContentData(), loadReviewCenterData()])
 }
 
 async function applyBulletinTypeFilter() {
@@ -343,7 +503,7 @@ async function deleteNotice(id) {
 async function reviewBulletin(item, status) {
   const rejectReason = status === '2' ? prompt('请输入驳回原因（可选）') || '' : ''
   await api.adminReviewBulletin(item.bulletinId, { status, rejectReason })
-  await loadContentData()
+  await Promise.all([loadContentData(), loadReviewCenterData()])
 }
 
 async function deleteBulletin(id) {
@@ -388,6 +548,54 @@ async function createPlace() {
 async function deletePlace(id) {
   await api.adminDeletePlace(id)
   await loadContentData()
+}
+
+async function deletePlaceReview(id) {
+  await api.adminDeletePlaceReview(id)
+  await Promise.all([loadContentData(), loadReviewCenterData()])
+}
+
+function viewReviewItem(item) {
+  alert([
+    `类型：${item.typeLabel}`,
+    `状态：${item.statusLabel}`,
+    `标题：${item.title}`,
+    `发布人/举报人：${item.actor}`,
+    `时间：${item.time}`,
+    `摘要：${item.summary}`,
+    `业务信息：${item.biz}`
+  ].join('\n'))
+}
+
+async function handleReviewCardAction(item, action) {
+  if (item.type === 'activity') {
+    const source = reviewActivities.value.find(i => `activity-${i.activityId}` === item.id)
+    if (!source) return
+    if (action === 'approve') return reviewActivity(source, '1')
+    if (action === 'reject') return reviewActivity(source, '2')
+    if (action === 'view') return viewReviewItem(item)
+  }
+  if (item.type === 'bulletin') {
+    const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
+    if (!source) return
+    if (action === 'approve') return reviewBulletin(source, '1')
+    if (action === 'reject') return reviewBulletin(source, '2')
+    if (action === 'view') return viewReviewItem(item)
+  }
+  if (item.type === 'report') {
+    const source = reports.value.find(i => `report-${i.reportId}` === item.id)
+    if (!source) return
+    if (action === 'done') return handleReport(source, '1')
+    if (action === 'reject') return handleReport(source, '2')
+    if (action === 'delete') return deleteReportedTarget(source)
+    if (action === 'view') return viewReviewItem(item)
+  }
+  if (item.type === 'placeReview') {
+    const source = placeReviews.value.find(i => `place-review-${i.reviewId}` === item.id)
+    if (!source) return
+    if (action === 'delete') return deletePlaceReview(source.reviewId)
+    if (action === 'view') return viewReviewItem(item)
+  }
 }
 
 function triggerBannerImageSelect() {
@@ -474,11 +682,14 @@ async function deleteBanner(id) {
 async function refreshAll() {
   await Promise.all([
     loadStats(),
+    loadAnalytics(),
     loadUsers(),
     loadPosts(),
     loadComments(),
     loadActivities(),
-    loadContentData()
+    loadReports(),
+    loadContentData(),
+    loadReviewCenterData()
   ])
 }
 
@@ -545,6 +756,149 @@ onMounted(refreshAll)
               <p><span>帖子</span><strong>{{ stats.postTotal || 0 }}</strong></p>
               <p><span>评论</span><strong>{{ stats.commentTotal || 0 }}</strong></p>
               <p><span>活动</span><strong>{{ stats.activityTotal || 0 }}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="tab === 'analytics'" class="card analytics-panel">
+        <div class="viz-card">
+          <h3>近 7 天运营趋势</h3>
+          <div v-if="!(analytics.trend7d || []).length" class="muted">暂无趋势数据</div>
+          <div v-else class="trend-table-wrap">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>新增用户</th>
+                  <th>新增帖子</th>
+                  <th>发布活动</th>
+                  <th>活动报名</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in analytics.trend7d" :key="item.date">
+                  <td>{{ item.date }}</td>
+                  <td>{{ item.newUsers || 0 }}</td>
+                  <td>{{ item.newPosts || 0 }}</td>
+                  <td>{{ item.newActivities || 0 }}</td>
+                  <td>{{ item.newSigns || 0 }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-for="item in analytics.trend7d" :key="`bar-${item.date}`" class="bar-row multi">
+              <span class="bar-label">{{ item.date }}</span>
+              <div class="multi-track">
+                <div class="multi-fill users" :style="{ width: `${Math.round((Number(item.newUsers || 0) / trendBarMax) * 100)}%` }"></div>
+                <div class="multi-fill posts" :style="{ width: `${Math.round((Number(item.newPosts || 0) / trendBarMax) * 100)}%` }"></div>
+                <div class="multi-fill acts" :style="{ width: `${Math.round((Number(item.newActivities || 0) / trendBarMax) * 100)}%` }"></div>
+                <div class="multi-fill signs" :style="{ width: `${Math.round((Number(item.newSigns || 0) / trendBarMax) * 100)}%` }"></div>
+              </div>
+            </div>
+            <p class="muted">条形颜色：用户 / 帖子 / 活动 / 报名</p>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="viz-card">
+            <h3>热门帖子排行</h3>
+            <div v-if="!(analytics.hotPosts || []).length" class="muted">暂无帖子数据</div>
+            <div v-for="(item, idx) in analytics.hotPosts" :key="`post-${item.postId}`" class="mini-row">
+              <div>
+                <strong>#{{ idx + 1 }} {{ item.title }}</strong>
+                <p>热度 {{ item.hotScore || 0 }} · 赞 {{ item.likeCount || 0 }} · 评 {{ item.commentCount || 0 }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="viz-card">
+            <h3>热门活动排行</h3>
+            <div v-if="!(analytics.hotActivities || []).length" class="muted">暂无活动数据</div>
+            <div v-for="(item, idx) in analytics.hotActivities" :key="`act-${item.activityId}`" class="mini-row">
+              <div>
+                <strong>#{{ idx + 1 }} {{ item.title }}</strong>
+                <p>报名 {{ item.signNum || 0 }} / {{ item.maxNum || '不限' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="viz-card">
+          <h3>快讯分类占比</h3>
+          <div v-if="!(analytics.bulletinTypeRatio || []).length" class="muted">暂无分类数据</div>
+          <div v-for="item in analytics.bulletinTypeRatio" :key="`ratio-${item.type}`" class="bar-row">
+            <span class="bar-label">{{ item.type }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" :style="{ width: `${Math.round((Number(item.count || 0) / bulletinRatioMax) * 100)}%` }" />
+            </div>
+            <strong>{{ item.count || 0 }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="tab === 'reviewCenter'" class="review-center">
+        <div class="card review-kpi-grid">
+          <div class="review-kpi-card">
+            <p>待审活动</p>
+            <strong>{{ pendingCounts.activity }}</strong>
+          </div>
+          <div class="review-kpi-card">
+            <p>待审快讯</p>
+            <strong>{{ pendingCounts.bulletin }}</strong>
+          </div>
+          <div class="review-kpi-card">
+            <p>待处理举报</p>
+            <strong>{{ pendingCounts.report }}</strong>
+          </div>
+          <div class="review-kpi-card">
+            <p>待审/待处理场地评价</p>
+            <strong>{{ pendingCounts.placeReview }}</strong>
+          </div>
+        </div>
+
+        <div class="card review-tabs">
+          <button
+            v-for="item in reviewCenterTabs"
+            :key="item.key"
+            class="btn-soft"
+            :class="{ active: reviewCenterTab === item.key }"
+            @click="reviewCenterTab = item.key"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+
+        <div class="card content-list">
+          <div v-if="!filteredReviewCards.length" class="muted">当前筛选下暂无数据</div>
+          <div v-for="item in filteredReviewCards" :key="item.id" class="review-card">
+            <div class="review-card-head">
+              <span class="status-chip">{{ item.typeLabel }}</span>
+              <span class="status-chip">{{ item.statusLabel }}</span>
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p class="review-meta">发布人/举报人：{{ item.actor }} · 发布时间：{{ item.time }}</p>
+            <p class="review-summary">{{ item.summary }}</p>
+            <p class="review-biz">{{ item.biz }}</p>
+            <div class="row-actions">
+              <template v-if="item.type === 'activity'">
+                <button v-if="item.status === '0'" @click="handleReviewCardAction(item, 'approve')">通过</button>
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+              </template>
+              <template v-else-if="item.type === 'bulletin'">
+                <button v-if="item.status === '0'" @click="handleReviewCardAction(item, 'approve')">通过</button>
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+              </template>
+              <template v-else-if="item.type === 'report'">
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'done')">标记已处理</button>
+                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回举报</button>
+                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除违规内容</button>
+              </template>
+              <template v-else-if="item.type === 'placeReview'">
+                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+              </template>
             </div>
           </div>
         </div>
@@ -625,6 +979,26 @@ onMounted(refreshAll)
           <button class="btn-soft" :disabled="pageState.activities.page <= 1" @click="changeActivitiesPage(pageState.activities.page - 1)">上一页</button>
           <span class="muted">第 {{ pageState.activities.page }} / {{ activitiesTotalPages }} 页（共 {{ pageState.activities.total }} 条）</span>
           <button class="btn-soft" :disabled="pageState.activities.page >= activitiesTotalPages" @click="changeActivitiesPage(pageState.activities.page + 1)">下一页</button>
+        </div>
+      </div>
+
+      <div v-if="tab === 'reports'" class="card content-list">
+        <div v-if="!reports.length" class="muted">暂无举报记录</div>
+        <div v-for="item in reports" :key="item.reportId" class="data-row">
+          <div>
+            <strong>#{{ item.reportId }} {{ item.targetTitle || '内容已删除' }}</strong>
+            <p>
+              类型：{{ item.targetType }} · 原因：{{ item.reason }} · 举报人：{{ item.reporterName || '未知' }}
+            </p>
+            <p>状态：{{ item.statusLabel }} · 时间：{{ item.createTime?.replace('T', ' ') }}</p>
+            <p v-if="item.detail">补充说明：{{ item.detail }}</p>
+            <p v-if="item.handleNote">处理备注：{{ item.handleNote }}</p>
+          </div>
+          <div class="row-actions">
+            <button v-if="item.status === '0'" class="btn-soft" @click="handleReport(item, '1')">标记已处理</button>
+            <button v-if="item.status === '0'" class="btn-soft" @click="handleReport(item, '2')">驳回举报</button>
+            <button class="btn-danger" @click="deleteReportedTarget(item)">删除违规内容</button>
+          </div>
         </div>
       </div>
 
@@ -761,6 +1135,16 @@ onMounted(refreshAll)
           <div v-for="p in pagedPlaces" :key="p.placeId" class="mini-row">
             <strong>{{ p.name }}（{{ p.score }}）</strong>
             <button class="btn-danger" @click="deletePlace(p.placeId)">删除</button>
+          </div>
+          <h4>场地评价治理</h4>
+          <div v-if="!placeReviews.length" class="empty-tip">暂无场地评价记录。</div>
+          <div v-for="r in placeReviews.slice(0, 20)" :key="r.reviewId" class="mini-row">
+            <div>
+              <strong>{{ r.placeName }} · {{ r.score }} 分</strong>
+              <p>{{ r.username }} · {{ String(r.createTime || '').replace('T', ' ') }}</p>
+              <p>{{ r.content || '无文字内容' }}</p>
+            </div>
+            <button class="btn-danger" @click="deletePlaceReview(r.reviewId)">删除评价</button>
           </div>
           <div class="pagination-bar compact">
             <button class="btn-soft" :disabled="contentPageState.places <= 1" @click="changeContentPage('places', contentPageState.places - 1, placesTotalPages)">上一页</button>
@@ -992,6 +1376,10 @@ onMounted(refreshAll)
   margin-bottom: 9px;
 }
 
+.bar-row.multi {
+  grid-template-columns: 88px 1fr;
+}
+
 .bar-label {
   color: var(--text-soft);
   font-size: 13px;
@@ -1008,6 +1396,115 @@ onMounted(refreshAll)
   height: 100%;
   border-radius: 999px;
   background: #111827;
+}
+
+.multi-track {
+  display: grid;
+  gap: 5px;
+}
+
+.multi-fill {
+  height: 7px;
+  border-radius: 999px;
+}
+
+.multi-fill.users { background: #2563eb; }
+.multi-fill.posts { background: #16a34a; }
+.multi-fill.acts { background: #d97706; }
+.multi-fill.signs { background: #7c3aed; }
+
+.analytics-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.review-center {
+  display: grid;
+  gap: 12px;
+}
+
+.review-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.review-kpi-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 12px;
+}
+
+.review-kpi-card p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.review-kpi-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 26px;
+}
+
+.review-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #fff;
+}
+
+.review-card h3 {
+  margin: 8px 0 6px;
+  font-size: 16px;
+}
+
+.review-card-head {
+  display: flex;
+  gap: 8px;
+}
+
+.review-meta,
+.review-summary,
+.review-biz {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.trend-table-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.simple-table th,
+.simple-table td {
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.simple-table thead th {
+  background: #f8fafc;
 }
 
 .overview-list {
@@ -1199,6 +1696,14 @@ onMounted(refreshAll)
 
   .viz-grid {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-kpi-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 
   .content-grid {

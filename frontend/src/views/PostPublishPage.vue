@@ -228,12 +228,43 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .form-grid input,
+  textarea,
+  .upload-block button,
+  .publish-btn {
+    min-height: 42px;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
 
   .publish-btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .upload-block .inline {
+    flex-wrap: wrap;
+  }
+
+  .upload-block .inline button {
+    flex: 1 1 100%;
   }
 }
 </style>

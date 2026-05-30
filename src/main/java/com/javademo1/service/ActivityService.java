@@ -36,6 +36,7 @@ public class ActivityService {
     private final ActivitySignRepository activitySignRepository;
     private final UserRepository userRepository;
     private final MessageNotifyService messageNotifyService;
+    private final UserGrowthService userGrowthService;
 
     public PageResult<Map<String, Object>> list(Integer page, Integer size, Long userId, String city, String district, String keyword) {
         int currentPage = page == null || page < 1 ? 1 : page;
@@ -94,6 +95,7 @@ public class ActivityService {
         activity.setContent(activityDesc);
         activity.setActivityType(trimToNull(request.getActivityType()));
         activity.setPlace(trimToNull(request.getPlace()));
+        activity.setPlaceId(request.getPlaceId());
         activity.setAddress(trimToNull(request.getAddress()));
         activity.setCity(trimToNull(request.getCity()));
         activity.setDistrict(trimToNull(request.getDistrict()));
@@ -128,9 +130,10 @@ public class ActivityService {
         sign.setSignStatus(ActivitySignStatus.PENDING_CONFIRM);
         sign.setIsCheckin("0");
         activitySignRepository.save(sign);
+        userGrowthService.grantExp(currentUser.id(), "ACTIVITY_SIGN", "ACTIVITY", activityId, 10);
 
         if (!activity.getUserId().equals(currentUser.id())) {
-            messageNotifyService.send(activity.getUserId(), "ACTIVITY", "你的活动有新报名：" + activity.getTitle());
+            messageNotifyService.send(activity.getUserId(), "ACTIVITY", "你的活动有新报名：" + activity.getTitle(), "ACTIVITY", activity.getActivityId());
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -146,16 +149,17 @@ public class ActivityService {
             throw new BizException("仅已通过报名可签到");
         }
         if ("1".equals(sign.getIsCheckin())) {
-            throw new BizException("你已签到，请勿重复签到");
+            throw new BizException("你已签到，请勿重复操作");
         }
         sign.setIsCheckin("1");
         activitySignRepository.save(sign);
+        userGrowthService.grantExp(currentUser.id(), "ACTIVITY_CHECKIN", "ACTIVITY", activityId, 15);
     }
 
     public List<ActivitySign> signs(CurrentUser currentUser, Long activityId) {
         Activity activity = getActivity(activityId);
         if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
-            throw new BizException("无权限查看报名信息");
+            throw new BizException("无权查看报名信息");
         }
         return activitySignRepository.findByActivityId(activityId);
     }
@@ -163,7 +167,7 @@ public class ActivityService {
     public ActivitySign updateSignStatus(CurrentUser currentUser, Long activityId, Long signId, String signStatus) {
         Activity activity = getActivity(activityId);
         if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
-            throw new BizException("无权限处理报名");
+            throw new BizException("无权处理报名");
         }
         ActivitySign sign = activitySignRepository.findBySignIdAndActivityId(signId, activityId)
                 .orElseThrow(() -> new BizException("报名记录不存在"));
@@ -189,6 +193,10 @@ public class ActivityService {
         }
 
         ActivitySign saved = activitySignRepository.save(sign);
+        if (!sign.getUserId().equals(currentUser.id())) {
+            String actionText = ActivitySignStatus.APPROVED.equals(signStatus) ? "已通过" : "未通过";
+            messageNotifyService.send(sign.getUserId(), "ACTIVITY", "你报名的活动" + actionText + "：" + activity.getTitle(), "ACTIVITY", activity.getActivityId());
+        }
         refreshActivityCapacityAndStatus(activity);
         return saved;
     }
@@ -196,7 +204,7 @@ public class ActivityService {
     public Activity closeSignup(CurrentUser currentUser, Long activityId) {
         Activity activity = getActivity(activityId);
         if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
-            throw new BizException("无权限关闭报名");
+            throw new BizException("无权关闭报名");
         }
         if (!ActivityReviewStatus.APPROVED.equals(activity.getReviewStatus())) {
             throw new BizException("仅审核通过活动可关闭报名");
@@ -278,7 +286,7 @@ public class ActivityService {
     public void delete(CurrentUser currentUser, Long activityId, boolean isAdmin) {
         Activity activity = getActivity(activityId);
         if (!isAdmin && !activity.getUserId().equals(currentUser.id())) {
-            throw new BizException("无权限删除活动");
+            throw new BizException("无权删除活动");
         }
         if (isAdmin && "ADMIN".equals(currentUser.role())) {
             activityRepository.delete(activity);
@@ -302,6 +310,7 @@ public class ActivityService {
         map.put("content", activity.getContent());
         map.put("activityDesc", activity.getContent());
         map.put("place", activity.getPlace());
+        map.put("placeId", activity.getPlaceId());
         map.put("address", activity.getAddress());
         map.put("city", activity.getCity());
         map.put("district", activity.getDistrict());
@@ -393,7 +402,7 @@ public class ActivityService {
             throw new BizException("人数上限不能为空");
         }
         if (maxNum < 2 || maxNum > 6) {
-            throw new BizException("普通用户发布活动人数上限需在2到6人之间");
+            throw new BizException("普通用户发布活动人数上限需在 2 到 6 人之间");
         }
     }
 

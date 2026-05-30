@@ -67,5 +67,11 @@ public class PostController {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(postService.toggleCollect(currentUser, postId));
     }
+
+    @PostMapping("/posts/{id}/watch-later")
+    public ApiResponse<Map<String, Object>> watchLater(@PathVariable("id") Long postId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(postService.toggleWatchLater(currentUser, postId));
+    }
 }
 

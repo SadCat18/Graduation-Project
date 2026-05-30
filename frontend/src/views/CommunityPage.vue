@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
@@ -18,6 +18,17 @@ const loading = ref(false)
 const error = ref('')
 const commentInputs = reactive({})
 const commentMap = reactive({})
+const keyword = ref('')
+const selectedCategory = ref('全部')
+const selectedSort = ref('latest')
+const categoryOptions = ['全部', '技巧交流', '装备讨论', '路线分享', '活动讨论', '经验分享']
+const sortOptions = [
+  { label: '最新', value: 'latest' },
+  { label: '最热', value: 'hot' },
+  { label: '推荐', value: 'recommended' },
+  { label: '点赞最多', value: 'likes' },
+  { label: '评论最多', value: 'comments' }
+]
 const isLoggedIn = computed(() => !!getToken())
 const totalPages = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)))
 
@@ -43,9 +54,31 @@ async function loadPosts() {
   loading.value = true
   error.value = ''
   try {
-    const res = await api.posts({ page: page.value, size: pageSize })
-    total.value = Number(res.total || 0)
-    posts.value = res.list || []
+    const categoryParam = selectedCategory.value === '全部' ? '' : selectedCategory.value
+    if (selectedSort.value === 'recommended' && getToken()) {
+      const rec = await api.recommendations()
+      let list = rec?.posts || []
+      if (keyword.value.trim()) {
+        const kw = keyword.value.trim().toLowerCase()
+        list = list.filter(item => String(item.title || '').toLowerCase().includes(kw) || String(item.content || '').toLowerCase().includes(kw))
+      }
+      if (categoryParam) {
+        list = list.filter(item => item.category === categoryParam)
+      }
+      total.value = list.length
+      const start = (page.value - 1) * pageSize
+      posts.value = list.slice(start, start + pageSize)
+    } else {
+      const res = await api.posts({
+        page: page.value,
+        size: pageSize,
+        keyword: keyword.value.trim(),
+        category: categoryParam,
+        sort: selectedSort.value === 'recommended' ? 'hot' : selectedSort.value
+      })
+      total.value = Number(res.total || 0)
+      posts.value = res.list || []
+    }
     if (page.value > totalPages.value) {
       page.value = totalPages.value
       await loadPosts()
@@ -56,6 +89,11 @@ async function loadPosts() {
   } finally {
     loading.value = false
   }
+}
+
+async function applyKeywordSearch() {
+  page.value = 1
+  await loadPosts()
 }
 
 async function changePage(nextPage) {
@@ -87,6 +125,12 @@ async function toggleCollect(postId) {
   await loadPosts()
 }
 
+async function toggleWatchLater(postId) {
+  if (!getToken()) return goLogin()
+  await api.watchLaterPost(postId)
+  await loadPosts()
+}
+
 async function loadComments(postId) {
   commentMap[postId] = await api.comments(postId)
 }
@@ -99,6 +143,11 @@ async function sendComment(postId) {
   await loadComments(postId)
   await loadPosts()
 }
+
+watch([selectedCategory, selectedSort], async () => {
+  page.value = 1
+  await loadPosts()
+})
 
 onMounted(async () => {
   await loadPosts()
@@ -123,11 +172,26 @@ onMounted(async () => {
 
       <div class="card">
         <div class="section-head">
-          <h3>最新帖子</h3>
+          <h3>帖子广场</h3>
           <button class="btn-soft" @click="loadPosts">
             <AppIcon name="refresh" :size="15" />
             刷新
           </button>
+        </div>
+
+        <div class="filter-bar">
+          <input
+            v-model="keyword"
+            placeholder="搜索标题或内容..."
+            @keyup.enter="applyKeywordSearch"
+          />
+          <button class="btn-soft" @click="applyKeywordSearch">搜索</button>
+          <select v-model="selectedCategory">
+            <option v-for="c in categoryOptions" :key="c" :value="c">{{ c }}</option>
+          </select>
+          <select v-model="selectedSort">
+            <option v-for="s in sortOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
         </div>
 
         <p v-if="loading" class="muted">加载中...</p>
@@ -139,7 +203,7 @@ onMounted(async () => {
             <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
             <span class="tag">{{ item.category || '未分类' }}</span>
           </div>
-          <p class="muted">作者：{{ item.authorName }} · {{ item.createTime?.replace('T', ' ') }}</p>
+          <p class="muted">作者：{{ item.authorName }} · Lv{{ item.authorLevel || 1 }} · {{ item.createTime?.replace('T', ' ') }}</p>
           <p class="post-content">{{ item.content }}</p>
 
           <div v-if="parseImages(item.images).length" class="post-images">
@@ -161,6 +225,9 @@ onMounted(async () => {
             <button class="btn-soft" @click="toggleCollect(item.postId)">
               <AppIcon name="collect" :size="14" />
               收藏 {{ item.collectCount }}
+            </button>
+            <button class="btn-soft" @click="toggleWatchLater(item.postId)">
+              稍后再看
             </button>
             <button class="btn-soft" @click="loadComments(item.postId)">
               <AppIcon name="comment" :size="14" />
@@ -321,6 +388,17 @@ onMounted(async () => {
   gap: 10px;
 }
 
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filter-bar select {
+  min-width: 120px;
+}
+
 @media (max-width: 768px) {
   .community-hero {
     flex-direction: column;
@@ -330,6 +408,49 @@ onMounted(async () => {
   .pagination-bar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .post-header {
+    flex-wrap: wrap;
+  }
+
+  .clickable-title {
+    word-break: break-word;
+  }
+
+  .actions-row {
+    flex-wrap: wrap;
+  }
+
+  .filter-bar input,
+  .filter-bar select,
+  .filter-bar button,
+  .actions-row button,
+  .comment-input-row button,
+  .comment-input-row input {
+    min-height: 42px;
+  }
+
+  .actions-row > * {
+    flex: 1 1 calc(50% - 6px);
+  }
+}
+
+@media (max-width: 480px) {
+  .post-images {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions-row > * {
+    flex: 1 1 100%;
+  }
+
+  .pagination-bar span {
+    word-break: break-word;
   }
 }
 </style>

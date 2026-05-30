@@ -17,7 +17,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -224,6 +229,71 @@ public class AdminService {
         result.put("signTotal", activitySignRepository.count());
         result.put("adminTotal", adminRepository.count());
         return result;
+    }
+
+    public Map<String, Object> operationAnalytics() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("trend7d", buildTrend7d());
+        result.put("hotPosts", buildHotPosts());
+        result.put("hotActivities", buildHotActivities());
+        result.put("bulletinTypeRatio", communityBulletinService.adminTypeStats());
+        return result;
+    }
+
+    private List<Map<String, Object>> buildTrend7d() {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.atTime(LocalTime.MAX);
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("date", date.toString());
+            row.put("newUsers", userRepository.countByCreateTimeBetween(start, end));
+            row.put("newPosts", postRepository.countByCreateTimeBetween(start, end));
+            row.put("newActivities", activityRepository.countByCreateTimeBetween(start, end));
+            row.put("newSigns", activitySignRepository.countBySignTimeBetween(start, end));
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    private List<Map<String, Object>> buildHotPosts() {
+        return postRepository.findTop10ByOrderByLikeCountDescCreateTimeDesc().stream()
+                .map(post -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    long commentCount = commentRepository.countByPostId(post.getPostId());
+                    row.put("postId", post.getPostId());
+                    row.put("title", post.getTitle());
+                    row.put("likeCount", post.getLikeCount());
+                    row.put("collectCount", post.getCollectCount());
+                    row.put("commentCount", commentCount);
+                    row.put("hotScore", (post.getLikeCount() == null ? 0 : post.getLikeCount()) * 2
+                            + (post.getCollectCount() == null ? 0 : post.getCollectCount())
+                            + commentCount);
+                    row.put("createTime", post.getCreateTime());
+                    return row;
+                })
+                .sorted((a, b) -> Long.compare(
+                        ((Number) b.get("hotScore")).longValue(),
+                        ((Number) a.get("hotScore")).longValue()))
+                .toList();
+    }
+
+    private List<Map<String, Object>> buildHotActivities() {
+        return activityRepository.findTop10ByOrderBySignNumDescCreateTimeDesc().stream()
+                .map(activity -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("activityId", activity.getActivityId());
+                    row.put("title", activity.getTitle());
+                    row.put("signNum", activity.getSignNum() == null ? 0 : activity.getSignNum());
+                    row.put("maxNum", activity.getMaxNum());
+                    row.put("activityStatus", activity.getActivityStatus());
+                    row.put("reviewStatus", activity.getReviewStatus());
+                    row.put("createTime", activity.getCreateTime());
+                    return row;
+                })
+                .toList();
     }
 
     private int normalizePage(Integer page) {

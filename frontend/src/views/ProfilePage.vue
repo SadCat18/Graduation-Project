@@ -1,5 +1,6 @@
 ﻿<script setup>
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, SIGN_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
@@ -12,17 +13,21 @@ const profile = reactive({
   gender: '',
   skateStyle: '',
   phone: '',
-  bio: ''
+  bio: '',
+  exp: 0,
+  level: 1,
+  nextLevelNeedExp: 100,
+  remainToNextLevel: 100
 })
 
 const passwordForm = reactive({ oldPassword: '', newPassword: '' })
 const videoForm = reactive({ title: '', cover: '', url: '', intro: '' })
 
-const messages = ref([])
 const dashboard = ref({})
 const videos = ref([])
 const signedActivities = ref([])
 const role = getRole()
+const router = useRouter()
 
 const avatarFileInputRef = ref(null)
 const selectedAvatarFile = ref(null)
@@ -34,6 +39,17 @@ const coverFileInputRef = ref(null)
 const selectedVideoFile = ref(null)
 const selectedCoverFile = ref(null)
 const videoUploading = ref(false)
+
+const myContentLoading = ref(false)
+const contentTab = ref('posts')
+const myPosts = ref([])
+const myCollections = ref([])
+const myWatchLater = ref([])
+const myActivities = ref([])
+const notifications = ref([])
+const notificationLoading = ref(false)
+const readFilter = ref('all')
+const typeFilter = ref('ALL')
 
 function sanitizePhone(value) {
   const phone = String(value || '').trim()
@@ -56,19 +72,57 @@ async function loadProfile() {
   profile.skateStyle = user?.skateStyle || ''
   profile.phone = sanitizePhone(user?.phone)
   profile.bio = user?.bio || ''
+  profile.exp = Number(user?.exp || 0)
+  profile.level = Number(user?.level || 1)
+  profile.nextLevelNeedExp = Number(user?.nextLevelNeedExp || 100)
+  profile.remainToNextLevel = Number(user?.remainToNextLevel || 100)
 }
 
 async function loadOthers() {
-  const [msg, board, videoList, signedList] = await Promise.all([
-    api.messages(),
+  const [board, videoList, signedList] = await Promise.all([
     api.dashboard(),
     api.videos(),
     api.mySignedActivities()
   ])
-  messages.value = msg || []
   dashboard.value = board || {}
   videos.value = videoList || []
   signedActivities.value = signedList || []
+}
+
+async function loadNotifications() {
+  notificationLoading.value = true
+  try {
+    const list = await api.notifications({
+      readStatus: readFilter.value,
+      msgType: typeFilter.value
+    })
+    notifications.value = list || []
+  } finally {
+    notificationLoading.value = false
+  }
+}
+
+async function loadMyContent() {
+  myContentLoading.value = true
+  try {
+    const data = await api.myContent()
+    myPosts.value = data?.myPosts || []
+    myCollections.value = data?.myCollections || []
+    myWatchLater.value = data?.myWatchLater || []
+    myActivities.value = data?.myActivities || []
+  } finally {
+    myContentLoading.value = false
+  }
+}
+
+async function removeCollection(postId) {
+  await api.collectPost(postId)
+  await loadMyContent()
+}
+
+async function removeWatchLater(postId) {
+  await api.watchLaterPost(postId)
+  await loadMyContent()
 }
 
 async function saveProfile() {
@@ -112,7 +166,12 @@ async function savePassword() {
 
 async function markRead(id) {
   await api.readMessage(id)
-  await loadOthers()
+  await Promise.all([loadOthers(), loadNotifications()])
+}
+
+async function markAllRead() {
+  await api.readAllMessages()
+  await Promise.all([loadOthers(), loadNotifications()])
 }
 
 function triggerAvatarSelect() {
@@ -241,7 +300,7 @@ function formatActivityTime(value) {
 }
 
 function signedAddress(item) {
-  return [item.city, item.district, item.place, item.address].filter(Boolean).join(' 路 ') || '未设置地点'
+  return [item.city, item.district, item.place, item.address].filter(Boolean).join(' · ') || '未设置地点'
 }
 
 function signStatusLabel(item) {
@@ -279,10 +338,40 @@ function canCancelSignedActivity(item) {
   return activityStatus !== ACTIVITY_STATUS.CANCELED && activityStatus !== ACTIVITY_STATUS.ENDED
 }
 
+function formatDateTime(value) {
+  if (!value) return '未设置'
+  return String(value).replace('T', ' ')
+}
+
+function goPostDetail(postId) {
+  router.push(`/community/post/${postId}`)
+}
+
+function goActivitiesPage() {
+  router.push('/activities')
+}
+
+function goPlaceReview(placeId) {
+  if (!placeId) return
+  router.push(`/places/${placeId}`)
+}
+
+async function applyNotificationFilter() {
+  await loadNotifications()
+}
+
+async function openNotification(item) {
+  if (item.isRead === '0') {
+    await markRead(item.msgId)
+  }
+  if (!item.jumpPath) return
+  await router.push(item.jumpPath)
+}
+
 onMounted(async () => {
   if (role !== 'ADMIN') {
     await loadProfile()
-    await loadOthers()
+    await Promise.all([loadOthers(), loadMyContent(), loadNotifications()])
   }
 })
 
@@ -355,6 +444,77 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="card">
+        <div class="section-head"><h3>我的内容</h3></div>
+        <div class="tabs">
+          <button :class="{ active: contentTab === 'posts' }" @click="contentTab = 'posts'">我的帖子</button>
+          <button :class="{ active: contentTab === 'collections' }" @click="contentTab = 'collections'">我的收藏</button>
+          <button :class="{ active: contentTab === 'watchLater' }" @click="contentTab = 'watchLater'">稍后再看</button>
+          <button :class="{ active: contentTab === 'activities' }" @click="contentTab = 'activities'">我发布的活动</button>
+        </div>
+
+        <p v-if="myContentLoading" class="muted">加载中...</p>
+
+        <template v-if="!myContentLoading && contentTab === 'posts'">
+          <div v-if="!myPosts.length" class="empty-tip">你还没有发布帖子，去社区分享第一个内容吧。</div>
+          <div v-for="item in myPosts" :key="item.postId" class="my-content-item">
+            <div class="item-title-row">
+              <strong>{{ item.title }}</strong>
+              <span class="tag">{{ item.category || '未分类' }}</span>
+            </div>
+            <p class="muted">发布时间：{{ formatDateTime(item.createTime) }}</p>
+            <p class="muted">点赞 {{ item.likeCount || 0 }} · 收藏 {{ item.collectCount || 0 }} · 评论 {{ item.commentCount || 0 }}</p>
+            <button class="btn-soft" @click="goPostDetail(item.postId)">查看帖子详情</button>
+          </div>
+        </template>
+
+        <template v-if="!myContentLoading && contentTab === 'collections'">
+          <div v-if="!myCollections.length" class="empty-tip">你还没有收藏帖子，遇到喜欢的内容记得先收藏。</div>
+          <div v-for="item in myCollections" :key="`${item.postId}-${item.collectTime}`" class="my-content-item">
+            <div class="item-title-row">
+              <strong>{{ item.title }}</strong>
+              <span class="tag">{{ item.category || '未分类' }}</span>
+            </div>
+            <p class="muted">收藏时间：{{ formatDateTime(item.collectTime) }}</p>
+            <p class="muted">点赞 {{ item.likeCount || 0 }} · 评论 {{ item.commentCount || 0 }}</p>
+            <div class="inline">
+              <button class="btn-soft" @click="goPostDetail(item.postId)">查看原帖</button>
+              <button class="btn-soft" @click="removeCollection(item.postId)">移除收藏</button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="!myContentLoading && contentTab === 'watchLater'">
+          <div v-if="!myWatchLater.length" class="empty-tip">还没有加入稍后再看的帖子。</div>
+          <div v-for="item in myWatchLater" :key="`${item.postId}-${item.watchLaterTime}`" class="my-content-item">
+            <div class="item-title-row">
+              <strong>{{ item.title }}</strong>
+              <span class="tag">{{ item.category || '未分类' }}</span>
+            </div>
+            <p class="muted">加入时间：{{ formatDateTime(item.watchLaterTime) }}</p>
+            <p class="muted">点赞 {{ item.likeCount || 0 }} · 评论 {{ item.commentCount || 0 }}</p>
+            <div class="inline">
+              <button class="btn-soft" @click="goPostDetail(item.postId)">查看帖子</button>
+              <button class="btn-soft" @click="removeWatchLater(item.postId)">移除</button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="!myContentLoading && contentTab === 'activities'">
+          <div v-if="!myActivities.length" class="empty-tip">你还没有发布活动，去同城约板发起一次活动吧。</div>
+          <div v-for="item in myActivities" :key="item.activityId" class="my-content-item">
+            <div class="item-title-row">
+              <strong>{{ item.title }}</strong>
+              <span class="tag">{{ activityStatusLabel(item) }}</span>
+            </div>
+            <p class="muted">发布时间：{{ formatDateTime(item.createTime) }}</p>
+            <p class="muted">活动时间：{{ formatDateTime(item.activityTime) }}</p>
+            <p class="muted">报名人数：{{ item.signNum || 0 }} / {{ item.maxNum || '不限' }}</p>
+            <button class="btn-soft" @click="goActivitiesPage">前往活动页管理</button>
+          </div>
+        </template>
+      </div>
+
+      <div class="card">
         <div class="section-head"><h3>修改密码</h3></div>
         <div class="form-grid">
           <input v-model="passwordForm.oldPassword" type="password" placeholder="旧密码" />
@@ -383,7 +543,7 @@ onBeforeUnmount(() => {
             选择本地视频
           </button>
           <span class="file-name" v-if="selectedVideoFile">{{ selectedVideoFile.name }}</span>
-          <button v-if="selectedVideoFile" type="button" @click="clearVideoSelection">鍙栨秷</button>
+          <button v-if="selectedVideoFile" type="button" @click="clearVideoSelection">取消</button>
         </div>
         <p class="muted">支持本地视频上传（推荐 mp4），最大 300MB。</p>
 
@@ -402,7 +562,7 @@ onBeforeUnmount(() => {
               选择本地封面
             </button>
             <span class="file-name" v-if="selectedCoverFile">{{ selectedCoverFile.name }}</span>
-            <button v-if="selectedCoverFile" type="button" @click="clearCoverSelection">鍙栨秷</button>
+            <button v-if="selectedCoverFile" type="button" @click="clearCoverSelection">取消</button>
           </div>
         </div>
 
@@ -432,6 +592,13 @@ onBeforeUnmount(() => {
             <button class="btn-soft" :disabled="!canCancelSignedActivity(item)" @click="cancelSignedActivity(item)">
               退出报名
             </button>
+            <button
+              v-if="normalizeActivityStatus(item.activityStatus ?? item.status) === ACTIVITY_STATUS.ENDED && item.placeId"
+              class="btn-soft"
+              @click="goPlaceReview(item.placeId)"
+            >
+              评价场地
+            </button>
           </div>
         </div>
       </div>
@@ -441,6 +608,9 @@ onBeforeUnmount(() => {
       <div class="card">
         <div class="section-head"><h3>我的概览</h3></div>
         <div class="stats-box">
+          <div><span>当前等级</span><strong>Lv{{ profile.level || 1 }}</strong></div>
+          <div><span>当前经验</span><strong>{{ profile.exp || 0 }}</strong></div>
+          <div><span>距离下一级</span><strong>{{ profile.remainToNextLevel || 0 }}</strong></div>
           <div><span>我的帖子</span><strong>{{ dashboard.postCount || 0 }}</strong></div>
           <div><span>我的活动</span><strong>{{ dashboard.activityCount || 0 }}</strong></div>
           <div><span>未读消息</span><strong>{{ dashboard.unreadMsgCount || 0 }}</strong></div>
@@ -448,11 +618,35 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="card">
-        <div class="section-head"><h3>我的消息</h3></div>
-        <div v-for="m in messages" :key="m.msgId" class="list-item">
+        <div class="section-head"><h3>通知中心</h3></div>
+        <div class="notify-toolbar">
+          <select v-model="readFilter" @change="applyNotificationFilter">
+            <option value="all">全部</option>
+            <option value="0">未读</option>
+            <option value="1">已读</option>
+          </select>
+          <select v-model="typeFilter" @change="applyNotificationFilter">
+            <option value="ALL">全部类型</option>
+            <option value="COMMENT">评论</option>
+            <option value="LIKE">点赞</option>
+            <option value="ACTIVITY">活动</option>
+            <option value="SYSTEM">系统</option>
+          </select>
+          <button class="btn-soft" @click="markAllRead">全部已读</button>
+        </div>
+        <p v-if="notificationLoading" class="muted">加载中...</p>
+        <div v-if="!notificationLoading && !notifications.length" class="empty-tip">暂无通知消息。</div>
+        <div v-for="m in notifications" :key="m.msgId" class="list-item notification-item">
+          <div class="item-title-row">
+            <strong>{{ m.msgTypeLabel }}</strong>
+            <span class="tag">{{ m.isRead === '0' ? '未读' : '已读' }}</span>
+          </div>
           <p>{{ m.content }}</p>
           <p class="muted">{{ m.createTime?.replace('T', ' ') }}</p>
-          <button v-if="m.isRead === '0'" class="btn-soft" @click="markRead(m.msgId)">标记已读</button>
+          <div class="inline">
+            <button v-if="m.isRead === '0'" class="btn-soft" @click="markRead(m.msgId)">标记已读</button>
+            <button v-if="m.jumpPath" class="btn-soft" @click="openNotification(m)">查看相关内容</button>
+          </div>
         </div>
       </div>
 
@@ -474,6 +668,11 @@ onBeforeUnmount(() => {
 <style scoped>
 .profile-page {
   align-items: start;
+}
+
+.profile-page section,
+.profile-page aside {
+  min-width: 0;
 }
 
 .form-grid {
@@ -546,6 +745,46 @@ onBeforeUnmount(() => {
   color: var(--text-soft);
 }
 
+.notify-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.tabs button.active {
+  background: var(--surface-muted);
+  border-color: var(--text-soft);
+}
+
+.my-content-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .stats-box {
   display: grid;
   gap: 8px;
@@ -594,6 +833,61 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-bottom: 4px;
 }
+
+.notification-item {
+  margin-top: 8px;
+}
+
+.notification-item p,
+.my-content-item p,
+.signed-item p {
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page aside {
+    order: -1;
+    display: grid;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .notify-toolbar :deep(select),
+  .notify-toolbar :deep(button),
+  .tabs button,
+  .form-grid :deep(input),
+  textarea,
+  .inline :deep(button) {
+    min-height: 42px;
+  }
+
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .notify-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .gender-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .upload-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .upload-row button {
+    width: 100%;
+  }
+}
 </style>
-
-

@@ -14,7 +14,10 @@ import com.javademo1.util.SecurityUtils;
 import com.javademo1.service.ActivityService;
 import com.javademo1.service.AdminService;
 import com.javademo1.service.PostService;
+import com.javademo1.service.ReportService;
 import com.javademo1.service.VideoService;
+import com.javademo1.service.PlaceReviewService;
+import com.javademo1.pojo.report.ReportHandleRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +36,8 @@ public class AdminController {
     private final PostService postService;
     private final ActivityService activityService;
     private final VideoService videoService;
+    private final ReportService reportService;
+    private final PlaceReviewService placeReviewService;
 
     @GetMapping("/users")
     public ApiResponse<PageResult<User>> users(@RequestParam(required = false) Integer page,
@@ -237,6 +242,42 @@ public class AdminController {
     @GetMapping("/stats")
     public ApiResponse<Map<String, Object>> stats() {
         return ApiResponse.success(adminService.stats());
+    }
+
+    @GetMapping("/analytics")
+    public ApiResponse<Map<String, Object>> analytics() {
+        return ApiResponse.success(adminService.operationAnalytics());
+    }
+
+    @GetMapping("/reports")
+    public ApiResponse<List<Map<String, Object>>> reports() {
+        return ApiResponse.success(reportService.adminList());
+    }
+
+    @PutMapping("/reports/{id}/handle")
+    public ApiResponse<Void> handleReport(@PathVariable("id") Long reportId,
+                                          @RequestBody @Valid ReportHandleRequest request) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        reportService.handle(reportId, currentUser, request.getStatus(), request.getHandleNote());
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/reports/{id}/target")
+    public ApiResponse<Void> deleteReportedTarget(@PathVariable("id") Long reportId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        reportService.deleteReportedTarget(reportId, currentUser);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/place-reviews")
+    public ApiResponse<List<Map<String, Object>>> placeReviews() {
+        return ApiResponse.success(placeReviewService.adminReviews());
+    }
+
+    @DeleteMapping("/place-reviews/{id}")
+    public ApiResponse<Void> deletePlaceReview(@PathVariable("id") Long reviewId) {
+        placeReviewService.adminDeleteReview(reviewId);
+        return ApiResponse.success();
     }
 }
 

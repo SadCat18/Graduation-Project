@@ -35,6 +35,7 @@ const form = reactive({
   activityTime: '',
   maxNum: 2
 })
+const selectedPlaceId = ref(null)
 
 const isLoggedIn = computed(() => !!getToken())
 const amapKeyMask = computed(() => amapKeyTail())
@@ -242,6 +243,7 @@ async function searchPoi() {
 
 async function selectPoi(poi) {
   if (!poi?.location) return
+  selectedPlaceId.value = null
   form.place = poi.name || ''
   form.address = poi.address || poi.name || ''
   await setProvinceCityDistrict(
@@ -255,11 +257,13 @@ async function selectPoi(poi) {
 }
 
 function selectRecommendPlace(item) {
+  selectedPlaceId.value = item.placeId || null
   form.place = item.name || ''
   form.address = item.address || ''
 }
 
 function selectCoordinateFromMap(lng, lat) {
+  selectedPlaceId.value = null
   form.longitude = Number(lng.toFixed(6))
   form.latitude = Number(lat.toFixed(6))
   showPickedMarker(form.longitude, form.latitude)
@@ -341,6 +345,7 @@ async function publishActivity() {
     content: activityDesc,
     activityDesc,
     activityType: form.activityType.trim(),
+    placeId: selectedPlaceId.value,
     place: form.place.trim(),
     address: form.address?.trim() || null,
     city: form.city?.trim() || null,
@@ -534,6 +539,11 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--line);
 }
 
+.poi-item strong,
+.poi-item p {
+  word-break: break-word;
+}
+
 .poi-item:last-child {
   border-bottom: 0;
 }
@@ -583,10 +593,43 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .form-grid :deep(input),
+  .form-grid :deep(select),
+  .form-grid :deep(button),
+  textarea,
+  .left-form > button {
+    min-height: 42px;
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
   .two-col,
   .three-col,
   .search-grid {
     grid-template-columns: 1fr;
+  }
+
+  .top-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .amap-container {
+    height: 260px;
+  }
+
+  .poi-item,
+  .recommend-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .poi-item button,
+  .recommend-item button {
+    width: 100%;
   }
 }
 </style>

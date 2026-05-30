@@ -20,6 +20,8 @@ const currentUserId = ref(null)
 const managingActivityId = ref(null)
 const signListLoading = ref(false)
 const signListMap = ref({})
+const mobilePanel = ref('list')
+const isCompact = ref(false)
 
 const mapRef = ref(null)
 const provinceOptions = ref([])
@@ -39,6 +41,10 @@ let mapInstance = null
 let citySearchInstance = null
 let activityMarkers = []
 
+function onResize() {
+  isCompact.value = window.innerWidth <= 768
+}
+
 function buildQueryParams() {
   const params = { page: 1, size: 50 }
   if (filter.city.trim()) params.city = filter.city.trim()
@@ -53,6 +59,11 @@ function goPublish() {
     return
   }
   router.push('/activities/publish')
+}
+
+function goPlaceDetail(placeId) {
+  if (!placeId) return
+  router.push(`/places/${placeId}`)
 }
 
 async function loadData() {
@@ -350,12 +361,15 @@ watch(() => filter.city, (city) => {
 })
 
 onMounted(async () => {
+  onResize()
+  window.addEventListener('resize', onResize)
   await loadCurrentUser()
   await loadData()
   await initMap()
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
   activityMarkers.forEach(marker => marker.setMap(null))
   activityMarkers = []
   if (mapInstance) {
@@ -367,7 +381,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="page-grid activity-page">
-    <section class="left-pane">
+    <div v-if="isCompact" class="mobile-switch">
+      <button class="btn-soft" :class="{ active: mobilePanel === 'list' }" @click="mobilePanel = 'list'">活动列表</button>
+      <button class="btn-soft" :class="{ active: mobilePanel === 'map' }" @click="mobilePanel = 'map'">地图与场地</button>
+    </div>
+    <section v-show="!isCompact || mobilePanel === 'list'" class="left-pane">
       <div class="card list-card">
         <div class="list-toolbar">
           <div>
@@ -464,7 +482,7 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <aside class="right-pane">
+    <aside v-show="!isCompact || mobilePanel === 'map'" class="right-pane">
       <div class="card map-card">
         <div class="section-head"><h3>活动地图</h3></div>
         <p class="muted">高德 Web API（{{ amapKeyMask }}）</p>
@@ -479,7 +497,8 @@ onBeforeUnmount(() => {
         <div v-for="p in places.slice(0, 8)" :key="p.placeId" class="list-item">
           <strong>{{ p.name }}</strong>
           <p class="muted">{{ p.address }}</p>
-          <p class="muted">评分：{{ p.score }}</p>
+          <p class="muted">评分：{{ p.score }} · {{ p.reviewCount || 0 }} 条评价</p>
+          <button v-if="p.placeId" class="btn-soft" @click="goPlaceDetail(p.placeId)">查看评价</button>
         </div>
       </div>
     </aside>
@@ -522,6 +541,21 @@ onBeforeUnmount(() => {
   margin: 6px 0 0;
 }
 
+.mobile-switch {
+  display: none;
+  gap: 8px;
+}
+
+.mobile-switch button {
+  flex: 1;
+  min-height: 42px;
+}
+
+.mobile-switch .active {
+  background: var(--surface-muted);
+  border-color: var(--text-soft);
+}
+
 .filter-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1.35fr auto auto;
@@ -531,7 +565,7 @@ onBeforeUnmount(() => {
 .filter-row :deep(select),
 .filter-row :deep(input),
 .filter-row :deep(button) {
-  min-height: 40px;
+  min-height: 42px;
 }
 
 .activity-item {
@@ -569,6 +603,7 @@ onBeforeUnmount(() => {
   font-size: 19px;
   line-height: 1.35;
   color: #0f172a;
+  word-break: break-word;
 }
 
 .status-tag {
@@ -618,6 +653,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  word-break: break-word;
 }
 
 .content {
@@ -646,6 +682,10 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 8px 10px;
   background: #fafafa;
+}
+
+.inline :deep(button) {
+  min-height: 40px;
 }
 
 .map-card {
@@ -713,5 +753,27 @@ onBeforeUnmount(() => {
   .filter-row {
     grid-template-columns: 1fr;
   }
+
+  .inline {
+    flex-wrap: wrap;
+  }
+
+  .inline :deep(button) {
+    flex: 1 1 calc(50% - 6px);
+  }
+
+  .sign-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-switch {
+    display: flex;
+  }
 }
 </style>
+
+
+

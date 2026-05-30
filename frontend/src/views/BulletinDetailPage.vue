@@ -3,11 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import { normalizeMediaUrl } from '../utils/url'
+import { getToken } from '../utils/auth'
 
 const route = useRoute()
 const router = useRouter()
 const detail = ref(null)
 const loading = ref(false)
+const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违法违规', '其他']
 
 const imageList = computed(() => {
   const raw = detail.value?.imageUrls
@@ -25,6 +27,27 @@ async function loadData() {
 }
 
 onMounted(loadData)
+
+function chooseReportReason() {
+  const tip = REPORT_REASONS.map((item, idx) => `${idx + 1}. ${item}`).join('\n')
+  const picked = window.prompt(`请选择举报原因，输入序号：\n${tip}`, '1')
+  const idx = Number(picked) - 1
+  if (!Number.isInteger(idx) || idx < 0 || idx >= REPORT_REASONS.length) return ''
+  return REPORT_REASONS[idx]
+}
+
+async function reportBulletin() {
+  if (!getToken()) {
+    router.push('/login')
+    return
+  }
+  if (!detail.value?.bulletinId) return
+  const reason = chooseReportReason()
+  if (!reason) return
+  const detailText = window.prompt('可补充举报说明（可留空）', '') || ''
+  await api.createReport({ targetType: 'BULLETIN', targetId: detail.value.bulletinId, reason, detail: detailText })
+  alert('举报已提交，感谢你的反馈')
+}
 </script>
 
 <template>
@@ -36,6 +59,9 @@ onMounted(loadData)
 
     <p v-if="loading" class="muted">加载中...</p>
     <template v-else-if="detail">
+      <div class="inline top-actions">
+        <button class="btn-soft" @click="reportBulletin">举报快讯</button>
+      </div>
       <h2>{{ detail.title }}</h2>
       <p class="muted meta">{{ detail.createTime?.replace('T', ' ') }} · {{ detail.publisherName || '匿名发布' }} · {{ detail.bulletinType || '社区快讯' }}</p>
       <div v-if="imageList.length" class="image-grid">
@@ -54,6 +80,10 @@ onMounted(loadData)
 
 .top-nav {
   margin-bottom: 12px;
+}
+
+.top-actions {
+  margin-bottom: 10px;
 }
 
 h2 {

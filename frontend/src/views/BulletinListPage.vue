@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 import { normalizeMediaUrl } from '../utils/url'
-import { BULLETIN_TYPES } from '../constants/bulletin'
+import { BULLETIN_SORT_OPTIONS, BULLETIN_TYPES } from '../constants/bulletin'
 
 const router = useRouter()
 const list = ref([])
@@ -12,6 +12,10 @@ const activeType = ref('全部')
 const activeSort = ref('latest')
 
 const typeOptions = computed(() => ['全部', ...BULLETIN_TYPES])
+const sortHint = computed(() => {
+  if (activeSort.value !== 'city') return ''
+  return '当前快讯暂无城市字段，已按最新发布展示。'
+})
 
 function firstImage(raw) {
   if (!raw) return ''
@@ -49,11 +53,23 @@ function tagClass(type) {
   return 'tag-default'
 }
 
+function hotScore(item) {
+  const now = Date.now()
+  const createTime = new Date(item.createTime || 0).getTime()
+  const ageHours = Number.isFinite(createTime) ? Math.max(1, (now - createTime) / (1000 * 60 * 60)) : 9999
+  const freshness = 100 / ageHours
+  const imageBonus = firstImage(item.imageUrls) ? 12 : 0
+  const titleScore = Math.min(20, String(item.title || '').trim().length * 0.45)
+  const contentScore = Math.min(35, String(item.content || '').trim().length * 0.12)
+  const cityBoost = String(item.bulletinType || '').includes('同城') ? 8 : 0
+  return freshness + imageBonus + titleScore + contentScore + cityBoost
+}
+
 const visibleList = computed(() => {
   let data = [...list.value]
   if (activeType.value !== '全部') data = data.filter(item => (item.bulletinType || '').trim() === activeType.value)
-  if (activeSort.value === 'title') {
-    data.sort((a, b) => String(b.title || '').length - String(a.title || '').length)
+  if (activeSort.value === 'hot') {
+    data.sort((a, b) => hotScore(b) - hotScore(a))
   } else {
     data.sort((a, b) => new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime())
   }
@@ -104,10 +120,10 @@ onMounted(loadData)
           </button>
         </div>
         <select v-model="activeSort" class="sort-select">
-          <option value="latest">按时间排序</option>
-          <option value="title">按标题长度排序</option>
+          <option v-for="item in BULLETIN_SORT_OPTIONS" :key="item.value" :value="item.value">{{ item.label }}</option>
         </select>
       </div>
+      <p v-if="sortHint" class="muted sort-hint">{{ sortHint }}</p>
 
       <div v-if="topItem" class="top-card" @click="goDetail(topItem.bulletinId)">
         <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" />
@@ -191,6 +207,10 @@ onMounted(loadData)
   gap: 12px;
   align-items: center;
   margin-bottom: 14px;
+}
+
+.sort-hint {
+  margin: -6px 0 10px;
 }
 
 .filter-row {
