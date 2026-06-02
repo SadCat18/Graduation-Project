@@ -23,6 +23,9 @@ http.interceptors.response.use(
     return body.data
   },
   (error) => {
+    if (error?.code === 'ECONNABORTED' || String(error?.message || '').includes('timeout')) {
+      return Promise.reject(new Error('请求超时，请稍后重试'))
+    }
     const status = error?.response?.status
     if ((status === 401 || status === 403) && getToken()) {
       clearAuth()

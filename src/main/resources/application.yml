@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: javademo1
+  config:
+    import: optional:classpath:application-local.yml
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:appuser}
@@ -31,3 +33,9 @@ spring:
 jwt:
   secret: ${JWT_SECRET:4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a}
   expiration-hours: ${JWT_EXPIRATION_HOURS:24}
+
+ai:
+  provider: ${AI_PROVIDER:ark}
+  model: ${AI_MODEL:doubao-seed-2-0-lite-260428}
+  base-url: ${AI_BASE_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}
+  api-key: ${AI_API_KEY:${ARK_API_KEY:}}

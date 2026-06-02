@@ -39,7 +39,8 @@ const iconMap = {
   activities: ['M6 4h12v4H6z', 'M5 8h14v12H5z', 'M8 12h8', 'M8 16h5'],
   content: ['M4 5h16v14H4z', 'M8 9h8', 'M8 13h6'],
   image: ['M4 5h16v14H4z', 'M8.5 11a1.5 1.5 0 1 0 .01 0', 'M20 15l-4-4l-6 6l-2-2l-4 4'],
-  upload: ['M12 16V6', 'M8 10l4-4l4 4', 'M4 18h16']
+  upload: ['M12 16V6', 'M8 10l4-4l4 4', 'M4 18h16'],
+  x: ['M18 6l-12 12', 'M6 6l12 12']
 }
 
 const paths = computed(() => iconMap[props.name] || iconMap.circle)

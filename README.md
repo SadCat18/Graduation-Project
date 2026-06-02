@@ -29,6 +29,50 @@ mvn spring-boot:run
 
 后端默认地址：`http://localhost:8080`
 
+## AI 网关配置
+
+统一 AI 接口层使用以下环境变量：
+
+- `AI_PROVIDER`：默认模型提供方，当前已接入 `ark`，并预留 `openai`、`deepseek`、`qwen`
+- `AI_MODEL`：默认模型名
+- `AI_BASE_URL`：模型接口地址
+- `AI_API_KEY`：模型访问密钥
+
+当前 AI 相关代码位置：
+
+- 配置：`src/main/java/com/javademo1/config/AiProperties.java`
+- 控制器：`src/main/java/com/javademo1/controller/AiController.java`
+- 统一请求/响应：`src/main/java/com/javademo1/pojo/ai`
+- 网关与场景服务：`src/main/java/com/javademo1/service/ai`
+- 模型适配层：`src/main/java/com/javademo1/provider`
+- 场景处理层：`src/main/java/com/javademo1/scene`
+
+统一接口用途：
+
+- `POST /api/ai/chat`：通用调试调用，直接按统一 `AiRequest` 访问模型
+- `POST /api/ai/execute`：按 `scene` 执行 AI 任务，由场景层统一组装 prompt
+
+职责划分：
+
+- `controller`：只接收统一协议，不写厂商逻辑
+- `service/ai`：负责 provider 路由与 scene 执行
+- `provider`：负责把统一请求映射到具体模型接口
+- `scene`：负责按业务场景组装 prompt
+
+扩展新模型时只需要：
+
+1. 新增一个 `AiProvider` 实现类
+2. 在实现类中完成通用 `AiRequest` 到目标模型请求的映射
+3. 将目标模型响应转换成统一 `AiResponse`
+
+扩展新 AI 场景时只需要：
+
+1. 新增一个 `AiSceneHandler` 实现类
+2. 在场景层组织 `systemPrompt` / `userPrompt`
+3. 调用统一网关，不需要改 provider 层
+
+前端和大部分业务代码不需要改调用协议，继续使用统一 AI 请求/响应结构即可，切换模型时也不需要改前端调用方式。
+
 ## 前端启动（Vue CLI）
 
 ```bash

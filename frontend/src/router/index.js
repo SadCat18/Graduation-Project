@@ -15,6 +15,7 @@ import NewsDetailPage from '../views/NewsDetailPage.vue'
 import ProfilePage from '../views/ProfilePage.vue'
 import AdminPage from '../views/AdminPage.vue'
 import PlaceDetailPage from '../views/PlaceDetailPage.vue'
+import AiCoachPage from '../views/AiCoachPage.vue'
 
 const routes = [
   { path: '/login', component: LoginPage },
@@ -30,6 +31,7 @@ const routes = [
   { path: '/bulletins/:id', component: BulletinDetailPage },
   { path: '/bulletins/publish', component: BulletinPublishPage, meta: { requiresAuth: true } },
   { path: '/news/:id', component: NewsDetailPage },
+  { path: '/ai-coach', component: AiCoachPage, meta: { requiresAuth: true } },
   { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true } }
 ]

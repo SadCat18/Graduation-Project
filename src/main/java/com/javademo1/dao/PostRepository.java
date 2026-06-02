@@ -23,11 +23,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                    OR p.title LIKE CONCAT('%', :keyword, '%')
                    OR p.content LIKE CONCAT('%', :keyword, '%'))
             ORDER BY
-              p.is_top DESC,
+              CASE WHEN :sort <> 'latest' THEN p.is_top ELSE '0' END DESC,
               CASE WHEN :sort = 'likes' THEN IFNULL(p.like_count, 0) ELSE 0 END DESC,
               CASE WHEN :sort = 'comments' THEN (SELECT COUNT(1) FROM tb_comment c WHERE c.post_id = p.post_id) ELSE 0 END DESC,
               CASE WHEN :sort = 'hot' THEN (IFNULL(p.like_count, 0) * 2 + (SELECT COUNT(1) FROM tb_comment c2 WHERE c2.post_id = p.post_id)) ELSE 0 END DESC,
-              p.create_time DESC
+              p.create_time DESC,
+              p.post_id DESC
             """,
             countQuery = """
                     SELECT COUNT(1)

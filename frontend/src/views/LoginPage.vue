@@ -28,15 +28,15 @@ const brandContent = computed(() => {
     return {
       sub: '加入滑板交流网站',
       title: '创建账号',
-      desc: '注册后可发布帖子、参加活动、完善你的滑板档案。',
-      points: ['发帖分享动作与路线', '同城约板活动报名签到', '个人资料与头像本地上传']
+      desc: '注册后可发布帖子、参加活动、使用 AI 滑板老师，并完善你的滑板档案。',
+      points: ['发帖分享动作与路线', '同城约板活动报名签到', 'AI 滑板老师一对一问答', '个人资料与头像本地上传']
     }
   }
   return {
     sub: '滑板交流网站',
     title: '欢迎回来',
-    desc: '登录后可发布帖子、参加同城约板、管理个人内容。',
-    points: ['内容先浏览，登录后互动', '极简社区，专注滑板交流', '支持管理员后台运营']
+    desc: '登录后可发布帖子、参加同城约板、使用 AI 滑板老师并管理个人内容。',
+    points: ['内容先浏览，登录后互动', 'AI 滑板老师登录后可用', '极简社区，专注滑板交流', '支持管理员后台运营']
   }
 })
 
@@ -154,6 +154,23 @@ watch(
         <p class="brand-desc">{{ brandContent.desc }}</p>
         <div class="brand-points">
           <span v-for="item in brandContent.points" :key="item">{{ item }}</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-badge">
+            <AppIcon name="skateboard" :size="15" />
+            新功能
+          </div>
+          <h3>AI 滑板老师</h3>
+          <p>
+            独立页面、站内主导航同级入口，适合提问新手选板、Ollie 练习、摔倒保护和活动参与建议。
+          </p>
+          <div class="feature-points">
+            <span>分步骤回答</span>
+            <span>练习建议跟进</span>
+            <span>危险动作与伤情谨慎提醒</span>
+          </div>
+          <strong class="feature-note">登录后才能使用该功能</strong>
         </div>
       </section>
 
@@ -304,6 +321,67 @@ watch(
   border-radius: 10px;
   padding: 9px 10px;
   background: #fff;
+}
+
+.feature-card {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 248, 247, 0.96));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 10px;
+}
+
+.feature-badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.feature-card h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.feature-card p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.feature-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feature-points span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.feature-note {
+  color: #0f172a;
+  font-size: 14px;
 }
 
 .form-panel {

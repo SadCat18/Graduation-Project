@@ -1,7 +1,8 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
 import { amapKeyTail, loadAMap } from '../utils/amap'
@@ -10,6 +11,7 @@ const router = useRouter()
 const amapWebKey = (process.env.VUE_APP_AMAP_KEY || '').trim()
 
 const searchingPoi = ref(false)
+const generatingCopy = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
 const searchResults = ref([])
@@ -17,6 +19,8 @@ const places = ref([])
 const provinceOptions = ref([])
 const cityOptions = ref([])
 const districtOptions = ref([])
+const aiResult = ref(null)
+const aiLoadingSteps = ['整理活动信息', '分析时间与地点', '生成召集文案', '提炼活动亮点', '补全注意事项与风险提示']
 
 const mapRef = ref(null)
 const locationKeyword = ref('')
@@ -39,6 +43,7 @@ const selectedPlaceId = ref(null)
 
 const isLoggedIn = computed(() => !!getToken())
 const amapKeyMask = computed(() => amapKeyTail())
+const activityBaseContent = computed(() => (form.activityDesc || form.content || '').trim())
 
 let mapInstance = null
 let geocoderInstance = null
@@ -294,6 +299,60 @@ function showPickedMarker(lng, lat) {
   mapInstance.setZoomAndCenter(14, [lng, lat])
 }
 
+async function generateActivityCopy() {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  if (!form.title.trim() || !activityBaseContent.value) {
+    alert('请先填写活动标题和活动说明，再使用 AI 生成文案')
+    return
+  }
+
+  generatingCopy.value = true
+  try {
+    const result = await api.activityDescription({
+      title: form.title.trim(),
+      activityTime: form.activityTime || '待定',
+      location: [form.city, form.district, form.place || form.address].filter(Boolean).join(' '),
+      place: form.place.trim(),
+      address: form.address.trim(),
+      maxNum: Number(form.maxNum) || 2,
+      content: activityBaseContent.value
+    })
+    aiResult.value = {
+      title: result?.title || '',
+      description: result?.description || '',
+      highlights: Array.isArray(result?.highlights) ? result.highlights : [],
+      tips: Array.isArray(result?.tips) ? result.tips : [],
+      suitableFor: result?.suitableFor || '',
+      riskTips: Array.isArray(result?.riskTips) ? result.riskTips : []
+    }
+  } catch (e) {
+    alert(e?.message || 'AI 生成文案失败，请稍后重试')
+  } finally {
+    generatingCopy.value = false
+  }
+}
+
+function applyAiTitle() {
+  if (aiResult.value?.title) {
+    form.title = aiResult.value.title
+  }
+}
+
+function applyAiDescription() {
+  if (aiResult.value?.description) {
+    form.content = aiResult.value.description
+    form.activityDesc = aiResult.value.description
+  }
+}
+
+function applyAiAll() {
+  applyAiTitle()
+  applyAiDescription()
+}
+
 async function publishActivity() {
   if (!isLoggedIn.value) {
     router.push('/login')
@@ -359,6 +418,7 @@ async function publishActivity() {
   alert('发布成功，活动已进入待审核')
   router.push('/activities')
 }
+
 watch(() => form.city, (city) => {
   if (city && mapInstance) {
     mapInstance.setCity(city)
@@ -385,13 +445,31 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="publish-shell">
+    <AiLoadingOverlay
+      :visible="generatingCopy"
+      title="AI 正在生成活动文案"
+      subtitle="正在根据活动时间、地点和说明，组织更自然的同城约板召集内容。"
+      :steps="aiLoadingSteps"
+    />
+
     <div class="card publish-card">
       <div class="section-head top-head">
         <div>
           <h2>发布约板活动</h2>
           <p class="muted">按省份→城市→区县选择，并支持地图点选自动回填。</p>
         </div>
-        <button class="btn-soft" @click="backToList">返回活动列表</button>
+        <div class="head-actions">
+          <button
+            type="button"
+            class="btn-soft"
+            :disabled="generatingCopy"
+            @click="generateActivityCopy"
+          >
+            <AppIcon name="refresh" :size="15" />
+            {{ generatingCopy ? 'AI 生成中...' : 'AI 生成文案' }}
+          </button>
+          <button class="btn-soft" @click="backToList">返回活动列表</button>
+        </div>
       </div>
 
       <div class="publish-grid">
@@ -431,6 +509,63 @@ onBeforeUnmount(() => {
 
           <textarea v-model="form.content" placeholder="活动说明（难度、集合规则、费用等）" />
           <textarea v-model="form.activityDesc" placeholder="活动说明（必填，至少10字）" />
+
+          <div v-if="aiResult" class="ai-panel">
+            <div class="ai-panel-head">
+              <div>
+                <span class="ai-badge">AI 生成文案结果</span>
+                <p class="muted">可先预览，再按需回填到当前活动表单。</p>
+              </div>
+              <button type="button" class="btn-primary ai-apply-all" @click="applyAiAll">应用全部内容</button>
+            </div>
+
+            <div class="ai-result-grid">
+              <div class="ai-result-block">
+                <div class="ai-result-title-row">
+                  <h3>优化标题</h3>
+                  <button type="button" class="btn-soft" @click="applyAiTitle">应用标题</button>
+                </div>
+                <p class="ai-result-text">{{ aiResult.title || '暂无结果' }}</p>
+              </div>
+
+              <div class="ai-result-block">
+                <h3>适合人群</h3>
+                <p class="ai-result-text">{{ aiResult.suitableFor || '暂无建议' }}</p>
+              </div>
+
+              <div class="ai-result-block ai-result-block-wide">
+                <div class="ai-result-title-row">
+                  <h3>活动介绍</h3>
+                  <button type="button" class="btn-soft" @click="applyAiDescription">仅应用活动介绍</button>
+                </div>
+                <p class="ai-result-text ai-result-content">{{ aiResult.description || '暂无结果' }}</p>
+              </div>
+
+              <div class="ai-result-block">
+                <h3>活动亮点</h3>
+                <ul v-if="aiResult.highlights.length" class="result-list">
+                  <li v-for="item in aiResult.highlights" :key="item">{{ item }}</li>
+                </ul>
+                <p v-else class="ai-result-text">暂无亮点建议</p>
+              </div>
+
+              <div class="ai-result-block">
+                <h3>注意事项</h3>
+                <ul v-if="aiResult.tips.length" class="result-list">
+                  <li v-for="item in aiResult.tips" :key="item">{{ item }}</li>
+                </ul>
+                <p v-else class="ai-result-text">暂无注意事项</p>
+              </div>
+
+              <div class="ai-result-block ai-result-block-wide">
+                <h3>风险提示</h3>
+                <ul v-if="aiResult.riskTips.length" class="result-list">
+                  <li v-for="item in aiResult.riskTips" :key="item">{{ item }}</li>
+                </ul>
+                <p v-else class="ai-result-text">未发现明显风险提示</p>
+              </div>
+            </div>
+          </div>
 
           <div v-if="searchResults.length" class="poi-list">
             <div v-for="poi in searchResults" :key="poi.id" class="poi-item">
@@ -496,6 +631,12 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 
+.head-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .publish-grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -522,6 +663,90 @@ onBeforeUnmount(() => {
 
 .search-grid {
   grid-template-columns: 1fr auto;
+}
+
+.ai-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 255, 0.98));
+  display: grid;
+  gap: 14px;
+}
+
+.ai-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ai-apply-all {
+  white-space: nowrap;
+}
+
+.ai-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-result-block {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.ai-result-block-wide {
+  grid-column: 1 / -1;
+}
+
+.ai-result-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ai-result-title-row h3,
+.ai-result-block h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.ai-result-text {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-result-content {
+  min-height: 120px;
+}
+
+.result-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  display: grid;
+  gap: 6px;
 }
 
 .poi-list {
@@ -587,7 +812,8 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 
-  .three-col {
+  .three-col,
+  .ai-result-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -607,11 +833,14 @@ onBeforeUnmount(() => {
 
   .two-col,
   .three-col,
-  .search-grid {
+  .search-grid,
+  .ai-result-grid {
     grid-template-columns: 1fr;
   }
 
-  .top-head {
+  .top-head,
+  .ai-panel-head,
+  .ai-result-title-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
@@ -628,10 +857,10 @@ onBeforeUnmount(() => {
   }
 
   .poi-item button,
-  .recommend-item button {
+  .recommend-item button,
+  .head-actions button,
+  .ai-apply-all {
     width: 100%;
   }
 }
 </style>
-
-

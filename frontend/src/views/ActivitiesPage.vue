@@ -434,6 +434,10 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.right-pane {
+  position: relative;
+}
+
 .list-card {
   display: grid;
   gap: 16px;
@@ -608,6 +612,7 @@ onBeforeUnmount(() => {
 .map-card {
   position: sticky;
   top: 74px;
+  z-index: 3;
   border-radius: 18px;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
@@ -623,6 +628,8 @@ onBeforeUnmount(() => {
 
 .place-card {
   margin-top: 14px;
+  position: relative;
+  z-index: 1;
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }

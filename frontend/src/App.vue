@@ -31,6 +31,7 @@ const navItems = computed(() => {
     { to: '/', label: '首页', icon: 'home' },
     { to: '/community', label: '社区帖子', icon: 'community' },
     { to: '/activities', label: '同城约板', icon: 'activity' },
+    { to: '/ai-coach', label: 'AI 滑板老师', icon: 'skateboard' },
     { to: '/bulletins', label: '社区快讯', icon: 'news' }
   ]
   if (hasToken.value) base.push({ to: '/profile', label: '个人中心', icon: 'user' })

@@ -1,6 +1,7 @@
 ﻿<script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
+import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { BULLETIN_TYPES } from '../constants/bulletin'
 
@@ -14,6 +15,12 @@ const reviewKeyword = ref('')
 const selectedReviewIds = ref([])
 const reviewDrawerVisible = ref(false)
 const reviewDrawerId = ref('')
+const moderationLoadingKey = ref('')
+const moderationResultKey = ref('')
+const moderationResult = ref(null)
+const postModerationLoadingId = ref(null)
+const postModerationResultId = ref(null)
+const postModerationResult = ref(null)
 const ADMIN_PAGE_SIZE = 10
 const stats = ref({})
 const analytics = ref({
@@ -148,6 +155,7 @@ const reviewCenterTabs = [
   { key: 'placeReview', label: '场地评价' },
   { key: 'done', label: '已处理' }
 ]
+const moderationSteps = ['抽取正文', '分析元信息', '识别风险点', '判断风险等级', '整理审核建议']
 
 function fmtTime(value) {
   return String(value || '').replace('T', ' ') || '-'
@@ -217,7 +225,18 @@ const reviewCards = computed(() => {
       { label: '报名人数', value: `${Number(item.signNum || 0)} / ${item.maxNum || '不限'}` },
       { label: '审核状态', value: activityReviewLabel(item) },
       { label: '活动状态', value: activityStatusLabel(item) }
-    ]
+    ],
+    moderationPayload: {
+      contentType: 'ACTIVITY',
+      title: item.title || `活动 #${item.activityId}`,
+      content: item.content || item.description || '暂无正文',
+      extraInfo: [
+        item.address ? `地点：${item.address}` : '',
+        item.activityType ? `活动类型：${item.activityType}` : '',
+        item.publisherName || item.username ? `发布人：${item.publisherName || item.username}` : '',
+        item.createTime ? `发布时间：${fmtTime(item.createTime)}` : ''
+      ].filter(Boolean).join('；')
+    }
   }))
   const bulletinCards = reviewBulletins.value.map(item => ({
     id: `bulletin-${item.bulletinId}`,
@@ -243,7 +262,17 @@ const reviewCards = computed(() => {
       { label: '快讯分类', value: item.bulletinType || '未分类' },
       { label: '发布人', value: item.publisherName || '未知发布人' },
       { label: '发布时间', value: fmtTime(item.createTime) }
-    ]
+    ],
+    moderationPayload: {
+      contentType: 'BULLETIN',
+      title: item.title || `快讯 #${item.bulletinId}`,
+      content: item.content || '暂无正文',
+      extraInfo: [
+        item.bulletinType ? `快讯分类：${item.bulletinType}` : '',
+        item.publisherName ? `发布人：${item.publisherName}` : '',
+        item.createTime ? `发布时间：${fmtTime(item.createTime)}` : ''
+      ].filter(Boolean).join('；')
+    }
   }))
   const reportCards = reports.value.map(item => ({
     id: `report-${item.reportId}`,
@@ -390,6 +419,25 @@ const allFilteredSelected = computed(() => {
 })
 
 const reviewDrawerItem = computed(() => reviewCards.value.find(item => item.id === reviewDrawerId.value) || null)
+const moderationOverlayVisible = computed(() => Boolean(moderationLoadingKey.value || postModerationLoadingId.value))
+const moderationOverlayTitle = computed(() => {
+  if (moderationLoadingKey.value) {
+    return 'AI 正在生成审核建议'
+  }
+  if (postModerationLoadingId.value) {
+    return 'AI 正在分析帖子风险'
+  }
+  return 'AI 正在处理中'
+})
+const moderationOverlaySubtitle = computed(() => {
+  if (moderationLoadingKey.value) {
+    return '正在识别广告导流、违规内容和展示风险，请稍候。'
+  }
+  if (postModerationLoadingId.value) {
+    return '正在提取帖子重点，整理风险等级、风险点和处理建议。'
+  }
+  return '请稍候，系统正在整理结果。'
+})
 
 function resetReviewFilters() {
   reviewStatusFilter.value = 'all'
@@ -417,11 +465,69 @@ function toggleSelectReview(id, checked) {
 
 function openReviewDrawer(item) {
   reviewDrawerId.value = item.id
+  moderationLoadingKey.value = ''
+  moderationResultKey.value = ''
+  moderationResult.value = null
   reviewDrawerVisible.value = true
 }
 
 function closeReviewDrawer() {
   reviewDrawerVisible.value = false
+}
+
+async function fetchModerationSuggestForReviewItem(item) {
+  if (!item?.moderationPayload) {
+    alert('当前内容暂不支持 AI 审核建议')
+    return
+  }
+  moderationLoadingKey.value = item.id
+  try {
+    const result = await api.moderationSuggest(item.moderationPayload)
+    moderationResultKey.value = item.id
+    moderationResult.value = {
+      riskLevel: result?.riskLevel || 'LOW',
+      riskPoints: Array.isArray(result?.riskPoints) ? result.riskPoints : [],
+      suggestion: result?.suggestion || '',
+      normalizedSummary: result?.normalizedSummary || ''
+    }
+  } catch (e) {
+    alert(e?.message || 'AI 审核建议获取失败，请稍后重试')
+  } finally {
+    moderationLoadingKey.value = ''
+  }
+}
+
+function buildPostModerationPayload(post) {
+  return {
+    contentType: 'POST',
+    title: post?.title || `帖子 #${post?.postId || ''}`,
+    content: post?.content || '暂无正文',
+    extraInfo: [
+      post?.category ? `分类：${post.category}` : '',
+      post?.username || post?.publisherName ? `发布人：${post.username || post.publisherName}` : '',
+      post?.createTime ? `发布时间：${fmtTime(post.createTime)}` : '',
+      post?.isTop ? `是否置顶：${post.isTop === '1' ? '是' : '否'}` : ''
+    ].filter(Boolean).join('；')
+  }
+}
+
+async function fetchModerationSuggestForPost(post) {
+  if (!post) return
+  postModerationLoadingId.value = post.postId
+  try {
+    const result = await api.moderationSuggest(buildPostModerationPayload(post))
+    postModerationResultId.value = post.postId
+    postModerationResult.value = {
+      riskLevel: result?.riskLevel || 'LOW',
+      riskPoints: Array.isArray(result?.riskPoints) ? result.riskPoints : [],
+      suggestion: result?.suggestion || '',
+      normalizedSummary: result?.normalizedSummary || ''
+    }
+  } catch (e) {
+    alert(e?.message || 'AI 审核建议获取失败，请稍后重试')
+  } finally {
+    postModerationLoadingId.value = null
+  }
 }
 
 async function batchReview(action) {
@@ -922,6 +1028,13 @@ onMounted(refreshAll)
 
 <template>
   <div class="admin-layout">
+    <AiLoadingOverlay
+      :visible="moderationOverlayVisible"
+      :title="moderationOverlayTitle"
+      :subtitle="moderationOverlaySubtitle"
+      :steps="moderationSteps"
+    />
+
     <aside class="left-nav">
       <div class="brand-block">
         <h2>后台管理中心</h2>
@@ -1166,11 +1279,17 @@ onMounted(refreshAll)
               <template v-if="item.type === 'activity'">
                 <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
+                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
+                </button>
                 <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
               </template>
               <template v-else-if="item.type === 'bulletin'">
                 <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
+                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
+                </button>
                 <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
               </template>
               <template v-else-if="item.type === 'report'">
@@ -1213,13 +1332,32 @@ onMounted(refreshAll)
                 <strong>历史处理备注</strong>
                 <p>{{ reviewDrawerItem.historyNote }}</p>
               </div>
+              <div v-if="moderationResultKey === reviewDrawerItem.id && moderationResult" class="review-drawer-block moderation-block">
+                <strong>AI 审核建议</strong>
+                <p><span>风险等级：</span>{{ moderationResult.riskLevel }}</p>
+                <p><span>处理建议：</span>{{ moderationResult.suggestion || '暂无建议' }}</p>
+                <p><span>规范摘要：</span>{{ moderationResult.normalizedSummary || '暂无摘要' }}</p>
+                <div v-if="moderationResult.riskPoints.length" class="moderation-points">
+                  <span>风险点：</span>
+                  <ul>
+                    <li v-for="point in moderationResult.riskPoints" :key="point">{{ point }}</li>
+                  </ul>
+                </div>
+                <p v-else><span>风险点：</span>未发现明显风险点</p>
+              </div>
             </div>
             <div class="review-drawer-actions">
               <template v-if="reviewDrawerItem.type === 'activity'">
+                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
+                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
+                </button>
                 <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
                 <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
               </template>
               <template v-else-if="reviewDrawerItem.type === 'bulletin'">
+                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
+                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
+                </button>
                 <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
                 <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
               </template>
@@ -1256,14 +1394,31 @@ onMounted(refreshAll)
       </div>
 
       <div v-if="tab === 'posts'" class="card content-list">
-        <div v-for="p in posts" :key="p.postId" class="data-row">
-          <div>
-            <strong>{{ p.title }}</strong>
-            <p>置顶：{{ p.isTop === '1' ? '是' : '否' }}</p>
+        <div v-for="p in posts" :key="p.postId" class="post-admin-card">
+          <div class="data-row">
+            <div>
+              <strong>{{ p.title }}</strong>
+              <p>置顶：{{ p.isTop === '1' ? '是' : '否' }}</p>
+            </div>
+            <div class="row-actions">
+              <button class="btn-soft" :disabled="postModerationLoadingId === p.postId" @click="fetchModerationSuggestForPost(p)">
+                {{ postModerationLoadingId === p.postId ? '分析中...' : 'AI 审核建议' }}
+              </button>
+              <button @click="topPost(p)">{{ p.isTop === '1' ? '取消置顶' : '置顶' }}</button>
+              <button class="btn-danger" @click="deletePost(p.postId)">删除</button>
+            </div>
           </div>
-          <div class="row-actions">
-            <button @click="topPost(p)">{{ p.isTop === '1' ? '取消置顶' : '置顶' }}</button>
-            <button class="btn-danger" @click="deletePost(p.postId)">删除</button>
+          <div v-if="postModerationResultId === p.postId && postModerationResult" class="moderation-inline-panel">
+            <p><strong>风险等级：</strong>{{ postModerationResult.riskLevel }}</p>
+            <p><strong>处理建议：</strong>{{ postModerationResult.suggestion || '暂无建议' }}</p>
+            <p><strong>规范摘要：</strong>{{ postModerationResult.normalizedSummary || '暂无摘要' }}</p>
+            <div v-if="postModerationResult.riskPoints.length" class="moderation-points">
+              <strong>风险点：</strong>
+              <ul>
+                <li v-for="point in postModerationResult.riskPoints" :key="point">{{ point }}</li>
+              </ul>
+            </div>
+            <p v-else><strong>风险点：</strong>未发现明显风险点</p>
           </div>
         </div>
         <div class="pagination-bar">
@@ -1972,6 +2127,42 @@ onMounted(refreshAll)
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.moderation-block,
+.moderation-inline-panel {
+  background: #fffdf7;
+  border-color: #eadfb7;
+}
+
+.moderation-points {
+  display: grid;
+  gap: 6px;
+}
+
+.moderation-points ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.post-admin-card {
+  display: grid;
+  gap: 8px;
+}
+
+.moderation-inline-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.moderation-inline-panel p {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+}
+
+.moderation-inline-panel p:last-child {
+  margin-bottom: 0;
 }
 
 .trend-table-wrap {

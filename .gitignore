@@ -13,3 +13,6 @@ node_modules/
 .idea/
 .vscode/
 *.iml
+
+# local secrets
+src/main/resources/application-local.yml

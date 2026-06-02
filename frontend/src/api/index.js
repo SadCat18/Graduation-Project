@@ -1,4 +1,6 @@
-﻿import http from './http'
+import http from './http'
+
+const AI_REQUEST_TIMEOUT = 60000
 
 export const api = {
   register: (data) => http.post('/api/auth/register', data),
@@ -18,6 +20,12 @@ export const api = {
     formData.append('file', file)
     return http.post('/api/files/upload/video', formData)
   },
+  aiCoachChat: (data) => http.post('/api/ai/coach/chat', data, { timeout: AI_REQUEST_TIMEOUT }),
+  aiCoachSessions: () => http.get('/api/ai/coach/sessions', { timeout: AI_REQUEST_TIMEOUT }),
+  aiCoachDeleteSession: (sessionId) => http.delete(`/api/ai/coach/sessions/${sessionId}`, { timeout: AI_REQUEST_TIMEOUT }),
+  aiCoachSessionMessages: (sessionId) => http.get(`/api/ai/coach/sessions/${sessionId}/messages`, { timeout: AI_REQUEST_TIMEOUT }),
+  aiCoachRelatedContent: (params) => http.get("/api/ai/coach/related-content", { params, timeout: AI_REQUEST_TIMEOUT }),
+  postPolish: (data) => http.post('/api/ai/post-polish', data, { timeout: AI_REQUEST_TIMEOUT }),
   createPost: (data) => http.post('/api/posts', data),
   updatePost: (id, data) => http.put(`/api/posts/${id}`, data),
   deletePost: (id) => http.delete(`/api/posts/${id}`),
@@ -30,6 +38,7 @@ export const api = {
   myActivities: (params) => http.get('/api/activities', { params }),
   myPublishedActivities: () => http.get('/api/activities/published/me'),
   mySignedActivities: () => http.get('/api/activities/signed/me'),
+  activityDescription: (data) => http.post('/api/ai/activity-description', data, { timeout: AI_REQUEST_TIMEOUT }),
   createActivity: (data) => http.post('/api/activities', data),
   createBulletin: (data) => http.post('/api/bulletins', data),
   signActivity: (id) => http.post(`/api/activities/${id}/sign`),
@@ -100,11 +109,10 @@ export const api = {
   adminDeleteBanner: (id) => http.delete(`/api/admin/banners/${id}`),
   adminPlaces: () => http.get('/api/admin/places'),
   adminCreatePlace: (data) => http.post('/api/admin/places', data),
-  adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`)
-  ,
+  adminDeletePlace: (id) => http.delete(`/api/admin/places/${id}`),
+  moderationSuggest: (data) => http.post('/api/ai/moderation-suggest', data, { timeout: AI_REQUEST_TIMEOUT }),
   adminPlaceReviews: () => http.get('/api/admin/place-reviews'),
   adminDeletePlaceReview: (id) => http.delete(`/api/admin/place-reviews/${id}`),
   adminVideos: () => http.get('/api/admin/videos'),
   adminDeleteVideo: (id) => http.delete(`/api/admin/videos/${id}`)
 }
-
