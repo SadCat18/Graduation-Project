@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
@@ -39,14 +39,34 @@ const bulletins = ref([])
 const reviewBulletins = ref([])
 const bulletinTypeFilter = ref('全部')
 const bulletinStatusFilter = ref('全部')
+const newsStatusFilter = ref('全部')
 const bulletinTypeStats = ref([])
 const newsList = ref([])
+const newsDetailVisible = ref(false)
+const newsDetailLoading = ref(false)
+const newsReprocessLoading = ref(false)
+const newsSyncLoading = ref(false)
+const newsSyncMode = ref('')
+const newsReviewLoading = ref(false)
+const newsSyncSummary = ref(null)
+const activeNewsDetail = ref(null)
 const places = ref([])
 const placeReviews = ref([])
 const banners = ref([])
 const videos = ref([])
 const reports = ref([])
 const reviewActivities = ref([])
+const loadedTabs = reactive({
+  stats: false,
+  analytics: false,
+  reviewCenter: false,
+  users: false,
+  posts: false,
+  comments: false,
+  activities: false,
+  reports: false,
+  content: false
+})
 const pageState = reactive({
   users: { page: 1, total: 0 },
   posts: { page: 1, total: 0 },
@@ -67,9 +87,39 @@ const contentTabs = [
   { key: 'banner', label: '轮播图' },
   { key: 'video', label: '视频' }
 ]
+const newsCategoryOptions = ['赛事资讯', '装备动态', '技巧教学', '社区动态', '官方公告', '品牌资讯', '未分类']
 
 const noticeForm = reactive({ title: '', content: '', status: '0' })
-const newsForm = reactive({ title: '', content: '', category: '', cover: '' })
+const newsForm = reactive({
+  title: '',
+  content: '',
+  summary: '',
+  category: '',
+  cover: '',
+  sourceName: '',
+  sourceUrl: ''
+})
+const newsEditForm = reactive({
+  newsId: null,
+  title: '',
+  content: '',
+  summary: '',
+  category: '',
+  cover: '',
+  sourceName: '',
+  sourceUrl: '',
+  originTitle: '',
+  originContent: '',
+  originSummary: '',
+  aiTitle: '',
+  aiSummary: '',
+  aiCategory: '',
+  aiTranslatedContent: '',
+  status: '0',
+  aiStatus: '',
+  aiErrorMessage: '',
+  syncTime: ''
+})
 const placeForm = reactive({ name: '', address: '', intro: '', score: 4.5 })
 const bannerForm = reactive({ title: '', imageUrl: '', linkUrl: '/community', sortNum: 0, intervalSeconds: 5, status: '0' })
 const bannerFileInputRef = ref(null)
@@ -131,17 +181,37 @@ const postsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.posts.to
 const commentsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.comments.total || 0) / ADMIN_PAGE_SIZE)))
 const activitiesTotalPages = computed(() => Math.max(1, Math.ceil((pageState.activities.total || 0) / ADMIN_PAGE_SIZE)))
 const noticesTotalPages = computed(() => Math.max(1, Math.ceil((notices.value.length || 0) / ADMIN_PAGE_SIZE)))
-const newsTotalPages = computed(() => Math.max(1, Math.ceil((newsList.value.length || 0) / ADMIN_PAGE_SIZE)))
+const filteredNewsList = computed(() => {
+  if (newsStatusFilter.value === '全部') return newsList.value
+  return newsList.value.filter(item => String(item?.status || '0') === newsStatusFilter.value)
+})
+const newsAuditStats = computed(() => {
+  const stats = { pending: 0, approved: 0, rejected: 0 }
+  newsList.value.forEach((item) => {
+    const status = String(item?.status || '0')
+    if (status === '1') stats.approved += 1
+    else if (status === '2') stats.rejected += 1
+    else stats.pending += 1
+  })
+  return stats
+})
+const newsTotalPages = computed(() => Math.max(1, Math.ceil((filteredNewsList.value.length || 0) / ADMIN_PAGE_SIZE)))
 const placesTotalPages = computed(() => Math.max(1, Math.ceil((places.value.length || 0) / ADMIN_PAGE_SIZE)))
 const bannersTotalPages = computed(() => Math.max(1, Math.ceil((banners.value.length || 0) / ADMIN_PAGE_SIZE)))
 const videosTotalPages = computed(() => Math.max(1, Math.ceil((videos.value.length || 0) / ADMIN_PAGE_SIZE)))
 const pagedNotices = computed(() => sliceByPage(notices.value, contentPageState.notices))
-const pagedNews = computed(() => sliceByPage(newsList.value, contentPageState.news))
+const pagedNews = computed(() => sliceByPage(filteredNewsList.value, contentPageState.news))
 const pagedPlaces = computed(() => sliceByPage(places.value, contentPageState.places))
 const pagedBanners = computed(() => sliceByPage(banners.value, contentPageState.banners))
 const pagedVideos = computed(() => sliceByPage(videos.value, contentPageState.videos))
 const bulletinFilterOptions = computed(() => ['全部', ...BULLETIN_TYPES])
 const bulletinStatusOptions = [
+  { label: '全部', value: '全部' },
+  { label: '待审核', value: '0' },
+  { label: '已通过', value: '1' },
+  { label: '已驳回', value: '2' }
+]
+const newsStatusOptions = [
   { label: '全部', value: '全部' },
   { label: '待审核', value: '0' },
   { label: '已通过', value: '1' },
@@ -156,9 +226,70 @@ const reviewCenterTabs = [
   { key: 'done', label: '已处理' }
 ]
 const moderationSteps = ['抽取正文', '分析元信息', '识别风险点', '判断风险等级', '整理审核建议']
+let newsSyncPollTimer = null
 
 function fmtTime(value) {
   return String(value || '').replace('T', ' ') || '-'
+}
+
+function cleanNewsText(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const lower = raw.toLowerCase()
+  const isInstagramEmbed = lower.includes('instagram-media') || lower.includes('instagram.com/embed.js')
+  const decoded = decodeHtmlEntities(raw)
+  const withoutScript = decoded
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+  const cleaned = decodeHtmlEntities(withoutScript)
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t\r\f\v]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  if (isInstagramEmbed && (!cleaned || cleaned.length > 180)) {
+    return '这条资讯来自 Instagram 嵌入内容，请点击原文链接查看完整内容。'
+  }
+  return cleaned
+}
+
+function cleanInlineNewsText(value) {
+  return cleanNewsText(value).replace(/\s+/g, ' ').trim()
+}
+
+function decodeHtmlEntities(value) {
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = String(value || '')
+  return textarea.value
+}
+
+function newsStatusLabel(status) {
+  if (status === '1') return '已通过'
+  if (status === '2') return '已驳回'
+  return '待审核'
+}
+
+function newsStatusClass(status) {
+  if (status === '1') return 'is-approved'
+  if (status === '2') return 'is-rejected'
+  return 'is-pending'
+}
+
+function newsAiStatusLabel(status) {
+  if (status === 'SUCCESS') return 'AI 成功'
+  if (status === 'PARTIAL') return 'AI 部分失败'
+  if (status === 'FAILED') return 'AI 失败'
+  if (status === 'SKIPPED') return 'AI 跳过'
+  return 'AI 状态未知'
+}
+
+function newsAuditHint(status) {
+  if (status === '1') return '该资讯已审核通过，前台可见'
+  if (status === '2') return '该资讯已驳回，前台不会展示'
+  return '该资讯为待审核状态，前台不会展示'
 }
 
 function isApprovedStatus(item) {
@@ -816,6 +947,208 @@ function changeContentPage(key, next, totalPages) {
   contentPageState[key] = next
 }
 
+function resetNewsForm() {
+  newsForm.title = ''
+  newsForm.content = ''
+  newsForm.summary = ''
+  newsForm.category = ''
+  newsForm.cover = ''
+  newsForm.sourceName = ''
+  newsForm.sourceUrl = ''
+}
+
+function fillNewsEditForm(detail = {}) {
+  newsEditForm.newsId = detail.newsId ?? null
+  newsEditForm.title = detail.title || ''
+  newsEditForm.content = detail.content || ''
+  newsEditForm.summary = detail.summary || ''
+  newsEditForm.category = detail.category || ''
+  newsEditForm.cover = detail.cover || ''
+  newsEditForm.sourceName = detail.sourceName || ''
+  newsEditForm.sourceUrl = detail.sourceUrl || ''
+  newsEditForm.originTitle = detail.originTitle || ''
+  newsEditForm.originContent = detail.originContent || ''
+  newsEditForm.originSummary = detail.originSummary || ''
+  newsEditForm.aiTitle = detail.aiTitle || ''
+  newsEditForm.aiSummary = detail.aiSummary || ''
+  newsEditForm.aiCategory = detail.aiCategory || ''
+  newsEditForm.aiTranslatedContent = detail.aiTranslatedContent || ''
+  newsEditForm.status = detail.status || '0'
+  newsEditForm.aiStatus = detail.aiStatus || ''
+  newsEditForm.aiErrorMessage = detail.aiErrorMessage || ''
+  newsEditForm.syncTime = detail.syncTime || ''
+}
+
+function closeNewsDetail() {
+  newsDetailVisible.value = false
+  newsDetailLoading.value = false
+  activeNewsDetail.value = null
+}
+
+async function openNewsDetail(item) {
+  if (!item?.newsId) return
+  newsDetailVisible.value = true
+  newsDetailLoading.value = true
+  try {
+    const detail = await api.adminNewsDetail(item.newsId)
+    activeNewsDetail.value = detail
+    fillNewsEditForm(detail)
+  } catch (error) {
+    alert(error?.message || '资讯详情加载失败')
+    closeNewsDetail()
+  } finally {
+    newsDetailLoading.value = false
+  }
+}
+
+async function reprocessNewsAi() {
+  if (!newsEditForm.newsId || newsReprocessLoading.value) {
+    return
+  }
+  newsReprocessLoading.value = true
+  try {
+    const detail = await api.adminReprocessNewsAi(newsEditForm.newsId)
+    activeNewsDetail.value = detail
+    fillNewsEditForm(detail)
+    await loadContentData()
+    alert('资讯 AI 重跑完成，已刷新最新结果')
+  } catch (error) {
+    alert(error?.message || '资讯 AI 重跑失败')
+  } finally {
+    newsReprocessLoading.value = false
+  }
+}
+
+async function syncNewsOnce() {
+  if (newsSyncLoading.value) return
+  newsSyncLoading.value = true
+  newsSyncMode.value = 'normal'
+  newsSyncSummary.value = null
+  try {
+    const result = await api.adminSyncNews()
+    newsSyncSummary.value = result || null
+    if (result?.running) {
+      startNewsSyncPolling()
+    } else {
+      newsSyncLoading.value = false
+      newsSyncMode.value = ''
+      await loadContentData()
+      alert(result?.message || '资讯拉取完成')
+    }
+  } catch (error) {
+    alert(error?.message || '资讯拉取失败')
+    newsSyncLoading.value = false
+    newsSyncMode.value = ''
+  }
+}
+
+async function syncNewsAiOnly() {
+  if (newsSyncLoading.value) return
+  newsSyncLoading.value = true
+  newsSyncMode.value = 'ai'
+  newsSyncSummary.value = null
+  try {
+    const result = await api.adminSyncNewsAi()
+    newsSyncSummary.value = result || null
+    if (result?.running) {
+      startNewsSyncPolling()
+    } else {
+      newsSyncLoading.value = false
+      newsSyncMode.value = ''
+      await loadContentData()
+      alert(result?.message || 'AI 全网抓取完成')
+    }
+  } catch (error) {
+    alert(error?.message || 'AI 全网抓取失败')
+    newsSyncLoading.value = false
+    newsSyncMode.value = ''
+  }
+}
+
+function clearNewsSyncPolling() {
+  if (newsSyncPollTimer) {
+    clearTimeout(newsSyncPollTimer)
+    newsSyncPollTimer = null
+  }
+}
+
+function startNewsSyncPolling() {
+  clearNewsSyncPolling()
+  newsSyncPollTimer = window.setTimeout(async () => {
+    try {
+      const status = await api.adminSyncNewsStatus()
+      newsSyncSummary.value = status || null
+      if (status?.running) {
+        startNewsSyncPolling()
+        return
+      }
+      newsSyncLoading.value = false
+      newsSyncMode.value = ''
+      await loadContentData()
+    } catch (_) {
+      newsSyncLoading.value = false
+      newsSyncMode.value = ''
+    } finally {
+      if (!newsSyncSummary.value?.running) {
+        clearNewsSyncPolling()
+      }
+    }
+  }, 3000)
+}
+
+async function saveNewsDetail() {
+  clearGroupErrors('news')
+  if (!newsEditForm.newsId) {
+    alert('当前资讯缺少有效 ID，暂时无法保存')
+    return
+  }
+  if (!String(newsEditForm.title || '').trim()) setError('news', 'title', '请填写展示标题')
+  if (!String(newsEditForm.content || '').trim()) setError('news', 'content', '请填写展示正文')
+  if (hasGroupErrors('news')) return
+
+  await api.adminUpdateNews(newsEditForm.newsId, {
+    title: newsEditForm.title,
+    content: newsEditForm.content,
+    summary: newsEditForm.summary,
+    category: newsEditForm.category,
+    cover: newsEditForm.cover,
+    sourceName: newsEditForm.sourceName,
+    sourceUrl: newsEditForm.sourceUrl,
+    originTitle: newsEditForm.originTitle,
+    originContent: newsEditForm.originContent,
+    originSummary: newsEditForm.originSummary,
+    aiTitle: newsEditForm.aiTitle,
+    aiSummary: newsEditForm.aiSummary,
+    aiCategory: newsEditForm.aiCategory,
+    aiTranslatedContent: newsEditForm.aiTranslatedContent,
+    status: newsEditForm.status
+  })
+  await loadContentData()
+  if (newsEditForm.newsId) {
+    const detail = await api.adminNewsDetail(newsEditForm.newsId)
+    activeNewsDetail.value = detail
+    fillNewsEditForm(detail)
+  }
+}
+
+async function reviewNews(status) {
+  if (!newsEditForm.newsId || newsReviewLoading.value) return
+  newsReviewLoading.value = true
+  try {
+    await api.adminReviewNews(newsEditForm.newsId, { status })
+    newsEditForm.status = status
+    await loadContentData()
+    const detail = await api.adminNewsDetail(newsEditForm.newsId)
+    activeNewsDetail.value = detail
+    fillNewsEditForm(detail)
+    alert(status === '1' ? '资讯已审核通过' : '资讯已驳回')
+  } catch (error) {
+    alert(error?.message || '资讯审核失败')
+  } finally {
+    newsReviewLoading.value = false
+  }
+}
+
 async function createNotice() {
   clearGroupErrors('notice')
   if (!String(noticeForm.title || '').trim()) setError('notice', 'title', '请填写公告标题')
@@ -851,8 +1184,7 @@ async function createNews() {
   if (hasGroupErrors('news')) return
 
   await api.adminCreateNews(newsForm)
-  newsForm.title = ''
-  newsForm.content = ''
+  resetNewsForm()
   await loadContentData()
 }
 
@@ -1021,9 +1353,56 @@ async function refreshAll() {
     loadContentData(),
     loadReviewCenterData()
   ])
+  Object.keys(loadedTabs).forEach((key) => {
+    loadedTabs[key] = true
+  })
 }
 
-onMounted(refreshAll)
+async function loadTabData(tabKey, force = false) {
+  if (!force && loadedTabs[tabKey]) return
+
+  if (tabKey === 'stats') {
+    await loadStats()
+  } else if (tabKey === 'analytics') {
+    await loadAnalytics()
+  } else if (tabKey === 'reviewCenter') {
+    await loadReviewCenterData()
+  } else if (tabKey === 'users') {
+    await loadUsers()
+  } else if (tabKey === 'posts') {
+    await loadPosts()
+  } else if (tabKey === 'comments') {
+    await loadComments()
+  } else if (tabKey === 'activities') {
+    await loadActivities()
+  } else if (tabKey === 'reports') {
+    await loadReports()
+  } else if (tabKey === 'content') {
+    await loadContentData()
+  }
+
+  loadedTabs[tabKey] = true
+}
+
+async function refreshCurrentTab() {
+  await loadTabData(tab.value, true)
+}
+
+onMounted(async () => {
+  await loadTabData(tab.value, true)
+})
+
+watch(tab, async (nextTab) => {
+  await loadTabData(nextTab)
+})
+
+watch(newsStatusFilter, () => {
+  contentPageState.news = 1
+})
+
+onBeforeUnmount(() => {
+  clearNewsSyncPolling()
+})
 </script>
 
 <template>
@@ -1034,6 +1413,21 @@ onMounted(refreshAll)
       :subtitle="moderationOverlaySubtitle"
       :steps="moderationSteps"
     />
+    <transition name="news-sync-float">
+      <div v-if="newsSyncLoading" class="news-sync-floating" role="status" aria-live="polite" aria-busy="true">
+        <div class="news-sync-floating-head">
+          <strong>正在拉取滑板资讯</strong>
+          <span>后台处理中</span>
+        </div>
+        <p>系统正在执行来源抓取、去重、AI 处理与待审核入库，你可以继续查看后台其他内容。</p>
+        <div class="news-sync-floating-steps">
+          <span>抓取来源</span>
+          <span>去重</span>
+          <span>AI 处理</span>
+          <span>待审核入库</span>
+        </div>
+      </div>
+    </transition>
 
     <aside class="left-nav">
       <div class="brand-block">
@@ -1057,9 +1451,9 @@ onMounted(refreshAll)
           <h1>{{ navItems.find(item => item.key === tab)?.label || '后台管理中心' }}</h1>
           <p>统一管理用户、帖子、评论、活动、公告和轮播图。</p>
         </div>
-        <button class="btn-primary" @click="refreshAll">
+        <button class="btn-primary" @click="refreshCurrentTab">
           <AppIcon name="refresh" :size="15" />
-          刷新
+          刷新当前
         </button>
       </div>
 
@@ -1534,7 +1928,61 @@ onMounted(refreshAll)
 
         <div v-if="contentTab === 'news'" class="card form-card">
           <h3>资讯管理</h3>
-          <p class="muted">快讯审核已迁移至“审核中心”。</p>
+          <p class="muted">支持查看原始资讯与 AI 处理结果对比，人工可修正最终展示内容，并控制审核状态。</p>
+          <div class="news-audit-overview">
+            <button class="news-audit-chip" :class="{ active: newsStatusFilter === '全部' }" @click="newsStatusFilter = '全部'">
+              <strong>{{ newsList.length }}</strong>
+              <span>全部资讯</span>
+            </button>
+            <button class="news-audit-chip pending" :class="{ active: newsStatusFilter === '0' }" @click="newsStatusFilter = '0'">
+              <strong>{{ newsAuditStats.pending }}</strong>
+              <span>待审核</span>
+            </button>
+            <button class="news-audit-chip approved" :class="{ active: newsStatusFilter === '1' }" @click="newsStatusFilter = '1'">
+              <strong>{{ newsAuditStats.approved }}</strong>
+              <span>已通过</span>
+            </button>
+            <button class="news-audit-chip rejected" :class="{ active: newsStatusFilter === '2' }" @click="newsStatusFilter = '2'">
+              <strong>{{ newsAuditStats.rejected }}</strong>
+              <span>已驳回</span>
+            </button>
+          </div>
+          <div class="news-audit-filter-row">
+            <span class="field-caption">审核状态筛选</span>
+            <select v-model="newsStatusFilter" class="news-status-select">
+              <option v-for="option in newsStatusOptions" :key="`news-filter-${option.value}`" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <span class="muted">拉取入库的资讯默认进入待审核，只有“已通过”才会在前台展示。</span>
+          </div>
+          <div class="row-actions">
+            <button class="btn-soft news-sync-btn" :disabled="newsSyncLoading" @click="syncNewsOnce">
+              {{ newsSyncLoading && newsSyncMode === 'normal' ? '拉取中...' : '一键拉取滑板资讯' }}
+            </button>
+            <button class="btn-soft news-sync-btn" :disabled="newsSyncLoading" @click="syncNewsAiOnly">
+              {{ newsSyncLoading && newsSyncMode === 'ai' ? 'AI 抓取中...' : 'AI 全网抓取' }}
+            </button>
+          </div>
+          <div v-if="newsSyncSummary" class="news-sync-summary">
+            <strong>{{ newsSyncSummary.message || '本次同步已完成' }}</strong>
+            <p>
+              抓取 {{ newsSyncSummary.fetchedCount || 0 }} 条，
+              新增 {{ newsSyncSummary.newCount || 0 }} 条，
+              重复 {{ newsSyncSummary.duplicateCount || 0 }} 条，
+              失败 {{ newsSyncSummary.failedCount || 0 }} 条。
+            </p>
+            <div v-if="newsSyncSummary.sourceResults?.length" class="news-sync-source-list">
+              <p
+                v-for="source in newsSyncSummary.sourceResults"
+                :key="`${source.sourceId || source.sourceName}-${source.sourceUrl}`"
+                class="news-sync-source-item"
+              >
+                {{ source.sourceName }}：抓取 {{ source.fetchedCount || 0 }} 条，新增 {{ source.newCount || 0 }} 条，重复 {{ source.duplicateCount || 0 }} 条，失败 {{ source.failedCount || 0 }} 条
+                <span v-if="source.message"> · {{ source.message }}</span>
+              </p>
+            </div>
+          </div>
           <label class="field-caption">资讯标题 <span class="required">*</span></label>
           <input
             v-model="newsForm.title"
@@ -1543,8 +1991,17 @@ onMounted(refreshAll)
             @input="clearError('news', 'title')"
           />
           <p v-if="formErrors.news.title" class="field-error">{{ formErrors.news.title }}</p>
-          <label class="field-caption">资讯分类（示例：技巧 / 装备 / 赛事）</label>
-          <input v-model="newsForm.category" placeholder="请输入资讯分类（可选）" />
+          <label class="field-caption">资讯摘要（可选）</label>
+          <textarea v-model="newsForm.summary" placeholder="可填写人工摘要，后续也可在详情中调整" />
+          <label class="field-caption">资讯分类</label>
+          <select v-model="newsForm.category">
+            <option value="">请选择或留空</option>
+            <option v-for="option in newsCategoryOptions" :key="option" :value="option">{{ option }}</option>
+          </select>
+          <label class="field-caption">来源名称（可选）</label>
+          <input v-model="newsForm.sourceName" placeholder="例如：World Skate / Thrasher" />
+          <label class="field-caption">原文链接（可选）</label>
+          <input v-model="newsForm.sourceUrl" placeholder="请输入原文链接 https://..." />
           <label class="field-caption">资讯内容 <span class="required">*</span></label>
           <textarea
             v-model="newsForm.content"
@@ -1555,9 +2012,22 @@ onMounted(refreshAll)
           <p v-if="formErrors.news.content" class="field-error">{{ formErrors.news.content }}</p>
           <button class="btn-primary" @click="createNews">新增资讯</button>
           <div v-for="n in pagedNews" :key="n.newsId" class="mini-row">
-            <strong>{{ n.title }}</strong>
-            <button class="btn-danger" @click="deleteNews(n.newsId)">删除</button>
+            <div class="news-row-main">
+              <div class="news-row-head">
+                <strong>{{ n.title }}</strong>
+                <span class="news-status-badge" :class="newsStatusClass(n.status)">{{ newsStatusLabel(n.status) }}</span>
+              </div>
+              <p>{{ n.category || '未分类' }} · {{ n.sourceName || '来源待补充' }}</p>
+              <p>{{ newsAuditHint(n.status) }}</p>
+              <p>{{ newsAiStatusLabel(n.aiStatus) }} · {{ fmtTime(n.syncTime || n.createTime) }}</p>
+              <p class="clamp-2">{{ n.summary || n.aiSummary || '暂无摘要' }}</p>
+            </div>
+            <div class="row-actions">
+              <button class="btn-soft" @click="openNewsDetail(n)">查看详情</button>
+              <button class="btn-danger" @click="deleteNews(n.newsId)">删除</button>
+            </div>
           </div>
+          <p v-if="!pagedNews.length" class="muted">当前筛选下暂无资讯。</p>
           <div class="pagination-bar compact">
             <button class="btn-soft" :disabled="contentPageState.news <= 1" @click="changeContentPage('news', contentPageState.news - 1, newsTotalPages)">上一页</button>
             <span class="muted">第 {{ contentPageState.news }} / {{ newsTotalPages }} 页</span>
@@ -1710,6 +2180,98 @@ onMounted(refreshAll)
         </div>
       </div>
     </section>
+
+    <div v-if="newsDetailVisible" class="news-detail-mask" @click.self="closeNewsDetail">
+      <div class="news-detail-modal">
+        <div class="news-detail-head">
+          <div>
+            <h3>资讯审核详情</h3>
+            <p>对比原始内容与 AI 结果，人工确认最终展示版本。</p>
+          </div>
+          <div class="news-detail-head-actions">
+            <button
+              class="btn-soft news-ai-refresh-btn"
+              :disabled="newsReprocessLoading || !newsEditForm.newsId"
+              @click="reprocessNewsAi"
+            >
+              {{ newsReprocessLoading ? 'AI 重跑中...' : '重跑 AI 结果' }}
+            </button>
+            <button class="btn-soft" @click="closeNewsDetail">关闭</button>
+          </div>
+        </div>
+        <div class="news-detail-body">
+          <div v-if="newsDetailLoading" class="muted">正在加载资讯详情...</div>
+          <template v-else-if="activeNewsDetail">
+            <div class="news-compare-grid">
+              <div class="news-compare-card">
+                <div class="news-card-label">原始资讯</div>
+                <p>
+                  <span>审核状态</span>
+                  <strong class="news-status-inline" :class="newsStatusClass(newsEditForm.status)">{{ newsStatusLabel(newsEditForm.status) }}</strong>
+                </p>
+                <p><span>同步时间</span>{{ fmtTime(newsEditForm.syncTime) }}</p>
+                <p><span>原始标题</span>{{ cleanInlineNewsText(newsEditForm.originTitle) || '未保留' }}</p>
+                <p><span>原始摘要</span>{{ cleanInlineNewsText(newsEditForm.originSummary) || '未提供' }}</p>
+                <div class="news-block">
+                  <span>原始正文</span>
+                  <pre>{{ cleanNewsText(newsEditForm.originContent) || '未保留原文内容' }}</pre>
+                </div>
+                <p><span>原文链接</span>
+                  <a v-if="newsEditForm.sourceUrl" :href="newsEditForm.sourceUrl" target="_blank" rel="noreferrer">{{ newsEditForm.sourceUrl }}</a>
+                  <template v-else>未提供</template>
+                </p>
+                <p><span>来源名称</span>{{ newsEditForm.sourceName || '未提供' }}</p>
+              </div>
+              <div class="news-compare-card ai-card">
+                <div class="news-card-label">AI 处理结果</div>
+                <p class="news-inline-tip">切换资讯模型后，可点击右上角“重跑 AI 结果”重新生成摘要、分类、翻译与标题优化。</p>
+                <p><span>AI 处理状态</span>{{ newsAiStatusLabel(newsEditForm.aiStatus) }}</p>
+                <p><span>AI 优化标题</span>{{ cleanInlineNewsText(newsEditForm.aiTitle) || '未生成' }}</p>
+                <p><span>AI 中文摘要</span>{{ cleanInlineNewsText(newsEditForm.aiSummary) || '未生成' }}</p>
+                <p><span>AI 分类</span>{{ cleanInlineNewsText(newsEditForm.aiCategory) || '未分类' }}</p>
+                <p v-if="newsEditForm.aiErrorMessage"><span>失败原因</span>{{ newsEditForm.aiErrorMessage }}</p>
+                <div class="news-block">
+                  <span>AI 翻译正文</span>
+                  <pre>{{ cleanNewsText(newsEditForm.aiTranslatedContent) || '未生成翻译正文' }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="card form-card news-edit-card">
+              <h4>人工最终展示内容</h4>
+              <p class="muted">这里保存的是站内最终展示版本，不会覆盖上方 AI 原始结果留档。待审核和已驳回资讯均不会在前台展示。</p>
+              <label class="field-caption">展示标题 <span class="required">*</span></label>
+              <input v-model="newsEditForm.title" :class="inputClass('news', 'title')" placeholder="请输入最终展示标题" />
+              <label class="field-caption">展示分类</label>
+              <select v-model="newsEditForm.category">
+                <option value="">请选择或留空</option>
+                <option v-for="option in newsCategoryOptions" :key="`edit-${option}`" :value="option">{{ option }}</option>
+              </select>
+              <label class="field-caption">审核状态</label>
+              <select v-model="newsEditForm.status">
+                <option value="0">待审核</option>
+                <option value="1">已通过</option>
+                <option value="2">已驳回</option>
+              </select>
+              <label class="field-caption">展示摘要</label>
+              <textarea v-model="newsEditForm.summary" placeholder="请输入最终展示摘要" />
+              <label class="field-caption">展示正文 <span class="required">*</span></label>
+              <textarea v-model="newsEditForm.content" :class="inputClass('news', 'content')" placeholder="请输入最终展示正文" />
+              <label class="field-caption">来源名称</label>
+              <input v-model="newsEditForm.sourceName" placeholder="请输入来源名称" />
+              <label class="field-caption">原文链接</label>
+              <input v-model="newsEditForm.sourceUrl" placeholder="请输入原文链接" />
+              <div class="news-detail-actions">
+                <button class="btn-primary" @click="saveNewsDetail">保存人工修正</button>
+                <button class="btn-soft" :disabled="newsReviewLoading" @click="reviewNews('1')">审核通过</button>
+                <button class="btn-soft" :disabled="newsReviewLoading" @click="reviewNews('2')">驳回</button>
+                <button class="btn-soft" @click="closeNewsDetail">取消</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -2311,6 +2873,358 @@ onMounted(refreshAll)
   font-size: 13px;
 }
 
+.news-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-sync-floating {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 80;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid #bfd9c8;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+  padding: 16px 16px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.news-sync-floating-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.news-sync-floating-head strong {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.news-sync-floating-head span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eefaf2;
+  border: 1px solid #bfd9c8;
+  color: #18603b;
+  font-size: 12px;
+}
+
+.news-sync-floating p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.news-sync-floating-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.news-sync-floating-steps span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  color: #475569;
+  font-size: 12px;
+}
+
+.news-sync-float-enter-active,
+.news-sync-float-leave-active {
+  transition: all 0.22s ease;
+}
+
+.news-sync-float-enter-from,
+.news-sync-float-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.news-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.news-audit-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.news-audit-chip {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.news-audit-chip strong {
+  font-size: 22px;
+  line-height: 1;
+  color: #0f172a;
+}
+
+.news-audit-chip span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.news-audit-chip.active {
+  border-color: #111827;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.news-audit-chip.pending {
+  background: #fff8e8;
+  border-color: #f1d9a6;
+}
+
+.news-audit-chip.approved {
+  background: #eefaf2;
+  border-color: #bfd9c8;
+}
+
+.news-audit-chip.rejected {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.news-audit-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.news-status-select {
+  min-width: 140px;
+}
+
+.news-status-badge,
+.news-status-inline {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.news-status-badge.is-pending,
+.news-status-inline.is-pending {
+  background: #fff8e8;
+  border-color: #f1d9a6;
+  color: #8a5a00;
+}
+
+.news-status-badge.is-approved,
+.news-status-inline.is-approved {
+  background: #eefaf2;
+  border-color: #bfd9c8;
+  color: #18603b;
+}
+
+.news-status-badge.is-rejected,
+.news-status-inline.is-rejected {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #b42318;
+}
+
+.news-detail-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.news-detail-modal {
+  width: min(1080px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  display: grid;
+  gap: 0;
+}
+
+.news-detail-head {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.news-detail-head-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.news-detail-head h3,
+.news-edit-card h4 {
+  margin: 0;
+}
+
+.news-detail-head p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.news-detail-body {
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.news-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.news-compare-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.news-compare-card.ai-card {
+  background: #fcfcf7;
+  border-color: #e7dfbf;
+}
+
+.news-ai-refresh-btn {
+  border-color: #d9c88f;
+  background: #fff8df;
+  color: #7a5a00;
+}
+
+.news-sync-btn {
+  border-color: #bfd9c8;
+  background: #eefaf2;
+  color: #18603b;
+}
+
+.news-sync-summary {
+  border: 1px solid #cfe6d6;
+  background: #f3fbf5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #1f5131;
+}
+
+.news-sync-summary p {
+  margin: 6px 0 0;
+  color: #42634d;
+  font-size: 13px;
+}
+
+.news-sync-source-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.news-sync-source-item {
+  margin: 0;
+  color: #335942;
+  line-height: 1.6;
+}
+
+.news-ai-refresh-btn:disabled {
+  opacity: 0.68;
+}
+
+.news-card-label {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.news-compare-card p,
+.news-block {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.news-inline-tip {
+  padding: 8px 10px;
+  border: 1px dashed #decf9b;
+  border-radius: 10px;
+  background: rgba(255, 248, 223, 0.72);
+  color: #7a5a00;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.news-compare-card span,
+.news-block span {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.news-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-height: 260px;
+  overflow: auto;
+}
+
+.news-edit-card {
+  background: #fff;
+}
+
+.news-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .banner-file-input {
   display: none;
 }
@@ -2418,6 +3332,17 @@ onMounted(refreshAll)
 
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .news-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .news-sync-floating {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
   }
 
   .pagination-bar {

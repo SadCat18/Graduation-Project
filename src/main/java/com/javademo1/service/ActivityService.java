@@ -87,6 +87,18 @@ public class ActivityService {
         return new PageResult<>(activityPage.getTotalElements(), list);
     }
 
+    public Map<String, Object> publicDetail(Long activityId) {
+        Activity activity = getActivity(activityId);
+        if (!ActivityReviewStatus.APPROVED.equals(activity.getReviewStatus())) {
+            throw new BizException("活动暂未公开");
+        }
+        String status = resolveActivityStatus(activity);
+        if (ActivityStatus.CANCELED.equals(status) || ActivityStatus.PENDING_REVIEW.equals(status) || ActivityStatus.REVIEW_REJECTED.equals(status)) {
+            throw new BizException("活动暂不可查看");
+        }
+        return toActivityVO(activity, null);
+    }
+
     public Activity create(CurrentUser currentUser, ActivityCreateRequest request) {
         validateCreateRequest(request);
         Activity activity = new Activity();

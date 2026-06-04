@@ -1,20 +1,23 @@
 package com.javademo1.service;
 
-import com.javademo1.pojo.News;
-import com.javademo1.pojo.Notice;
-import com.javademo1.pojo.Place;
-import com.javademo1.pojo.Video;
-import com.javademo1.pojo.Banner;
 import com.javademo1.dao.BannerRepository;
 import com.javademo1.dao.NewsRepository;
 import com.javademo1.dao.NoticeRepository;
 import com.javademo1.dao.PlaceRepository;
 import com.javademo1.dao.VideoRepository;
+import com.javademo1.pojo.Banner;
+import com.javademo1.pojo.News;
+import com.javademo1.pojo.Notice;
+import com.javademo1.pojo.Place;
+import com.javademo1.pojo.Video;
 import com.javademo1.util.BizException;
+import com.javademo1.util.NewsStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,33 +35,34 @@ public class PublicContentService {
         return noticeRepository.findByStatusOrderByCreateTimeDesc("0");
     }
 
-    public List<java.util.Map<String, Object>> bulletins(Integer limit) {
+    public List<Map<String, Object>> bulletins(Integer limit) {
         return communityBulletinService.listPublicApproved(limit);
     }
 
-    public List<java.util.Map<String, Object>> bulletinsAll() {
+    public List<Map<String, Object>> bulletinsAll() {
         return communityBulletinService.listPublicApprovedAll();
     }
 
-    public java.util.Map<String, Object> bulletinDetail(Long bulletinId) {
+    public Map<String, Object> bulletinDetail(Long bulletinId) {
         return communityBulletinService.publicDetail(bulletinId);
     }
 
     public List<News> news() {
-        return newsRepository.findAllByOrderByCreateTimeDesc();
+        return newsRepository.findAllByStatusOrderBySyncTimeDescCreateTimeDesc(NewsStatus.APPROVED);
     }
 
     public News newsDetail(Long newsId) {
-        return newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
+        return newsRepository.findByNewsIdAndStatus(newsId, NewsStatus.APPROVED)
+                .orElseThrow(() -> new BizException("资讯不存在或未审核通过"));
     }
 
     public List<Place> places() {
         return placeRepository.findAllByOrderByScoreDescCreateTimeDesc();
     }
 
-    public java.util.Map<String, Object> placeDetail(Long placeId) {
+    public Map<String, Object> placeDetail(Long placeId) {
         Place place = placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
-        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         map.put("placeId", place.getPlaceId());
         map.put("name", place.getName());
         map.put("address", place.getAddress());
@@ -70,7 +74,7 @@ public class PublicContentService {
         return map;
     }
 
-    public List<java.util.Map<String, Object>> placeReviews(Long placeId) {
+    public List<Map<String, Object>> placeReviews(Long placeId) {
         placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
         return placeReviewService.listByPlace(placeId);
     }
@@ -83,4 +87,3 @@ public class PublicContentService {
         return bannerRepository.findByStatusOrderBySortNumAscCreateTimeDesc("0");
     }
 }
-

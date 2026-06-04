@@ -2,6 +2,7 @@ package com.javademo1.service;
 
 import com.javademo1.dao.*;
 import com.javademo1.pojo.*;
+import com.javademo1.pojo.admin.AdminNewsResponse;
 import com.javademo1.pojo.admin.BannerSaveRequest;
 import com.javademo1.pojo.admin.CommunityBulletinReviewRequest;
 import com.javademo1.pojo.admin.NewsSaveRequest;
@@ -9,12 +10,14 @@ import com.javademo1.pojo.admin.NoticeSaveRequest;
 import com.javademo1.pojo.admin.PlaceSaveRequest;
 import com.javademo1.util.BizException;
 import com.javademo1.util.CurrentUser;
+import com.javademo1.util.NewsStatus;
 import com.javademo1.util.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -123,26 +126,41 @@ public class AdminService {
         communityBulletinService.delete(bulletinId);
     }
 
-    public List<News> listNews() {
-        return newsRepository.findAllByOrderByCreateTimeDesc();
+    public List<AdminNewsResponse> listNews() {
+        return newsRepository.findAllByOrderByCreateTimeDesc().stream()
+                .map(AdminNewsResponse::from)
+                .toList();
+    }
+
+    public AdminNewsResponse newsDetail(Long newsId) {
+        News news = newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
+        return AdminNewsResponse.from(news);
     }
 
     public News createNews(CurrentUser currentUser, NewsSaveRequest request) {
         News news = new News();
-        news.setTitle(request.getTitle());
-        news.setContent(request.getContent());
-        news.setCategory(request.getCategory());
-        news.setCover(request.getCover());
+        fillNewsFields(news, request);
         news.setAdminId(currentUser.id());
+        news.setStatus(firstNonBlank(request.getStatus(), NewsStatus.APPROVED));
+        news.setSyncTime(LocalDateTime.now());
         return newsRepository.save(news);
     }
 
     public News updateNews(Long newsId, NewsSaveRequest request) {
         News news = newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
-        news.setTitle(request.getTitle());
-        news.setContent(request.getContent());
-        news.setCategory(request.getCategory());
-        news.setCover(request.getCover());
+        fillNewsFields(news, request);
+        if (StringUtils.hasText(request.getStatus()) && NewsStatus.isValid(request.getStatus().trim())) {
+            news.setStatus(request.getStatus().trim());
+        }
+        return newsRepository.save(news);
+    }
+
+    public News reviewNews(Long newsId, String status) {
+        News news = newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
+        if (!StringUtils.hasText(status) || !NewsStatus.isValid(status.trim())) {
+            throw new BizException("资讯审核状态不合法");
+        }
+        news.setStatus(status.trim());
         return newsRepository.save(news);
     }
 
@@ -333,5 +351,33 @@ public class AdminService {
             return null;
         }
         return value.trim();
+    }
+
+    private String trimToEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String firstNonBlank(String preferred, String fallback) {
+        if (StringUtils.hasText(preferred)) {
+            return preferred.trim();
+        }
+        return trimToEmpty(fallback);
+    }
+
+    private void fillNewsFields(News news, NewsSaveRequest request) {
+        news.setTitle(trimToEmpty(request.getTitle()));
+        news.setContent(trimToEmpty(request.getContent()));
+        news.setSummary(trimToNull(request.getSummary()));
+        news.setCategory(trimToNull(request.getCategory()));
+        news.setCover(trimToNull(request.getCover()));
+        news.setSourceName(trimToNull(request.getSourceName()));
+        news.setSourceUrl(trimToNull(request.getSourceUrl()));
+        news.setOriginTitle(firstNonBlank(request.getOriginTitle(), request.getTitle()));
+        news.setOriginContent(firstNonBlank(request.getOriginContent(), request.getContent()));
+        news.setOriginSummary(trimToNull(request.getOriginSummary()));
+        news.setAiTitle(trimToNull(request.getAiTitle()));
+        news.setAiSummary(trimToNull(request.getAiSummary()));
+        news.setAiCategory(trimToNull(request.getAiCategory()));
+        news.setAiTranslatedContent(trimToNull(request.getAiTranslatedContent()));
     }
 }

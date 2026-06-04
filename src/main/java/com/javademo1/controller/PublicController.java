@@ -53,6 +53,11 @@ public class PublicController {
         return ApiResponse.success(activityService.list(page, size, null, city, district, keyword));
     }
 
+    @GetMapping("/activities/{id}")
+    public ApiResponse<Map<String, Object>> activityDetail(@PathVariable("id") Long activityId) {
+        return ApiResponse.success(activityService.publicDetail(activityId));
+    }
+
     @GetMapping("/notices")
     public ApiResponse<List<Notice>> notices() {
         return ApiResponse.success(publicContentService.notices());

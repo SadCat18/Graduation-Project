@@ -1,11 +1,14 @@
 ﻿<script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { getToken } from '../utils/auth'
 import { amapKeyTail, loadAMap } from '../utils/amap'
+import { getCachedResource } from '../utils/requestCache'
+
+defineOptions({ name: 'ActivitiesPage' })
 
 const router = useRouter()
 
@@ -32,6 +35,7 @@ const filter = reactive({
 
 const isLoggedIn = computed(() => !!getToken())
 const amapKeyMask = computed(() => amapKeyTail())
+const PLACE_CACHE_TTL = 5 * 60 * 1000
 
 let mapInstance = null
 let citySearchInstance = null
@@ -40,6 +44,8 @@ let activityMarkers = []
 function onResize() {
   isCompact.value = window.innerWidth <= 768
 }
+
+
 
 function buildQueryParams() {
   const params = { page: 1, size: 50 }
@@ -62,11 +68,21 @@ function goPlaceDetail(placeId) {
   router.push(`/places/${placeId}`)
 }
 
+function goActivityDetail(activityId) {
+  if (!activityId) return
+  router.push(`/activities/${activityId}`)
+}
+
 async function loadData() {
   loading.value = true
   loadError.value = ''
   try {
     const params = buildQueryParams()
+    const placePromise = getCachedResource(
+      'public:places',
+      () => api.places(),
+      PLACE_CACHE_TTL
+    )
     let activities
     if (isLoggedIn.value) {
       try {
@@ -82,7 +98,7 @@ async function loadData() {
       activities = await api.publicActivities(params)
     }
 
-    const placeList = await api.places()
+    const placeList = await placePromise
     list.value = (activities.list || []).filter((item) => {
       const status = normalizeActivityStatus(item.activityStatus ?? item.status)
       return status !== ACTIVITY_STATUS.CANCELED
@@ -299,8 +315,17 @@ watch(() => filter.city, (city) => {
 onMounted(async () => {
   onResize()
   window.addEventListener('resize', onResize)
-  await loadData()
-  await initMap()
+  await Promise.all([
+    loadData(),
+    initMap()
+  ])
+})
+onActivated(() => {
+  onResize()
+  window.addEventListener('resize', onResize)
+})
+onDeactivated(() => {
+  window.removeEventListener('resize', onResize)
 })
 
 onBeforeUnmount(() => {
@@ -367,6 +392,7 @@ onBeforeUnmount(() => {
           :key="item.activityId"
           class="activity-item"
           :class="{ active: selectedActivityId === item.activityId }"
+          @click="goActivityDetail(item.activityId)"
         >
           <div class="item-top">
             <h4>{{ item.title }}</h4>
@@ -384,13 +410,13 @@ onBeforeUnmount(() => {
           </div>
           <p class="content">{{ item.content || '暂无说明' }}</p>
           <div class="inline">
-            <button v-if="canSign(item)" @click="sign(item)">
+            <button v-if="canSign(item)" @click.stop="sign(item)">
               报名
             </button>
-            <button v-else class="btn-soft" :disabled="!canCancelSign(item)" @click="cancelSign(item)">
+            <button v-else class="btn-soft" :disabled="!canCancelSign(item)" @click.stop="cancelSign(item)">
               退出报名
             </button>
-            <button v-if="item.longitude && item.latitude" class="btn-soft" @click="locateOnMap(item)">
+            <button v-if="item.longitude && item.latitude" class="btn-soft" @click.stop="locateOnMap(item)">
               <AppIcon name="location" :size="14" />
               地图定位
             </button>
@@ -494,6 +520,7 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 14px 15px;
   background: #fff;
+  cursor: pointer;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }

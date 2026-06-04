@@ -1,8 +1,18 @@
 package com.javademo1.controller;
 
+import com.javademo1.config.NewsSyncProperties;
 import com.javademo1.util.ApiResponse;
 import com.javademo1.util.PageResult;
+import com.javademo1.pojo.admin.AdminNewsResponse;
+import com.javademo1.pojo.admin.NewsAiPreviewRequest;
+import com.javademo1.pojo.admin.NewsAiPreviewResponse;
+import com.javademo1.pojo.admin.NewsAiReprocessBatchRequest;
+import com.javademo1.pojo.admin.NewsAiReprocessBatchResponse;
+import com.javademo1.pojo.admin.NewsConfigCheckResponse;
+import com.javademo1.pojo.admin.NewsReviewRequest;
 import com.javademo1.pojo.admin.NewsSaveRequest;
+import com.javademo1.pojo.admin.NewsSyncNowRequest;
+import com.javademo1.pojo.admin.NewsSyncTriggerResponse;
 import com.javademo1.pojo.admin.NoticeSaveRequest;
 import com.javademo1.pojo.admin.PlaceSaveRequest;
 import com.javademo1.pojo.admin.ActivityReviewRequest;
@@ -13,6 +23,10 @@ import com.javademo1.util.CurrentUser;
 import com.javademo1.util.SecurityUtils;
 import com.javademo1.service.ActivityService;
 import com.javademo1.service.AdminService;
+import com.javademo1.service.NewsAiDiagnosticService;
+import com.javademo1.service.NewsFetchService;
+import com.javademo1.service.NewsAiReprocessService;
+import com.javademo1.service.NewsSyncTaskService;
 import com.javademo1.service.PostService;
 import com.javademo1.service.ReportService;
 import com.javademo1.service.VideoService;
@@ -33,6 +47,11 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final NewsFetchService newsFetchService;
+    private final NewsAiDiagnosticService newsAiDiagnosticService;
+    private final NewsAiReprocessService newsAiReprocessService;
+    private final NewsSyncTaskService newsSyncTaskService;
+    private final NewsSyncProperties newsSyncProperties;
     private final PostService postService;
     private final ActivityService activityService;
     private final VideoService videoService;
@@ -160,8 +179,13 @@ public class AdminController {
     }
 
     @GetMapping("/news")
-    public ApiResponse<List<News>> news() {
+    public ApiResponse<List<AdminNewsResponse>> news() {
         return ApiResponse.success(adminService.listNews());
+    }
+
+    @GetMapping("/news/{id}")
+    public ApiResponse<AdminNewsResponse> newsDetail(@PathVariable("id") Long newsId) {
+        return ApiResponse.success(adminService.newsDetail(newsId));
     }
 
     @PostMapping("/news")
@@ -170,10 +194,66 @@ public class AdminController {
         return ApiResponse.success(adminService.createNews(currentUser, request));
     }
 
+    @PostMapping("/news/sync")
+    public ApiResponse<NewsSyncTriggerResponse> syncNews() {
+        return ApiResponse.success(newsSyncTaskService.startAsync(new NewsSyncNowRequest()));
+    }
+
+    @PostMapping("/news/ai-sync")
+    public ApiResponse<NewsSyncTriggerResponse> syncNewsAi() {
+        NewsSyncNowRequest request = new NewsSyncNowRequest();
+        Integer sourceId = newsSyncProperties.getAiSearch() == null
+                ? 999
+                : newsSyncProperties.getAiSearch().getSourceId();
+        request.setSourceId(sourceId == null ? 999 : sourceId);
+        return ApiResponse.success(newsSyncTaskService.startAsync(request));
+    }
+
+    @GetMapping("/news/sync-status")
+    public ApiResponse<NewsSyncTriggerResponse> syncNewsStatus() {
+        return ApiResponse.success(newsSyncTaskService.currentStatus());
+    }
+
+    @PostMapping("/news/sync-now")
+    public ApiResponse<NewsSyncTriggerResponse> syncNewsNow(
+            @RequestBody(required = false) NewsSyncNowRequest request) {
+        return ApiResponse.success(newsFetchService.syncNow(request == null ? new NewsSyncNowRequest() : request));
+    }
+
     @PutMapping("/news/{id}")
     public ApiResponse<News> updateNews(@PathVariable("id") Long newsId,
                                         @RequestBody @Valid NewsSaveRequest request) {
         return ApiResponse.success(adminService.updateNews(newsId, request));
+    }
+
+    @PutMapping("/news/{id}/review")
+    public ApiResponse<News> reviewNews(@PathVariable("id") Long newsId,
+                                        @RequestBody @Valid NewsReviewRequest request) {
+        return ApiResponse.success(adminService.reviewNews(newsId, request.getStatus()));
+    }
+
+    @GetMapping("/ai/news-config-check")
+    public ApiResponse<NewsConfigCheckResponse> newsConfigCheck() {
+        return ApiResponse.success(newsAiDiagnosticService.checkNewsConfig());
+    }
+
+    @PostMapping("/news/ai-preview")
+    public ApiResponse<NewsAiPreviewResponse> newsAiPreview(
+            @RequestBody(required = false) NewsAiPreviewRequest request) {
+        return ApiResponse.success(newsAiDiagnosticService.preview(request == null ? new NewsAiPreviewRequest() : request));
+    }
+
+    @PostMapping("/news/{id}/ai-reprocess")
+    public ApiResponse<AdminNewsResponse> reprocessNewsAi(@PathVariable("id") Long newsId) {
+        return ApiResponse.success(newsAiReprocessService.reprocessSingle(newsId));
+    }
+
+    @PostMapping("/news/ai-reprocess/batch")
+    public ApiResponse<NewsAiReprocessBatchResponse> reprocessNewsAiBatch(
+            @RequestBody(required = false) NewsAiReprocessBatchRequest request) {
+        return ApiResponse.success(newsAiReprocessService.reprocessBatch(
+                request == null ? null : request.getNewsIds()
+        ));
     }
 
     @DeleteMapping("/news/{id}")

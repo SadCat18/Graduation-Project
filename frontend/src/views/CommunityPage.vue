@@ -4,7 +4,10 @@ import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
-import { normalizeMediaUrl } from '../utils/url'
+import { loadCachedPublic } from '../utils/requestCache'
+import { normalizeMediaUrl, parseImages } from '../utils/url'
+
+defineOptions({ name: 'CommunityPage' })
 
 const router = useRouter()
 
@@ -18,6 +21,7 @@ const loading = ref(false)
 const error = ref('')
 const commentInputs = reactive({})
 const commentMap = reactive({})
+const postUiState = reactive({})
 const keyword = ref('')
 const selectedCategory = ref('全部')
 const selectedSort = ref('latest')
@@ -41,17 +45,33 @@ function showActionError(e, fallback = '操作失败，请稍后重试') {
   alert(e?.message || fallback)
 }
 
-function parseImages(images) {
-  if (!images) return []
-  return String(images)
-    .split(',')
-    .map(item => item.trim())
-    .map(item => normalizeMediaUrl(item))
-    .filter(Boolean)
-}
 
 function goPostDetail(postId) {
   router.push(`/community/post/${postId}`)
+}
+
+function goNewsDetail(newsId) {
+  if (!newsId) return
+  router.push(`/news/${newsId}`)
+}
+
+
+function postState(postId) {
+  if (!postUiState[postId]) postUiState[postId] = { liked: false, collected: false, watchedLater: false }
+  return postUiState[postId]
+}
+
+function syncPostUiState(list) {
+  ;(list || []).forEach((item) => {
+    postState(item.postId)
+  })
+}
+
+function updatePostLocally(postId, updater) {
+  posts.value = posts.value.map((item) => {
+    if (item.postId !== postId) return item
+    return updater(item)
+  })
 }
 
 async function loadPosts() {
@@ -83,6 +103,7 @@ async function loadPosts() {
       total.value = Number(res.total || 0)
       posts.value = res.list || []
     }
+    syncPostUiState(posts.value)
     if (page.value > totalPages.value) {
       page.value = totalPages.value
       await loadPosts()
@@ -107,15 +128,20 @@ async function changePage(nextPage) {
 }
 
 async function loadSideData() {
-  notices.value = await api.notices()
-  newsList.value = await api.news()
+  const [noticeData, newsData] = await Promise.all([
+    loadCachedPublic('public:notices', () => api.notices()),
+    loadCachedPublic('public:news', () => api.news())
+  ])
+  notices.value = noticeData || []
+  newsList.value = newsData || []
 }
 
 async function deletePost(postId) {
   if (!getToken()) return goLogin()
   try {
     await api.deletePost(postId)
-    await loadPosts()
+    posts.value = posts.value.filter(item => item.postId !== postId)
+    total.value = Math.max(0, total.value - 1)
   } catch (e) {
     showActionError(e, '删除失败，请稍后重试')
   }
@@ -124,28 +150,36 @@ async function deletePost(postId) {
 async function toggleLike(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.likePost(postId)
-    await loadPosts()
+    const result = await api.likePost(postId)
+    postState(postId).liked = !!result?.active
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      likeCount: Number(result?.likeCount ?? item.likeCount ?? 0)
+    }))
   } catch (e) {
-    showActionError(e, '点赞失败，请稍后重试')
+    showActionError(e, '收藏失败，请稍后重试')
   }
 }
 
 async function toggleCollect(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.collectPost(postId)
-    await loadPosts()
+    const result = await api.collectPost(postId)
+    postState(postId).collected = !!result?.active
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      collectCount: Number(result?.collectCount ?? item.collectCount ?? 0)
+    }))
   } catch (e) {
-    showActionError(e, '收藏失败，请稍后重试')
+    showActionError(e, '操作失败，请稍后重试')
   }
 }
 
 async function toggleWatchLater(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.watchLaterPost(postId)
-    await loadPosts()
+    const result = await api.watchLaterPost(postId)
+    postState(postId).watchedLater = !!result?.active
   } catch (e) {
     showActionError(e, '操作失败，请稍后重试')
   }
@@ -166,7 +200,10 @@ async function sendComment(postId) {
     await api.createComment(postId, { content: commentInputs[postId], parentId: 0 })
     commentInputs[postId] = ''
     await loadComments(postId)
-    await loadPosts()
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      commentCount: Number(item.commentCount || 0) + 1
+    }))
   } catch (e) {
     showActionError(e, '评论发送失败，请稍后重试')
   }
@@ -178,8 +215,10 @@ watch([selectedCategory, selectedSort], async () => {
 })
 
 onMounted(async () => {
-  await loadPosts()
-  await loadSideData()
+  await Promise.all([
+    loadPosts(),
+    loadSideData()
+  ])
 })
 </script>
 
@@ -247,15 +286,15 @@ onMounted(async () => {
 
           <div class="inline actions-row">
             <button class="btn-soft" @click="toggleLike(item.postId)">
-              <AppIcon name="like" :size="14" />
-              点赞 {{ item.likeCount }}
+            <AppIcon name="like" :size="14" />
+            {{ postState(item.postId).liked ? '已赞' : '点赞' }} {{ item.likeCount }}
             </button>
             <button class="btn-soft" @click="toggleCollect(item.postId)">
               <AppIcon name="collect" :size="14" />
-              收藏 {{ item.collectCount }}
+              {{ postState(item.postId).collected ? '已收藏' : '收藏' }} {{ item.collectCount }}
             </button>
             <button class="btn-soft" @click="toggleWatchLater(item.postId)">
-              稍后再看
+              {{ postState(item.postId).watchedLater ? '已加入稍后再看' : '稍后再看' }}
             </button>
             <button class="btn-soft" @click="loadComments(item.postId)">
               <AppIcon name="comment" :size="14" />
@@ -297,7 +336,12 @@ onMounted(async () => {
       </div>
       <div class="card">
         <div class="section-head"><h3>滑板资讯</h3></div>
-        <div v-for="n in newsList.slice(0, 8)" :key="n.newsId" class="list-item">
+        <div
+          v-for="n in newsList.slice(0, 8)"
+          :key="n.newsId"
+          class="list-item clickable-news-item"
+          @click="goNewsDetail(n.newsId)"
+        >
           <strong>{{ n.title }}</strong>
           <p class="muted">{{ n.category || '未分类' }}</p>
         </div>
@@ -351,6 +395,14 @@ onMounted(async () => {
 }
 
 .clickable-title:hover {
+  text-decoration: underline;
+}
+
+.clickable-news-item {
+  cursor: pointer;
+}
+
+.clickable-news-item:hover strong {
   text-decoration: underline;
 }
 

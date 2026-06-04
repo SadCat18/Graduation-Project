@@ -1,11 +1,14 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
-import { normalizeMediaUrl } from '../utils/url'
+import { normalizeMediaUrl, parseImages, firstImage } from '../utils/url'
 import { getToken } from '../utils/auth'
+import { loadCachedPublic } from '../utils/requestCache'
+
+defineOptions({ name: 'HomePage' })
 
 const router = useRouter()
 
@@ -38,19 +41,7 @@ const autoplayIntervalMs = computed(() => {
   return seconds * 1000
 })
 
-function parseImages(images) {
-  if (!images) return []
-  return String(images)
-    .split(',')
-    .map(item => item.trim())
-    .map(item => normalizeMediaUrl(item))
-    .filter(Boolean)
-}
 
-function firstImage(images) {
-  const list = parseImages(images)
-  return list.length ? list[0] : ''
-}
 
 function activityStatusText(item) {
   const status = normalizeActivityStatus(item.activityStatus ?? item.status)
@@ -115,36 +106,18 @@ function stopAutoplay() {
   }
 }
 
-async function loadHomeData() {
+
+async function loadHomePrimaryData() {
   loading.value = true
   try {
-    const [bannerData, postData, activityData, noticeData, bulletinData, newsData] = await Promise.all([
-      api.publicBanners(),
-      api.posts({ page: 1, size: 6 }),
-      api.publicActivities({ page: 1, size: 6 }),
-      api.notices(),
-      api.bulletins({ limit: 5 }),
-      api.news()
+    const [bannerData, postData, activityData] = await Promise.all([
+      loadCachedPublic('home:banners', () => api.publicBanners()),
+      loadCachedPublic('home:posts', () => api.posts({ page: 1, size: 6 })),
+      loadCachedPublic('home:activities', () => api.publicActivities({ page: 1, size: 6 }))
     ])
     bannerList.value = (bannerData || []).filter(item => item.status !== '1')
     posts.value = postData?.list || []
     activities.value = activityData?.list || []
-    notices.value = noticeData || []
-    bulletins.value = bulletinData || []
-    newsList.value = newsData || []
-    if (getToken()) {
-      try {
-        const rec = await api.recommendations()
-        recommendPosts.value = rec?.posts || []
-        recommendActivities.value = rec?.activities || []
-      } catch (_) {
-        recommendPosts.value = []
-        recommendActivities.value = []
-      }
-    } else {
-      recommendPosts.value = []
-      recommendActivities.value = []
-    }
     currentSlide.value = 0
     startAutoplay()
   } finally {
@@ -152,10 +125,53 @@ async function loadHomeData() {
   }
 }
 
-onMounted(loadHomeData)
-onBeforeUnmount(stopAutoplay)
-watch(currentSlide, () => {
+async function loadHomeSecondaryData() {
+  const [noticeResult, bulletinResult, newsResult] = await Promise.allSettled([
+    loadCachedPublic('public:notices', () => api.notices()),
+    loadCachedPublic('public:bulletins:home', () => api.bulletins({ limit: 5 })),
+    loadCachedPublic('public:news', () => api.news())
+  ])
+
+  if (noticeResult.status === 'fulfilled') {
+    notices.value = noticeResult.value || []
+  }
+  if (bulletinResult.status === 'fulfilled') {
+    bulletins.value = bulletinResult.value || []
+  }
+  if (newsResult.status === 'fulfilled') {
+    newsList.value = newsResult.value || []
+  }
+}
+
+async function loadRecommendations() {
+  if (!getToken()) {
+    recommendPosts.value = []
+    recommendActivities.value = []
+    return
+  }
+  try {
+    const rec = await api.recommendations()
+    recommendPosts.value = rec?.posts || []
+    recommendActivities.value = rec?.activities || []
+  } catch (_) {
+    recommendPosts.value = []
+    recommendActivities.value = []
+  }
+}
+
+onMounted(async () => {
+  await loadHomePrimaryData()
+  loadHomeSecondaryData()
+  loadRecommendations()
+})
+onBeforeUnmount(() => {
+  stopAutoplay()
+})
+onActivated(() => {
   startAutoplay()
+})
+onDeactivated(() => {
+  stopAutoplay()
 })
 </script>
 

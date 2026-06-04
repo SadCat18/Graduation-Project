@@ -1,21 +1,22 @@
-﻿                                                                                                                                                                                                                                                                                                                   import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { getRole, getToken } from '../utils/auth'
 
-import LoginPage from '../views/LoginPage.vue'
-import HomePage from '../views/HomePage.vue'
-import CommunityPage from '../views/CommunityPage.vue'
-import PostDetailPage from '../views/PostDetailPage.vue'
-import PostPublishPage from '../views/PostPublishPage.vue'
-import ActivitiesPage from '../views/ActivitiesPage.vue'
-import ActivityPublishPage from '../views/ActivityPublishPage.vue'
-import BulletinListPage from '../views/BulletinListPage.vue'
-import BulletinDetailPage from '../views/BulletinDetailPage.vue'
-import BulletinPublishPage from '../views/BulletinPublishPage.vue'
-import NewsDetailPage from '../views/NewsDetailPage.vue'
-import ProfilePage from '../views/ProfilePage.vue'
-import AdminPage from '../views/AdminPage.vue'
-import PlaceDetailPage from '../views/PlaceDetailPage.vue'
-import AiCoachPage from '../views/AiCoachPage.vue'
+const LoginPage = () => import(/* webpackChunkName: "view-login" */ '../views/LoginPage.vue')
+const HomePage = () => import(/* webpackChunkName: "view-home" */ '../views/HomePage.vue')
+const CommunityPage = () => import(/* webpackChunkName: "view-community" */ '../views/CommunityPage.vue')
+const PostDetailPage = () => import(/* webpackChunkName: "view-community" */ '../views/PostDetailPage.vue')
+const PostPublishPage = () => import(/* webpackChunkName: "view-community" */ '../views/PostPublishPage.vue')
+const ActivitiesPage = () => import(/* webpackChunkName: "view-activities" */ '../views/ActivitiesPage.vue')
+const ActivityDetailPage = () => import(/* webpackChunkName: "view-activities" */ '../views/ActivityDetailPage.vue')
+const ActivityPublishPage = () => import(/* webpackChunkName: "view-activities" */ '../views/ActivityPublishPage.vue')
+const BulletinListPage = () => import(/* webpackChunkName: "view-bulletins" */ '../views/BulletinListPage.vue')
+const BulletinDetailPage = () => import(/* webpackChunkName: "view-bulletins" */ '../views/BulletinDetailPage.vue')
+const BulletinPublishPage = () => import(/* webpackChunkName: "view-bulletins" */ '../views/BulletinPublishPage.vue')
+const NewsDetailPage = () => import(/* webpackChunkName: "view-news" */ '../views/NewsDetailPage.vue')
+const ProfilePage = () => import(/* webpackChunkName: "view-profile" */ '../views/ProfilePage.vue')
+const AdminPage = () => import(/* webpackChunkName: "view-admin" */ '../views/AdminPage.vue')
+const PlaceDetailPage = () => import(/* webpackChunkName: "view-places" */ '../views/PlaceDetailPage.vue')
+const AiCoachPage = () => import(/* webpackChunkName: "view-ai-coach" */ '../views/AiCoachPage.vue')
 
 const routes = [
   { path: '/login', component: LoginPage },
@@ -26,6 +27,7 @@ const routes = [
   { path: '/community/publish', component: PostPublishPage, meta: { requiresAuth: true } },
   { path: '/activities', component: ActivitiesPage },
   { path: '/activities/publish', component: ActivityPublishPage, meta: { requiresAuth: true } },
+  { path: '/activities/:id', component: ActivityDetailPage },
   { path: '/places/:id', component: PlaceDetailPage },
   { path: '/bulletins', component: BulletinListPage },
   { path: '/bulletins/:id', component: BulletinDetailPage },

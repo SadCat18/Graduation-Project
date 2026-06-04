@@ -38,6 +38,99 @@ mvn spring-boot:run
 - `AI_BASE_URL`：模型接口地址
 - `AI_API_KEY`：模型访问密钥
 
+当前项目已支持“默认聊天模型 + 资讯专用模型 + 资讯子场景模型”的分层配置。
+
+建议优先使用以下一组环境变量：
+
+- `AI_PROVIDER_DEFAULT`
+- `AI_MODEL_DEFAULT`
+- `AI_BASE_URL_DEFAULT`
+- `AI_API_KEY_DEFAULT`
+- `AI_PROVIDER_NEWS`
+- `AI_MODEL_NEWS`
+- `AI_BASE_URL_NEWS`
+- `AI_API_KEY_NEWS`
+
+如果资讯各子场景需要进一步拆分 modelId，已支持：
+
+- `AI_MODEL_NEWS_SUMMARY`
+- `AI_MODEL_NEWS_TRANSLATE`
+- `AI_MODEL_NEWS_CLASSIFY`
+- `AI_MODEL_NEWS_TITLE_POLISH`
+
+如需进一步拆 provider / baseUrl / apiKey，也已支持：
+
+- `AI_PROVIDER_NEWS_SUMMARY` / `AI_BASE_URL_NEWS_SUMMARY` / `AI_API_KEY_NEWS_SUMMARY`
+- `AI_PROVIDER_NEWS_TRANSLATE` / `AI_BASE_URL_NEWS_TRANSLATE` / `AI_API_KEY_NEWS_TRANSLATE`
+- `AI_PROVIDER_NEWS_CLASSIFY` / `AI_BASE_URL_NEWS_CLASSIFY` / `AI_API_KEY_NEWS_CLASSIFY`
+- `AI_PROVIDER_NEWS_TITLE_POLISH` / `AI_BASE_URL_NEWS_TITLE_POLISH` / `AI_API_KEY_NEWS_TITLE_POLISH`
+
+推荐的火山方舟配置方式：
+
+```env
+AI_PROVIDER_DEFAULT=ark
+AI_MODEL_DEFAULT=Doubao-Seed-2.0-mini
+AI_BASE_URL_DEFAULT=https://ark.cn-beijing.volces.com/api/v3/chat/completions
+AI_API_KEY_DEFAULT=你的ARK_API_KEY
+
+AI_PROVIDER_NEWS=ark
+AI_MODEL_NEWS=Doubao-Seed-2.0-mini
+
+AI_MODEL_NEWS_SUMMARY=Doubao-Seed-2.0-mini
+AI_MODEL_NEWS_TRANSLATE=Doubao-Seed-Translation
+AI_MODEL_NEWS_CLASSIFY=Doubao-Seed-2.0-mini
+AI_MODEL_NEWS_TITLE_POLISH=Doubao-Seed-2.0-mini
+```
+
+当前资讯 AI scene 路由如下：
+
+- `news_summary`：资讯摘要
+- `news_translate`：资讯翻译
+- `news_classify`：资讯分类
+- `news_title_polish`：资讯标题优化
+
+如果后续切换资讯模型，只需：
+
+1. 修改对应 `AI_MODEL_NEWS*` 环境变量
+2. 调用后台资讯 AI 重跑接口重新生成已有资讯的 AI 结果
+
+重跑接口：
+
+- `POST /api/admin/news/{id}/ai-reprocess`
+- `POST /api/admin/news/ai-reprocess/batch`
+
+## 资讯一键拉取配置
+
+当前后台已支持管理员点击“一键拉取滑板资讯”，后端会按配置的 RSS / Atom 来源执行：
+
+1. 抓取
+2. 去重
+3. AI 翻译 / 摘要 / 分类 / 标题优化
+4. 入库
+
+配置项：
+
+```yaml
+news-sync:
+  enabled: true
+  sources:
+    - name: "KickerClub"
+      url: "https://www.kickerclub.com/feed"
+    - name: "O22Y"
+      url: "https://www.o22y.com/?feed=rss2"
+```
+
+后台接口：
+
+- `POST /api/admin/news/sync`
+
+说明：
+
+- 第一版支持 RSS / Atom 格式来源
+- 当前示例优先放了已验证可返回 RSS/Atom 的中文滑板来源
+- 如果没有配置 `news-sync.sources`，后台按钮会返回提示，但不会报错
+- 新抓取的资讯会继续走现有 `NewsSyncService`，自动复用 AI 处理与去重逻辑
+
 当前 AI 相关代码位置：
 
 - 配置：`src/main/java/com/javademo1/config/AiProperties.java`

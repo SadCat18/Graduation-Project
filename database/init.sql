@@ -142,10 +142,42 @@ CREATE TABLE IF NOT EXISTS tb_news (
   news_id BIGINT PRIMARY KEY AUTO_INCREMENT,
   title VARCHAR(100) NOT NULL,
   content TEXT NOT NULL,
+  summary TEXT,
+  origin_title VARCHAR(255),
+  origin_content TEXT,
+  origin_summary TEXT,
+  ai_title VARCHAR(255),
+  ai_summary TEXT,
+  ai_category VARCHAR(20),
+  ai_translated_content TEXT,
+  source_name VARCHAR(100),
+  source_url VARCHAR(500),
   cover VARCHAR(255),
   category VARCHAR(20),
+  status CHAR(1) DEFAULT '0',
+  ai_status VARCHAR(20),
+  ai_error_message VARCHAR(500),
   admin_id BIGINT NOT NULL,
+  sync_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ai_coach_session (
+  session_id VARCHAR(64) PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_ai_coach_session_user_update (user_id, update_time)
+);
+
+CREATE TABLE IF NOT EXISTS ai_coach_message (
+  msg_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  session_id VARCHAR(64) NOT NULL,
+  role VARCHAR(20) NOT NULL,
+  content TEXT NOT NULL,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ai_coach_message_session_time (session_id, create_time, msg_id)
 );
 
 CREATE TABLE IF NOT EXISTS tb_banner (

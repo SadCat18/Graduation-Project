@@ -341,10 +341,40 @@ function applyAiTitle() {
   }
 }
 
+function buildAiDetailContent() {
+  if (!aiResult.value) return ''
+
+  const sections = []
+  const description = (aiResult.value.description || '').trim()
+  const suitableFor = (aiResult.value.suitableFor || '').trim()
+  const highlights = Array.isArray(aiResult.value.highlights) ? aiResult.value.highlights.filter(Boolean) : []
+  const tips = Array.isArray(aiResult.value.tips) ? aiResult.value.tips.filter(Boolean) : []
+  const riskTips = Array.isArray(aiResult.value.riskTips) ? aiResult.value.riskTips.filter(Boolean) : []
+
+  if (description) {
+    sections.push(`活动介绍\n${description}`)
+  }
+  if (suitableFor) {
+    sections.push(`适合人群\n${suitableFor}`)
+  }
+  if (highlights.length) {
+    sections.push(`活动亮点\n${highlights.map(item => `- ${item}`).join('\n')}`)
+  }
+  if (tips.length) {
+    sections.push(`注意事项\n${tips.map(item => `- ${item}`).join('\n')}`)
+  }
+  if (riskTips.length) {
+    sections.push(`风险提示\n${riskTips.map(item => `- ${item}`).join('\n')}`)
+  }
+
+  return sections.join('\n\n')
+}
+
 function applyAiDescription() {
-  if (aiResult.value?.description) {
-    form.content = aiResult.value.description
-    form.activityDesc = aiResult.value.description
+  const mergedContent = buildAiDetailContent()
+  if (mergedContent) {
+    form.content = mergedContent
+    form.activityDesc = mergedContent
   }
 }
 

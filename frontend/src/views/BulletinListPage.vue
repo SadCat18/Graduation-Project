@@ -2,8 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
-import { normalizeMediaUrl } from '../utils/url'
+import { firstImage } from '../utils/url'
 import { BULLETIN_SORT_OPTIONS, BULLETIN_TYPES } from '../constants/bulletin'
+
+defineOptions({ name: 'BulletinListPage' })
 
 const router = useRouter()
 const list = ref([])
@@ -17,10 +19,6 @@ const sortHint = computed(() => {
   return '当前快讯暂无城市字段，已按最新发布展示。'
 })
 
-function firstImage(raw) {
-  if (!raw) return ''
-  return String(raw).split(',').map(item => normalizeMediaUrl(item.trim())).find(Boolean) || ''
-}
 
 function shortText(text, max = 90) {
   const value = String(text || '').trim().replace(/\s+/g, ' ')
