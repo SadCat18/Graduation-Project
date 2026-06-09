@@ -1,0 +1,43 @@
+server {
+  listen 80;
+  server_name ${SERVER_NAME};
+
+  client_max_body_size 20m;
+
+  location /api/ {
+    proxy_pass http://backend:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /upload/ {
+    proxy_pass http://backend:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location = /_AMapService/v4/map/styles {
+    rewrite ^ /v4/map/styles break;
+    proxy_ssl_server_name on;
+    proxy_set_header Host webapi.amap.com;
+    proxy_pass https://webapi.amap.com;
+  }
+
+  location /_AMapService/ {
+    rewrite ^/_AMapService/(.*)$ /$1 break;
+    proxy_ssl_server_name on;
+    proxy_set_header Host restapi.amap.com;
+    proxy_pass https://restapi.amap.com;
+  }
+
+  location / {
+    root /usr/share/nginx/html;
+    try_files $uri $uri/ /index.html;
+  }
+}
