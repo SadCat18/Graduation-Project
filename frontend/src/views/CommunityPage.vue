@@ -4,7 +4,10 @@ import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
-import { normalizeMediaUrl } from '../utils/url'
+import { loadCachedPublic } from '../utils/requestCache'
+import { parseImages } from '../utils/url'
+
+defineOptions({ name: 'CommunityPage' })
 
 const router = useRouter()
 
@@ -18,19 +21,25 @@ const loading = ref(false)
 const error = ref('')
 const commentInputs = reactive({})
 const commentMap = reactive({})
+const postUiState = reactive({})
 const keyword = ref('')
 const selectedCategory = ref('全部')
 const selectedSort = ref('latest')
-const categoryOptions = ['全部', '技巧交流', '装备讨论', '路线分享', '活动讨论', '经验分享']
+const categoryOptions = ['全部', '新手教学', '技巧交流', '装备分享', '路线分享', '赛事讨论', '同城约板', '日常交流', '经验分享']
 const sortOptions = [
   { label: '最新', value: 'latest' },
-  { label: '最热', value: 'hot' },
+  { label: '热门', value: 'hot' },
   { label: '推荐', value: 'recommended' },
-  { label: '点赞最多', value: 'likes' },
-  { label: '评论最多', value: 'comments' }
+  { label: '高赞', value: 'likes' },
+  { label: '热评', value: 'comments' }
 ]
 const isLoggedIn = computed(() => !!getToken())
 const totalPages = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)))
+const listSummary = computed(() => {
+  const categoryText = selectedCategory.value === '全部' ? '全部分类' : selectedCategory.value
+  const sortText = sortOptions.find(item => item.value === selectedSort.value)?.label || '最新'
+  return `${categoryText} · ${sortText}排序 · 共 ${total.value || 0} 条`
+})
 
 function goLogin(message = '请先登录后再进行互动操作') {
   alert(message)
@@ -41,17 +50,42 @@ function showActionError(e, fallback = '操作失败，请稍后重试') {
   alert(e?.message || fallback)
 }
 
-function parseImages(images) {
-  if (!images) return []
-  return String(images)
-    .split(',')
-    .map(item => item.trim())
-    .map(item => normalizeMediaUrl(item))
-    .filter(Boolean)
-}
 
 function goPostDetail(postId) {
   router.push(`/community/post/${postId}`)
+}
+
+function goNewsDetail(newsId) {
+  if (!newsId) return
+  router.push(`/news/${newsId}`)
+}
+
+
+function postState(postId) {
+  if (!postUiState[postId]) postUiState[postId] = { liked: false, collected: false, watchedLater: false }
+  return postUiState[postId]
+}
+
+function postImages(item) {
+  return parseImages(item?.images).slice(0, 3)
+}
+
+async function selectCategory(category) {
+  if (selectedCategory.value === category) return
+  selectedCategory.value = category
+}
+
+function syncPostUiState(list) {
+  ;(list || []).forEach((item) => {
+    postState(item.postId)
+  })
+}
+
+function updatePostLocally(postId, updater) {
+  posts.value = posts.value.map((item) => {
+    if (item.postId !== postId) return item
+    return updater(item)
+  })
 }
 
 async function loadPosts() {
@@ -83,6 +117,7 @@ async function loadPosts() {
       total.value = Number(res.total || 0)
       posts.value = res.list || []
     }
+    syncPostUiState(posts.value)
     if (page.value > totalPages.value) {
       page.value = totalPages.value
       await loadPosts()
@@ -107,15 +142,20 @@ async function changePage(nextPage) {
 }
 
 async function loadSideData() {
-  notices.value = await api.notices()
-  newsList.value = await api.news()
+  const [noticeData, newsData] = await Promise.all([
+    loadCachedPublic('public:notices', () => api.notices()),
+    loadCachedPublic('public:news', () => api.news())
+  ])
+  notices.value = noticeData || []
+  newsList.value = newsData || []
 }
 
 async function deletePost(postId) {
   if (!getToken()) return goLogin()
   try {
     await api.deletePost(postId)
-    await loadPosts()
+    posts.value = posts.value.filter(item => item.postId !== postId)
+    total.value = Math.max(0, total.value - 1)
   } catch (e) {
     showActionError(e, '删除失败，请稍后重试')
   }
@@ -124,28 +164,36 @@ async function deletePost(postId) {
 async function toggleLike(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.likePost(postId)
-    await loadPosts()
+    const result = await api.likePost(postId)
+    postState(postId).liked = !!result?.active
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      likeCount: Number(result?.likeCount ?? item.likeCount ?? 0)
+    }))
   } catch (e) {
-    showActionError(e, '点赞失败，请稍后重试')
+    showActionError(e, '收藏失败，请稍后重试')
   }
 }
 
 async function toggleCollect(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.collectPost(postId)
-    await loadPosts()
+    const result = await api.collectPost(postId)
+    postState(postId).collected = !!result?.active
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      collectCount: Number(result?.collectCount ?? item.collectCount ?? 0)
+    }))
   } catch (e) {
-    showActionError(e, '收藏失败，请稍后重试')
+    showActionError(e, '操作失败，请稍后重试')
   }
 }
 
 async function toggleWatchLater(postId) {
   if (!getToken()) return goLogin()
   try {
-    await api.watchLaterPost(postId)
-    await loadPosts()
+    const result = await api.watchLaterPost(postId)
+    postState(postId).watchedLater = !!result?.active
   } catch (e) {
     showActionError(e, '操作失败，请稍后重试')
   }
@@ -166,7 +214,10 @@ async function sendComment(postId) {
     await api.createComment(postId, { content: commentInputs[postId], parentId: 0 })
     commentInputs[postId] = ''
     await loadComments(postId)
-    await loadPosts()
+    updatePostLocally(postId, (item) => ({
+      ...item,
+      commentCount: Number(item.commentCount || 0) + 1
+    }))
   } catch (e) {
     showActionError(e, '评论发送失败，请稍后重试')
   }
@@ -178,8 +229,10 @@ watch([selectedCategory, selectedSort], async () => {
 })
 
 onMounted(async () => {
-  await loadPosts()
-  await loadSideData()
+  await Promise.all([
+    loadPosts(),
+    loadSideData()
+  ])
 })
 </script>
 
@@ -189,8 +242,8 @@ onMounted(async () => {
       <div class="card community-hero">
         <div>
           <p class="hero-sub">社区内容广场</p>
-          <h2>社区帖子广场</h2>
-          <p class="muted">先看内容，再决定发帖。帖子浏览优先，发布独立跳转。</p>
+          <h2>看看大家今天练了什么</h2>
+          <p class="muted">按技巧、装备、路线和同城内容筛选，快速找到值得看的帖子。</p>
         </div>
         <button class="btn-primary" @click="isLoggedIn ? $router.push('/community/publish') : $router.push('/login')">
           <AppIcon name="plus" :size="15" />
@@ -200,68 +253,108 @@ onMounted(async () => {
 
       <div class="card">
         <div class="section-head">
-          <h3>帖子广场</h3>
+          <div>
+            <p class="hero-sub">POST FEED</p>
+            <h3>帖子广场</h3>
+            <p class="muted">{{ listSummary }}</p>
+          </div>
           <button class="btn-soft" @click="loadPosts">
             <AppIcon name="refresh" :size="15" />
             刷新
           </button>
         </div>
 
-        <div class="filter-bar">
-          <input
-            v-model="keyword"
-            placeholder="搜索标题或内容..."
-            @keyup.enter="applyKeywordSearch"
-          />
-          <button class="btn-soft" @click="applyKeywordSearch">搜索</button>
-          <select v-model="selectedCategory">
-            <option v-for="c in categoryOptions" :key="c" :value="c">{{ c }}</option>
-          </select>
-          <select v-model="selectedSort">
-            <option v-for="s in sortOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
-          </select>
+        <div class="feed-toolbar">
+          <div class="search-line">
+            <input
+              v-model="keyword"
+              placeholder="搜索标题、正文、路线或装备..."
+              @keyup.enter="applyKeywordSearch"
+            />
+            <button class="btn-primary" @click="applyKeywordSearch">
+              <AppIcon name="search" :size="15" />
+              搜索
+            </button>
+          </div>
+          <div class="chip-row" aria-label="帖子分类">
+            <button
+              v-for="c in categoryOptions"
+              :key="c"
+              type="button"
+              :class="['filter-chip', { active: selectedCategory === c }]"
+              @click="selectCategory(c)"
+            >
+              {{ c }}
+            </button>
+          </div>
+          <div class="sort-row" aria-label="排序方式">
+            <button
+              v-for="s in sortOptions"
+              :key="s.value"
+              type="button"
+              :class="['sort-chip', { active: selectedSort === s.value }]"
+              @click="selectedSort = s.value"
+            >
+              {{ s.label }}
+            </button>
+          </div>
         </div>
 
         <p v-if="loading" class="muted">加载中...</p>
         <p v-if="error" class="error">{{ error }}</p>
         <p v-if="!loading && !posts.length" class="muted">暂无帖子</p>
 
-        <div v-for="item in posts" :key="item.postId" class="post-item post-card-item">
-          <div class="post-header">
-            <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
-            <span class="tag">{{ item.category || '未分类' }}</span>
-          </div>
-          <p class="muted">作者：{{ item.authorName }} · Lv{{ item.authorLevel || 1 }} · {{ item.createTime?.replace('T', ' ') }}</p>
-          <p class="post-content">{{ item.content }}</p>
-
-          <div v-if="parseImages(item.images).length" class="post-images">
+        <div v-for="item in posts" :key="item.postId" :class="['post-item', 'post-card-item', { 'has-images': postImages(item).length }]">
+          <div v-if="postImages(item).length" class="post-cover-strip" @click="goPostDetail(item.postId)">
             <img
-              v-for="img in parseImages(item.images)"
+              v-for="img in postImages(item)"
               :key="img"
               :src="img"
               alt="帖子图片"
               class="clickable-image"
-              @click="goPostDetail(item.postId)"
+              loading="lazy"
+              decoding="async"
             />
+          </div>
+          <div class="post-body">
+            <div class="post-header">
+              <div class="post-title-block">
+                <div class="post-tags">
+                  <span v-if="item.isTop === '1'" class="tag hot-tag">置顶</span>
+                  <span class="tag">{{ item.category || '未分类' }}</span>
+                </div>
+                <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
+              </div>
+              <button class="btn-soft detail-btn" @click="goPostDetail(item.postId)">查看详情</button>
+            </div>
+            <p class="post-meta">
+              {{ item.authorName || '匿名滑手' }} · Lv{{ item.authorLevel || 1 }} · {{ item.createTime?.replace('T', ' ') }}
+            </p>
+            <p class="post-content">{{ item.content }}</p>
+          </div>
+
+          <div class="post-stats-row">
+            <span>赞 {{ item.likeCount || 0 }}</span>
+            <span>收藏 {{ item.collectCount || 0 }}</span>
+            <span>评论 {{ item.commentCount || 0 }}</span>
           </div>
 
           <div class="inline actions-row">
             <button class="btn-soft" @click="toggleLike(item.postId)">
               <AppIcon name="like" :size="14" />
-              点赞 {{ item.likeCount }}
+              {{ postState(item.postId).liked ? '已赞' : '点赞' }}
             </button>
             <button class="btn-soft" @click="toggleCollect(item.postId)">
               <AppIcon name="collect" :size="14" />
-              收藏 {{ item.collectCount }}
+              {{ postState(item.postId).collected ? '已收藏' : '收藏' }}
             </button>
             <button class="btn-soft" @click="toggleWatchLater(item.postId)">
-              稍后再看
+              {{ postState(item.postId).watchedLater ? '已加入稍后再看' : '稍后再看' }}
             </button>
             <button class="btn-soft" @click="loadComments(item.postId)">
               <AppIcon name="comment" :size="14" />
-              评论 {{ item.commentCount }}
+              看评论
             </button>
-            <button class="btn-soft" @click="goPostDetail(item.postId)">查看详情</button>
           </div>
 
           <div v-if="commentMap[item.postId]" class="comment-block">
@@ -297,7 +390,12 @@ onMounted(async () => {
       </div>
       <div class="card">
         <div class="section-head"><h3>滑板资讯</h3></div>
-        <div v-for="n in newsList.slice(0, 8)" :key="n.newsId" class="list-item">
+        <div
+          v-for="n in newsList.slice(0, 8)"
+          :key="n.newsId"
+          class="list-item clickable-news-item"
+          @click="goNewsDetail(n.newsId)"
+        >
           <strong>{{ n.title }}</strong>
           <p class="muted">{{ n.category || '未分类' }}</p>
         </div>
@@ -332,13 +430,50 @@ onMounted(async () => {
 
 .post-card-item {
   display: grid;
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.post-card-item.has-images {
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+}
+
+.post-cover-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  cursor: pointer;
+}
+
+.post-cover-strip img {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.post-cover-strip img:first-child {
+  grid-column: 1 / -1;
+  height: 150px;
+}
+
+.post-body {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .post-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -346,39 +481,91 @@ onMounted(async () => {
   margin: 0;
 }
 
+.post-title-block {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hot-tag {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
 .clickable-title {
   cursor: pointer;
+  font-size: 20px;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .clickable-title:hover {
   text-decoration: underline;
 }
 
+.clickable-news-item {
+  cursor: pointer;
+}
+
+.clickable-news-item:hover strong {
+  text-decoration: underline;
+}
+
 .post-content {
   margin: 0;
   white-space: pre-wrap;
+  color: #1f2937;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.post-images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
-}
-
-.post-images img {
-  width: 100%;
-  height: 96px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--line);
+.post-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .clickable-image {
   cursor: pointer;
 }
 
+.post-stats-row {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.post-card-item.has-images .post-stats-row {
+  grid-column: 2;
+}
+
+.post-stats-row span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #f8fafc;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
 .actions-row {
+  grid-column: 1;
   margin-top: 2px;
+}
+
+.post-card-item.has-images .actions-row {
+  grid-column: 2;
 }
 
 .comment-block {
@@ -415,15 +602,48 @@ onMounted(async () => {
   gap: 10px;
 }
 
-.filter-bar {
+.feed-toolbar {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto auto auto;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
-.filter-bar select {
-  min-width: 120px;
+.search-line {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 8px;
+}
+
+.chip-row,
+.sort-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip,
+.sort-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-soft);
+  padding: 7px 11px;
+  min-height: 34px;
+}
+
+.filter-chip.active,
+.sort-chip.active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.detail-btn {
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -437,8 +657,18 @@ onMounted(async () => {
     align-items: flex-start;
   }
 
-  .filter-bar {
+  .feed-toolbar,
+  .search-line {
     grid-template-columns: 1fr;
+  }
+
+  .post-card-item {
+    grid-template-columns: 1fr;
+  }
+
+  .post-stats-row,
+  .actions-row {
+    grid-column: 1;
   }
 
   .post-header {
@@ -453,9 +683,10 @@ onMounted(async () => {
     flex-wrap: wrap;
   }
 
-  .filter-bar input,
-  .filter-bar select,
-  .filter-bar button,
+  .search-line input,
+  .search-line button,
+  .filter-chip,
+  .sort-chip,
   .actions-row button,
   .comment-input-row button,
   .comment-input-row input {
@@ -468,8 +699,13 @@ onMounted(async () => {
 }
 
 @media (max-width: 480px) {
-  .post-images {
+  .post-cover-strip {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .post-cover-strip img,
+  .post-cover-strip img:first-child {
+    height: 120px;
   }
 
   .actions-row > * {

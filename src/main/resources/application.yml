@@ -1,9 +1,18 @@
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
-    name: javademo1
+    name: skatehub
+  messages:
+    encoding: UTF-8
   config:
     import: optional:classpath:application-local.yml
   datasource:
@@ -35,7 +44,54 @@ jwt:
   expiration-hours: ${JWT_EXPIRATION_HOURS:24}
 
 ai:
-  provider: ${AI_PROVIDER:ark}
-  model: ${AI_MODEL:doubao-seed-2-0-lite-260428}
-  base-url: ${AI_BASE_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}
-  api-key: ${AI_API_KEY:${ARK_API_KEY:}}
+  provider: ${AI_PROVIDER:${AI_PROVIDER_DEFAULT:ark}}
+  model: ${AI_MODEL:${AI_MODEL_DEFAULT:doubao-seed-2-0-lite-260428}}
+  base-url: ${AI_BASE_URL:${AI_BASE_URL_DEFAULT:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
+  api-key: ${AI_API_KEY:${AI_API_KEY_DEFAULT:${ARK_API_KEY:}}}
+  defaults:
+    provider: ${AI_PROVIDER_DEFAULT:${AI_PROVIDER:ark}}
+    model: ${AI_MODEL_DEFAULT:${AI_MODEL:doubao-seed-2-0-lite-260428}}
+    base-url: ${AI_BASE_URL_DEFAULT:${AI_BASE_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
+    api-key: ${AI_API_KEY_DEFAULT:${AI_API_KEY:${ARK_API_KEY:}}}
+  news:
+    provider: ${AI_PROVIDER_NEWS:}
+    model: ${AI_MODEL_NEWS:}
+    base-url: ${AI_BASE_URL_NEWS:}
+    api-key: ${AI_API_KEY_NEWS:}
+  scenes:
+    news_discovery:
+      provider: ${AI_PROVIDER_NEWS_DISCOVERY:${AI_PROVIDER_NEWS:}}
+      model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-0-pro-260215}}
+      base-url: ${AI_BASE_URL_NEWS_DISCOVERY:${AI_BASE_URL_NEWS:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
+      api-key: ${AI_API_KEY_NEWS_DISCOVERY:${AI_API_KEY_NEWS:}}
+    news_summary:
+      provider: ${AI_PROVIDER_NEWS_SUMMARY:${AI_PROVIDER_NEWS:}}
+      model: ${AI_MODEL_NEWS_SUMMARY:${AI_MODEL_NEWS:}}
+      base-url: ${AI_BASE_URL_NEWS_SUMMARY:${AI_BASE_URL_NEWS:}}
+      api-key: ${AI_API_KEY_NEWS_SUMMARY:${AI_API_KEY_NEWS:}}
+    news_translate:
+      provider: ${AI_PROVIDER_NEWS_TRANSLATE:${AI_PROVIDER_NEWS:}}
+      model: ${AI_MODEL_NEWS_TRANSLATE:${AI_MODEL_NEWS:}}
+      base-url: ${AI_BASE_URL_NEWS_TRANSLATE:${AI_BASE_URL_NEWS:}}
+      api-key: ${AI_API_KEY_NEWS_TRANSLATE:${AI_API_KEY_NEWS:}}
+    news_classify:
+      provider: ${AI_PROVIDER_NEWS_CLASSIFY:${AI_PROVIDER_NEWS:}}
+      model: ${AI_MODEL_NEWS_CLASSIFY:${AI_MODEL_NEWS:}}
+      base-url: ${AI_BASE_URL_NEWS_CLASSIFY:${AI_BASE_URL_NEWS:}}
+      api-key: ${AI_API_KEY_NEWS_CLASSIFY:${AI_API_KEY_NEWS:}}
+    news_title_polish:
+      provider: ${AI_PROVIDER_NEWS_TITLE_POLISH:${AI_PROVIDER_NEWS:}}
+      model: ${AI_MODEL_NEWS_TITLE_POLISH:${AI_MODEL_NEWS:}}
+      base-url: ${AI_BASE_URL_NEWS_TITLE_POLISH:${AI_BASE_URL_NEWS:}}
+      api-key: ${AI_API_KEY_NEWS_TITLE_POLISH:${AI_API_KEY_NEWS:}}
+
+news-sync:
+  enabled: ${NEWS_SYNC_ENABLED:true}
+  auto-publish: ${NEWS_SYNC_AUTO_PUBLISH:false}
+  lookback-days: ${NEWS_SYNC_LOOKBACK_DAYS:7}
+  ai-search:
+    enabled: ${NEWS_SYNC_AI_SEARCH_ENABLED:true}
+    max-items: ${NEWS_SYNC_AI_SEARCH_MAX_ITEMS:6}
+    source-id: ${NEWS_SYNC_AI_SEARCH_SOURCE_ID:999}
+    source-name: ${NEWS_SYNC_AI_SEARCH_SOURCE_NAME:AI全网搜索}
+    source-url: ${NEWS_SYNC_AI_SEARCH_SOURCE_URL:ai://ark/web-search}

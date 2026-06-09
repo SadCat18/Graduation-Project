@@ -1,8 +1,9 @@
 ﻿<script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import { clearAuth, getAuthChangedEventName, getName, getRole, getToken } from './utils/auth'
+import { warmLikelyRouteChunks } from './utils/routePrefetch'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,6 +54,13 @@ onMounted(() => {
   syncAuthState()
   window.addEventListener('storage', handleAuthChange)
   window.addEventListener(getAuthChangedEventName(), handleAuthChange)
+
+  const warmRoutes = () => warmLikelyRouteChunks()
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(warmRoutes, { timeout: 1500 })
+  } else {
+    window.setTimeout(warmRoutes, 600)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -102,7 +110,11 @@ onBeforeUnmount(() => {
     </header>
 
     <main class="main-container">
-      <router-view />
+      <RouterView v-slot="{ Component }">
+        <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
+          <component :is="Component" />
+        </KeepAlive>
+      </RouterView>
     </main>
   </div>
 </template>

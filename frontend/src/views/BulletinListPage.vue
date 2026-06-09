@@ -2,8 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
-import { normalizeMediaUrl } from '../utils/url'
+import { firstImage } from '../utils/url'
 import { BULLETIN_SORT_OPTIONS, BULLETIN_TYPES } from '../constants/bulletin'
+
+defineOptions({ name: 'BulletinListPage' })
 
 const router = useRouter()
 const list = ref([])
@@ -17,10 +19,6 @@ const sortHint = computed(() => {
   return '当前快讯暂无城市字段，已按最新发布展示。'
 })
 
-function firstImage(raw) {
-  if (!raw) return ''
-  return String(raw).split(',').map(item => normalizeMediaUrl(item.trim())).find(Boolean) || ''
-}
 
 function shortText(text, max = 90) {
   const value = String(text || '').trim().replace(/\s+/g, ' ')
@@ -126,7 +124,7 @@ onMounted(loadData)
       <p v-if="sortHint" class="muted sort-hint">{{ sortHint }}</p>
 
       <div v-if="topItem" class="top-card" @click="goDetail(topItem.bulletinId)">
-        <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" />
+        <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" fetchpriority="high" decoding="async" />
         <div v-else class="top-image placeholder">社区快讯</div>
         <div class="top-body">
           <p class="top-label">头条快讯</p>
@@ -148,7 +146,7 @@ onMounted(loadData)
             class="bulletin-card"
             @click="goDetail(item.bulletinId)"
           >
-            <img v-if="firstImage(item.imageUrls)" :src="firstImage(item.imageUrls)" alt="快讯封面" class="hero-image" />
+            <img v-if="firstImage(item.imageUrls)" :src="firstImage(item.imageUrls)" alt="快讯封面" class="hero-image" loading="lazy" decoding="async" />
             <div v-else class="hero-image placeholder">无图快讯</div>
             <div class="body">
               <h4>{{ item.title }}</h4>

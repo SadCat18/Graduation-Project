@@ -1,11 +1,22 @@
 ﻿<script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
-import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
+import { ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { getToken } from '../utils/auth'
 import { amapKeyTail, loadAMap } from '../utils/amap'
+import { getCachedResource } from '../utils/requestCache'
+import {
+  ACTIVITY_EXPIRY_FILTER,
+  canCancelSignActivity,
+  canSignActivity,
+  filterActivitiesByExpiry,
+  getActivityStatusLabel
+} from '../utils/activityExpiry'
+import { buildActivityPlaceRecommendations } from '../utils/activityPlaceRecommendations'
+
+defineOptions({ name: 'ActivitiesPage' })
 
 const router = useRouter()
 
@@ -13,6 +24,8 @@ const list = ref([])
 const places = ref([])
 const loading = ref(false)
 const loadError = ref('')
+const mapRequested = ref(false)
+const mapLoading = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
 const selectedActivityId = ref(null)
@@ -27,11 +40,14 @@ const filter = reactive({
   province: '',
   city: '',
   district: '',
-  keyword: ''
+  keyword: '',
+  expiry: ACTIVITY_EXPIRY_FILTER.ACTIVE
 })
 
 const isLoggedIn = computed(() => !!getToken())
 const amapKeyMask = computed(() => amapKeyTail())
+const recommendedPlaces = computed(() => buildActivityPlaceRecommendations(places.value, list.value, 8))
+const PLACE_CACHE_TTL = 5 * 60 * 1000
 
 let mapInstance = null
 let citySearchInstance = null
@@ -41,11 +57,14 @@ function onResize() {
   isCompact.value = window.innerWidth <= 768
 }
 
+
+
 function buildQueryParams() {
   const params = { page: 1, size: 50 }
   if (filter.city.trim()) params.city = filter.city.trim()
   if (filter.district.trim()) params.district = filter.district.trim()
   if (filter.keyword.trim()) params.keyword = filter.keyword.trim()
+  params.expired = filter.expiry === ACTIVITY_EXPIRY_FILTER.EXPIRED
   return params
 }
 
@@ -62,11 +81,27 @@ function goPlaceDetail(placeId) {
   router.push(`/places/${placeId}`)
 }
 
+function goActivityDetail(activityId) {
+  if (!activityId) return
+  router.push(`/activities/${activityId}`)
+}
+
+async function filterByPlace(place) {
+  if (!place?.name) return
+  filter.keyword = place.name
+  await loadData()
+}
+
 async function loadData() {
   loading.value = true
   loadError.value = ''
   try {
     const params = buildQueryParams()
+    const placePromise = getCachedResource(
+      'public:places',
+      () => api.places(),
+      PLACE_CACHE_TTL
+    )
     let activities
     if (isLoggedIn.value) {
       try {
@@ -82,11 +117,8 @@ async function loadData() {
       activities = await api.publicActivities(params)
     }
 
-    const placeList = await api.places()
-    list.value = (activities.list || []).filter((item) => {
-      const status = normalizeActivityStatus(item.activityStatus ?? item.status)
-      return status !== ACTIVITY_STATUS.CANCELED
-    })
+    const placeList = await placePromise
+    list.value = filterActivitiesByExpiry(activities.list || [], filter.expiry)
     places.value = placeList || []
     renderActivityMarkers()
   } catch (e) {
@@ -105,6 +137,7 @@ async function clearFilter() {
   filter.city = ''
   filter.district = ''
   filter.keyword = ''
+  filter.expiry = ACTIVITY_EXPIRY_FILTER.ACTIVE
   cityOptions.value = []
   districtOptions.value = []
   await loadData()
@@ -212,9 +245,11 @@ async function onCityChange() {
 
 async function initMap() {
   await nextTick()
-  if (!mapRef.value) return
+  if (!mapRef.value || mapInstance) return
 
   try {
+    mapLoading.value = true
+    mapError.value = ''
     const AMap = await loadAMap()
     mapInstance = new AMap.Map(mapRef.value, {
       zoom: 11,
@@ -232,7 +267,14 @@ async function initMap() {
     renderActivityMarkers()
   } catch (error) {
     mapError.value = error?.message || '地图加载失败，请检查网络或高德 Key 配置'
+  } finally {
+    mapLoading.value = false
   }
+}
+
+async function requestMap() {
+  mapRequested.value = true
+  await initMap()
 }
 
 function renderActivityMarkers() {
@@ -256,10 +298,14 @@ function renderActivityMarkers() {
   })
 }
 
-function locateOnMap(item) {
+async function locateOnMap(item) {
   const lng = Number(item.longitude)
   const lat = Number(item.latitude)
-  if (!mapInstance || !Number.isFinite(lng) || !Number.isFinite(lat)) return
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return
+  if (!mapInstance) {
+    await requestMap()
+  }
+  if (!mapInstance) return
   selectedActivityId.value = item.activityId
   mapInstance.setZoomAndCenter(14, [lng, lat])
 }
@@ -275,19 +321,23 @@ function formatTime(item) {
 }
 
 function displayActivityStatus(item) {
+  const expiryLabel = getActivityStatusLabel(item)
+  if (expiryLabel) return expiryLabel
   const status = normalizeActivityStatus(item.activityStatus ?? item.status)
   return ACTIVITY_STATUS_LABEL[status] || '未知状态'
 }
 
+function activityStatusClass(item) {
+  if (getActivityStatusLabel(item)) return 'expired'
+  return normalizeActivityStatus(item.activityStatus ?? item.status)
+}
+
 function canSign(item) {
-  const status = normalizeActivityStatus(item.activityStatus ?? item.status)
-  return !item.signed && status === ACTIVITY_STATUS.SIGNUP_OPEN
+  return canSignActivity(item)
 }
 
 function canCancelSign(item) {
-  if (!item.signed) return false
-  const status = normalizeActivityStatus(item.activityStatus ?? item.status)
-  return status !== ACTIVITY_STATUS.CANCELED && status !== ACTIVITY_STATUS.ENDED
+  return canCancelSignActivity(item)
 }
 
 watch(() => filter.city, (city) => {
@@ -296,11 +346,23 @@ watch(() => filter.city, (city) => {
   }
 })
 
+watch(mobilePanel, async (next) => {
+  if (next === 'map' && !mapRequested.value) {
+    await requestMap()
+  }
+})
+
 onMounted(async () => {
   onResize()
   window.addEventListener('resize', onResize)
   await loadData()
-  await initMap()
+})
+onActivated(() => {
+  onResize()
+  window.addEventListener('resize', onResize)
+})
+onDeactivated(() => {
+  window.removeEventListener('resize', onResize)
 })
 
 onBeforeUnmount(() => {
@@ -334,8 +396,8 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="filter-row">
-          <select v-model="filter.province" @change="onProvinceChange">
-            <option value="">选择省份</option>
+          <select v-model="filter.province" :disabled="!mapReady" @focus="requestMap" @change="onProvinceChange">
+            <option value="">{{ mapReady ? '选择省份' : '加载地图后可选省份' }}</option>
             <option v-for="item in provinceOptions" :key="item" :value="item">{{ item }}</option>
           </select>
           <select v-model="filter.city" :disabled="!filter.province" @change="onCityChange">
@@ -347,6 +409,10 @@ onBeforeUnmount(() => {
             <option v-for="item in districtOptions" :key="item" :value="item">{{ item }}</option>
           </select>
           <input v-model="filter.keyword" placeholder="关键词（地点/动作/活动名）" @keyup.enter="applyFilter" />
+          <select v-model="filter.expiry" @change="applyFilter">
+            <option :value="ACTIVITY_EXPIRY_FILTER.ACTIVE">未过期活动</option>
+            <option :value="ACTIVITY_EXPIRY_FILTER.EXPIRED">已过期活动</option>
+          </select>
           <button class="btn-soft" @click="applyFilter">
             <AppIcon name="search" :size="15" />
             筛选
@@ -367,12 +433,13 @@ onBeforeUnmount(() => {
           :key="item.activityId"
           class="activity-item"
           :class="{ active: selectedActivityId === item.activityId }"
+          @click="goActivityDetail(item.activityId)"
         >
           <div class="item-top">
             <h4>{{ item.title }}</h4>
             <span
               class="status-tag"
-              :class="`status-${normalizeActivityStatus(item.activityStatus ?? item.status)}`"
+              :class="`status-${activityStatusClass(item)}`"
             >
               {{ displayActivityStatus(item) }}
             </span>
@@ -384,15 +451,15 @@ onBeforeUnmount(() => {
           </div>
           <p class="content">{{ item.content || '暂无说明' }}</p>
           <div class="inline">
-            <button v-if="canSign(item)" @click="sign(item)">
+            <button v-if="canSign(item)" @click.stop="sign(item)">
               报名
             </button>
-            <button v-else class="btn-soft" :disabled="!canCancelSign(item)" @click="cancelSign(item)">
+            <button v-else class="btn-soft" :disabled="!canCancelSign(item)" @click.stop="cancelSign(item)">
               退出报名
             </button>
-            <button v-if="item.longitude && item.latitude" class="btn-soft" @click="locateOnMap(item)">
+            <button v-if="item.longitude && item.latitude" class="btn-soft" @click.stop="locateOnMap(item)">
               <AppIcon name="location" :size="14" />
-              地图定位
+              {{ mapReady ? '地图定位' : '加载地图定位' }}
             </button>
           </div>
         </div>
@@ -403,19 +470,32 @@ onBeforeUnmount(() => {
       <div class="card map-card">
         <div class="section-head"><h3>活动地图</h3></div>
         <p class="muted">高德 Web API（{{ amapKeyMask }}）</p>
-        <p v-if="!mapReady && !mapError" class="muted">地图加载中...</p>
+        <div v-if="!mapRequested" class="map-lazy-panel">
+          <AppIcon name="map" :size="28" />
+          <strong>地图按需加载</strong>
+          <p>先浏览活动列表；需要定位场地或选择省市区时再加载地图资源。</p>
+          <button class="btn-primary" @click="requestMap">加载地图与地区筛选</button>
+        </div>
+        <p v-if="mapRequested && mapLoading && !mapReady && !mapError" class="muted">地图加载中...</p>
         <p v-if="mapError" class="error">{{ mapError }}</p>
-        <div ref="mapRef" class="amap-container"></div>
+        <div v-if="mapRequested" ref="mapRef" class="amap-container"></div>
       </div>
 
       <div class="card place-card">
         <div class="section-head"><h3>推荐场地</h3></div>
-        <p v-if="!places.length" class="muted place-empty">当前暂无推荐场地，稍后再来看看。</p>
-        <div v-for="p in places.slice(0, 8)" :key="p.placeId" class="list-item">
+        <p v-if="!recommendedPlaces.length" class="muted place-empty">当前暂无推荐场地，稍后再来看看。</p>
+        <div v-for="p in recommendedPlaces" :key="p.placeId" class="list-item place-recommend-item">
           <strong>{{ p.name }}</strong>
           <p class="muted">{{ p.address }}</p>
           <p class="muted">评分：{{ p.score }} · {{ p.reviewCount || 0 }} 条评价</p>
-          <button v-if="p.placeId" class="btn-soft" @click="goPlaceDetail(p.placeId)">查看评价</button>
+          <p v-if="p.hasActivityLink" class="muted place-link">
+            关联 {{ p.relatedCount }} 个当前活动
+            <template v-if="p.latestActivity"> · 最近：{{ p.latestActivity.title }}</template>
+          </p>
+          <div class="inline place-actions">
+            <button v-if="p.hasActivityLink" class="btn-soft" @click="filterByPlace(p)">筛选活动</button>
+            <button v-if="p.placeId" class="btn-soft" @click="goPlaceDetail(p.placeId)">查看评价</button>
+          </div>
         </div>
       </div>
     </aside>
@@ -479,7 +559,7 @@ onBeforeUnmount(() => {
 
 .filter-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.35fr auto auto;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr 1fr auto auto;
   gap: 10px;
 }
 
@@ -494,6 +574,7 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 14px 15px;
   background: #fff;
+  cursor: pointer;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -554,7 +635,8 @@ onBeforeUnmount(() => {
 .status-2,
 .status-3,
 .status-ended,
-.status-canceled {
+.status-canceled,
+.status-expired {
   color: #64748b;
   background: #f1f5f9;
   border-color: #cbd5e1;
@@ -626,6 +708,32 @@ onBeforeUnmount(() => {
   background: #f1f5f9;
 }
 
+.map-lazy-panel {
+  min-height: 260px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: #334155;
+}
+
+.map-lazy-panel strong {
+  color: #111827;
+  font-size: 18px;
+}
+
+.map-lazy-panel p {
+  max-width: 320px;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 .place-card {
   margin-top: 14px;
   position: relative;
@@ -640,6 +748,19 @@ onBeforeUnmount(() => {
   border: 1px dashed #cbd5e1;
   border-radius: 12px;
   background: #f8fafc;
+}
+
+.place-recommend-item {
+  display: grid;
+  gap: 6px;
+}
+
+.place-link {
+  color: #334155;
+}
+
+.place-actions {
+  margin-top: 2px;
 }
 
 .inline :deep(button) {

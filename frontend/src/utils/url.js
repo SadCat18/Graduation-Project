@@ -20,3 +20,16 @@ export function normalizeMediaUrl(value) {
   }
   return `/${url}`
 }
+export function parseImages(images) {
+  if (!images) return []
+  return String(images)
+    .split(',')
+    .map(item => item.trim())
+    .map(item => normalizeMediaUrl(item))
+    .filter(Boolean)
+}
+
+export function firstImage(images) {
+  const list = parseImages(images)
+  return list.length ? list[0] : ''
+}

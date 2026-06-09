@@ -165,7 +165,7 @@ onMounted(loadPostDetail)
             target="_blank"
             rel="noreferrer"
           >
-            <img :src="img" alt="帖子图片" />
+            <img :src="img" alt="帖子图片" loading="lazy" decoding="async" />
           </a>
         </div>
 
