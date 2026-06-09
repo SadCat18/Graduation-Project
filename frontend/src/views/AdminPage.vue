@@ -5,7 +5,7 @@ import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { BULLETIN_TYPES } from '../constants/bulletin'
 
-const tab = ref('stats')
+const tab = ref('workbench')
 const reviewCenterTab = ref('all')
 const contentTab = ref('notice')
 const reviewStatusFilter = ref('all')
@@ -13,6 +13,7 @@ const reviewTypeFilter = ref('all')
 const reviewTimeFilter = ref('all')
 const reviewKeyword = ref('')
 const selectedReviewIds = ref([])
+const selectedNewsIds = ref([])
 const reviewDrawerVisible = ref(false)
 const reviewDrawerId = ref('')
 const moderationLoadingKey = ref('')
@@ -21,6 +22,11 @@ const moderationResult = ref(null)
 const postModerationLoadingId = ref(null)
 const postModerationResultId = ref(null)
 const postModerationResult = ref(null)
+const postModerationResults = ref({})
+const selectedPostIds = ref([])
+const postDetailVisible = ref(false)
+const postDetailLoading = ref(false)
+const activePostDetail = ref(null)
 const ADMIN_PAGE_SIZE = 10
 const stats = ref({})
 const analytics = ref({
@@ -32,6 +38,10 @@ const analytics = ref({
 const users = ref([])
 const posts = ref([])
 const comments = ref([])
+const selectedCommentIds = ref([])
+const commentContextVisible = ref(false)
+const commentContextLoading = ref(false)
+const activeCommentContext = ref(null)
 const activities = ref([])
 const activityReviewFilter = ref('0')
 const notices = ref([])
@@ -48,6 +58,8 @@ const newsReprocessLoading = ref(false)
 const newsSyncLoading = ref(false)
 const newsSyncMode = ref('')
 const newsReviewLoading = ref(false)
+const newsQuickReviewId = ref('')
+const newsBatchReviewLoading = ref(false)
 const newsSyncSummary = ref(null)
 const activeNewsDetail = ref(null)
 const places = ref([])
@@ -57,6 +69,7 @@ const videos = ref([])
 const reports = ref([])
 const reviewActivities = ref([])
 const loadedTabs = reactive({
+  workbench: false,
   stats: false,
   analytics: false,
   reviewCenter: false,
@@ -72,6 +85,19 @@ const pageState = reactive({
   posts: { page: 1, total: 0 },
   comments: { page: 1, total: 0 },
   activities: { page: 1, total: 0 }
+})
+const postFilters = reactive({
+  keyword: '',
+  category: '',
+  top: 'all',
+  sort: 'latest'
+})
+const commentFilters = reactive({
+  keyword: '',
+  postId: '',
+  userId: '',
+  type: 'all',
+  sort: 'latest'
 })
 const contentPageState = reactive({
   notices: 1,
@@ -131,17 +157,62 @@ const formErrors = reactive({
   banner: { title: '', linkUrl: '', sortNum: '', intervalSeconds: '', imageUrl: '' }
 })
 
-const navItems = [
-  { key: 'stats', label: '数据统计', icon: 'stats' },
-  { key: 'analytics', label: '运营分析', icon: 'stats' },
-  { key: 'reviewCenter', label: '审核中心', icon: 'notice' },
-  { key: 'users', label: '用户管理', icon: 'users' },
-  { key: 'posts', label: '帖子管理', icon: 'posts' },
-  { key: 'comments', label: '评论管理', icon: 'comments' },
-  { key: 'activities', label: '活动管理', icon: 'activities' },
-  { key: 'reports', label: '举报管理', icon: 'notice' },
-  { key: 'content', label: '内容管理', icon: 'content' }
+const navGroups = [
+  {
+    key: 'overview',
+    label: '运营看板',
+    hint: '先看全局数据',
+    items: [
+      { key: 'workbench', label: '工作台', icon: 'admin', desc: '今日待办与高频操作' },
+      { key: 'stats', label: '数据统计', icon: 'stats', desc: '核心数量与模块规模' },
+      { key: 'analytics', label: '运营分析', icon: 'stats', desc: '趋势、热门内容与结构' }
+    ]
+  },
+  {
+    key: 'governance',
+    label: '审核治理',
+    hint: '处理风险与待办',
+    items: [
+      { key: 'reviewCenter', label: '审核中心', icon: 'notice', desc: '集中处理活动、快讯、举报和评价' },
+      { key: 'reports', label: '举报管理', icon: 'notice', desc: '跟进用户举报记录' }
+    ]
+  },
+  {
+    key: 'community',
+    label: '社区内容',
+    hint: '管理用户产出',
+    items: [
+      { key: 'users', label: '用户管理', icon: 'users', desc: '账号状态与快讯权限' },
+      { key: 'posts', label: '帖子管理', icon: 'posts', desc: '帖子审核、置顶和批量处理' },
+      { key: 'comments', label: '评论管理', icon: 'comments', desc: '帖子评论、回复和上下文处理' },
+      { key: 'activities', label: '活动管理', icon: 'activities', desc: '同城活动审核与状态' }
+    ]
+  },
+  {
+    key: 'publishing',
+    label: '内容配置',
+    hint: '维护站内展示',
+    items: [
+      { key: 'content', label: '内容管理', icon: 'content', desc: '公告、资讯、场地、轮播和视频' }
+    ]
+  }
 ]
+const navItems = navGroups.flatMap(group =>
+  group.items.map(item => ({
+    ...item,
+    groupKey: group.key,
+    groupLabel: group.label
+  }))
+)
+const quickAdminActions = [
+  { key: 'review', label: '审核待办', desc: '活动、快讯、举报', icon: 'notice', tab: 'reviewCenter', reviewTab: 'all' },
+  { key: 'posts', label: '帖子治理', desc: '筛选、AI 建议、批量处理', icon: 'posts', tab: 'posts' },
+  { key: 'comments', label: '评论治理', desc: '按帖子看上下文', icon: 'comments', tab: 'comments' },
+  { key: 'news', label: '资讯审核', desc: 'AI 处理结果与批量审核', icon: 'news', tab: 'content', contentTab: 'news' }
+]
+
+const activeNavItem = computed(() => navItems.find(item => item.key === tab.value) || navItems[0])
+const activeNavGroup = computed(() => navGroups.find(group => group.key === activeNavItem.value?.groupKey) || navGroups[0])
 
 const statCards = computed(() => [
   { key: 'userTotal', label: '用户总数', icon: 'users', value: Number(stats.value.userTotal || 0) },
@@ -178,7 +249,35 @@ const bulletinRatioMax = computed(() => {
 })
 const usersTotalPages = computed(() => Math.max(1, Math.ceil((pageState.users.total || 0) / ADMIN_PAGE_SIZE)))
 const postsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.posts.total || 0) / ADMIN_PAGE_SIZE)))
+const selectedPosts = computed(() => {
+  const ids = new Set(selectedPostIds.value)
+  return posts.value.filter(item => ids.has(item.postId))
+})
+const allPostsSelected = computed(() => {
+  if (!posts.value.length) return false
+  return posts.value.every(item => selectedPostIds.value.includes(item.postId))
+})
+const postBatchSummary = computed(() => {
+  if (!selectedPosts.value.length) return '未选择帖子'
+  const userCount = new Set(selectedPosts.value.map(item => item.userId)).size
+  const commentCount = selectedPosts.value.reduce((sum, item) => sum + Number(item.commentCount || 0), 0)
+  return `已选择 ${selectedPosts.value.length} 篇，涉及 ${userCount} 个用户、${commentCount} 条评论`
+})
 const commentsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.comments.total || 0) / ADMIN_PAGE_SIZE)))
+const selectedComments = computed(() => {
+  const ids = new Set(selectedCommentIds.value)
+  return comments.value.filter(item => ids.has(item.commentId))
+})
+const allCommentsSelected = computed(() => {
+  if (!comments.value.length) return false
+  return comments.value.every(item => selectedCommentIds.value.includes(item.commentId))
+})
+const commentBatchSummary = computed(() => {
+  if (!selectedComments.value.length) return '未选择评论'
+  const postCount = new Set(selectedComments.value.map(item => item.postId)).size
+  const userCount = new Set(selectedComments.value.map(item => item.userId)).size
+  return `已选择 ${selectedComments.value.length} 条，涉及 ${postCount} 个帖子、${userCount} 个用户`
+})
 const activitiesTotalPages = computed(() => Math.max(1, Math.ceil((pageState.activities.total || 0) / ADMIN_PAGE_SIZE)))
 const noticesTotalPages = computed(() => Math.max(1, Math.ceil((notices.value.length || 0) / ADMIN_PAGE_SIZE)))
 const filteredNewsList = computed(() => {
@@ -201,6 +300,140 @@ const bannersTotalPages = computed(() => Math.max(1, Math.ceil((banners.value.le
 const videosTotalPages = computed(() => Math.max(1, Math.ceil((videos.value.length || 0) / ADMIN_PAGE_SIZE)))
 const pagedNotices = computed(() => sliceByPage(notices.value, contentPageState.notices))
 const pagedNews = computed(() => sliceByPage(filteredNewsList.value, contentPageState.news))
+const selectedNewsItems = computed(() => {
+  const ids = new Set(selectedNewsIds.value)
+  return newsList.value.filter(item => ids.has(item.newsId))
+})
+const selectedNewsPendingCount = computed(() => selectedNewsItems.value.filter(item => String(item?.status || '0') === '0').length)
+const canBatchReviewNews = computed(() => {
+  if (!selectedNewsItems.value.length || newsBatchReviewLoading.value) return false
+  return selectedNewsItems.value.every(item => String(item?.status || '0') === '0')
+})
+const allPagedNewsSelected = computed(() => {
+  if (!pagedNews.value.length) return false
+  return pagedNews.value.every(item => selectedNewsIds.value.includes(item.newsId))
+})
+const newsBatchStatusText = computed(() => {
+  if (!selectedNewsItems.value.length) return '未选择资讯'
+  if (canBatchReviewNews.value) return `已选择 ${selectedNewsItems.value.length} 条待审核资讯`
+  return `已选择 ${selectedNewsItems.value.length} 条，其中 ${selectedNewsPendingCount.value} 条待审核`
+})
+const pendingActivityCount = computed(() => reviewActivities.value.filter(item => String(item?.status || '0') === '0').length)
+const pendingBulletinCount = computed(() => reviewBulletins.value.filter(item => String(item?.status || '0') === '0').length)
+const pendingReviewTotal = computed(() => {
+  return pendingActivityCount.value + pendingBulletinCount.value + reports.value.length + placeReviews.value.length
+})
+const workbenchTodoCards = computed(() => [
+  {
+    key: 'review',
+    label: '审核待办',
+    value: pendingReviewTotal.value,
+    detail: `活动 ${pendingActivityCount.value} / 快讯 ${pendingBulletinCount.value} / 举报 ${reports.value.length}`,
+    priority: pendingReviewTotal.value ? 'high' : 'normal',
+    action: quickAdminActions[0]
+  },
+  {
+    key: 'news',
+    label: '资讯待审',
+    value: newsAuditStats.value.pending,
+    detail: `资讯库 ${newsList.value.length} 条，AI 结果需人工确认`,
+    priority: newsAuditStats.value.pending ? 'medium' : 'normal',
+    action: quickAdminActions[3]
+  },
+  {
+    key: 'posts',
+    label: '帖子治理',
+    value: pageState.posts.total || stats.value.postTotal || 0,
+    detail: '筛选、查看详情、AI 建议、批量置顶或删除',
+    priority: selectedPostIds.value.length ? 'medium' : 'normal',
+    action: quickAdminActions[1]
+  },
+  {
+    key: 'comments',
+    label: '评论巡检',
+    value: pageState.comments.total || stats.value.commentTotal || 0,
+    detail: '按帖子上下文处理评论和回复',
+    priority: selectedCommentIds.value.length ? 'medium' : 'normal',
+    action: quickAdminActions[2]
+  }
+])
+const workbenchStats = computed(() => [
+  { label: '用户', value: Number(stats.value.userTotal || 0), icon: 'users' },
+  { label: '帖子', value: Number(stats.value.postTotal || 0), icon: 'posts' },
+  { label: '评论', value: Number(stats.value.commentTotal || 0), icon: 'comments' },
+  { label: '活动', value: Number(stats.value.activityTotal || 0), icon: 'activities' }
+])
+const currentPrimaryAction = computed(() => {
+  const map = {
+    workbench: { label: '刷新工作台', icon: 'refresh', handler: refreshCurrentTab },
+    stats: { label: '刷新统计', icon: 'refresh', handler: refreshCurrentTab },
+    analytics: { label: '刷新分析', icon: 'refresh', handler: refreshCurrentTab },
+    reviewCenter: { label: '仅看待办', icon: 'notice', handler: () => { reviewCenterTab.value = 'all'; reviewStatusFilter.value = 'pending' } },
+    users: { label: '刷新用户', icon: 'refresh', handler: refreshCurrentTab },
+    posts: { label: selectedPostIds.value.length ? 'AI 审核选中' : '刷新帖子', icon: selectedPostIds.value.length ? 'notice' : 'refresh', handler: () => selectedPostIds.value.length ? fetchModerationSuggestForPost(selectedPosts.value[0]) : refreshCurrentTab() },
+    comments: { label: selectedCommentIds.value.length ? '批量删除评论' : '刷新评论', icon: selectedCommentIds.value.length ? 'x' : 'refresh', handler: () => selectedCommentIds.value.length ? batchDeleteComments() : refreshCurrentTab() },
+    activities: { label: '看待审核活动', icon: 'activities', handler: () => { activityReviewFilter.value = '0'; pageState.activities.page = 1; loadActivities() } },
+    reports: { label: '刷新举报', icon: 'refresh', handler: refreshCurrentTab },
+    content: { label: contentTab.value === 'news' ? '仅看待审资讯' : '刷新内容', icon: contentTab.value === 'news' ? 'notice' : 'refresh', handler: () => { if (contentTab.value === 'news') newsStatusFilter.value = '0'; else refreshCurrentTab() } }
+  }
+  return map[tab.value] || map.workbench
+})
+const panelSummaryItems = computed(() => {
+  const count = value => Number(value || 0)
+  const map = {
+    workbench: [
+      { label: '待办', value: pendingReviewTotal.value + newsAuditStats.value.pending },
+      { label: '帖子', value: count(stats.value.postTotal) },
+      { label: '用户', value: count(stats.value.userTotal) }
+    ],
+    stats: [
+      { label: '用户', value: count(stats.value.userTotal) },
+      { label: '帖子', value: count(stats.value.postTotal) },
+      { label: '评论', value: count(stats.value.commentTotal) }
+    ],
+    analytics: [
+      { label: '趋势天数', value: (analytics.value?.trend7d || []).length },
+      { label: '热门帖子', value: (analytics.value?.hotPosts || []).length },
+      { label: '活动榜', value: (analytics.value?.hotActivities || []).length }
+    ],
+    reviewCenter: [
+      { label: '待办', value: pendingReviewTotal.value },
+      { label: '活动待审', value: pendingActivityCount.value },
+      { label: '快讯待审', value: pendingBulletinCount.value }
+    ],
+    users: [
+      { label: '用户总数', value: pageState.users.total },
+      { label: '本页', value: users.value.length },
+      { label: '页码', value: `${pageState.users.page}/${usersTotalPages.value}` }
+    ],
+    posts: [
+      { label: '帖子总数', value: pageState.posts.total },
+      { label: '本页', value: posts.value.length },
+      { label: '已选', value: selectedPostIds.value.length }
+    ],
+    comments: [
+      { label: '评论总数', value: pageState.comments.total },
+      { label: '本页', value: comments.value.length },
+      { label: '已选', value: selectedCommentIds.value.length }
+    ],
+    activities: [
+      { label: '活动总数', value: pageState.activities.total },
+      { label: '本页', value: activities.value.length },
+      { label: '页码', value: `${pageState.activities.page}/${activitiesTotalPages.value}` }
+    ],
+    reports: [
+      { label: '举报记录', value: reports.value.length },
+      { label: '待跟进', value: reports.value.length },
+      { label: '入口', value: '治理' }
+    ],
+    content: [
+      { label: '资讯', value: newsList.value.length },
+      { label: '待审资讯', value: newsAuditStats.value.pending },
+      { label: '公告', value: notices.value.length }
+    ]
+  }
+  return map[tab.value] || []
+})
 const pagedPlaces = computed(() => sliceByPage(places.value, contentPageState.places))
 const pagedBanners = computed(() => sliceByPage(banners.value, contentPageState.banners))
 const pagedVideos = computed(() => sliceByPage(videos.value, contentPageState.videos))
@@ -227,6 +460,40 @@ const reviewCenterTabs = [
 ]
 const moderationSteps = ['抽取正文', '分析元信息', '识别风险点', '判断风险等级', '整理审核建议']
 let newsSyncPollTimer = null
+
+function switchAdminTab(key) {
+  if (!key || tab.value === key) return
+  tab.value = key
+}
+
+function runQuickAdminAction(action) {
+  if (action.reviewTab) reviewCenterTab.value = action.reviewTab
+  if (action.contentTab) contentTab.value = action.contentTab
+  switchAdminTab(action.tab)
+}
+
+function navBadge(key) {
+  const badges = {
+    reviewCenter: pendingReviewTotal.value,
+    reports: reports.value.length,
+    users: pageState.users.total || stats.value.userTotal,
+    posts: pageState.posts.total || stats.value.postTotal,
+    comments: pageState.comments.total || stats.value.commentTotal,
+    activities: pageState.activities.total || stats.value.activityTotal,
+    content: newsAuditStats.value.pending ? `${newsAuditStats.value.pending} 待审` : newsList.value.length
+  }
+  const value = badges[key]
+  if (value === undefined || value === null || value === '' || value === 0) return ''
+  return value
+}
+
+function quickActionBadge(action) {
+  if (action.key === 'review') return pendingReviewTotal.value || ''
+  if (action.key === 'posts') return pageState.posts.total || stats.value.postTotal || ''
+  if (action.key === 'comments') return pageState.comments.total || stats.value.commentTotal || ''
+  if (action.key === 'news') return newsAuditStats.value.pending ? `${newsAuditStats.value.pending} 待审` : ''
+  return ''
+}
 
 function fmtTime(value) {
   return String(value || '').replace('T', ' ') || '-'
@@ -635,11 +902,27 @@ function buildPostModerationPayload(post) {
     content: post?.content || '暂无正文',
     extraInfo: [
       post?.category ? `分类：${post.category}` : '',
-      post?.username || post?.publisherName ? `发布人：${post.username || post.publisherName}` : '',
+      post?.username || post?.authorName || post?.publisherName ? `发布人：${post.username || post.authorName || post.publisherName}` : '',
       post?.createTime ? `发布时间：${fmtTime(post.createTime)}` : '',
       post?.isTop ? `是否置顶：${post.isTop === '1' ? '是' : '否'}` : ''
     ].filter(Boolean).join('；')
   }
+}
+
+function postRiskLabel(postId) {
+  const risk = postModerationResults.value[postId]?.riskLevel
+  if (risk === 'HIGH') return '高风险'
+  if (risk === 'MEDIUM') return '中风险'
+  if (risk === 'LOW') return '低风险'
+  return '未分析'
+}
+
+function postRiskClass(postId) {
+  const risk = postModerationResults.value[postId]?.riskLevel
+  if (risk === 'HIGH') return 'risk-high'
+  if (risk === 'MEDIUM') return 'risk-medium'
+  if (risk === 'LOW') return 'risk-low'
+  return 'risk-unknown'
 }
 
 async function fetchModerationSuggestForPost(post) {
@@ -653,6 +936,10 @@ async function fetchModerationSuggestForPost(post) {
       riskPoints: Array.isArray(result?.riskPoints) ? result.riskPoints : [],
       suggestion: result?.suggestion || '',
       normalizedSummary: result?.normalizedSummary || ''
+    }
+    postModerationResults.value = {
+      ...postModerationResults.value,
+      [post.postId]: postModerationResult.value
     }
   } catch (e) {
     alert(e?.message || 'AI 审核建议获取失败，请稍后重试')
@@ -773,9 +1060,17 @@ async function toggleUserBulletinPermission(item) {
 }
 
 async function loadPosts() {
-  const res = await api.adminPosts({ page: pageState.posts.page, size: ADMIN_PAGE_SIZE })
+  const res = await api.adminPosts({
+    page: pageState.posts.page,
+    size: ADMIN_PAGE_SIZE,
+    keyword: String(postFilters.keyword || '').trim() || undefined,
+    category: String(postFilters.category || '').trim() || undefined,
+    top: postFilters.top,
+    sort: postFilters.sort
+  })
   posts.value = res.list || []
   pageState.posts.total = Number(res.total || 0)
+  pruneSelectedPostIds()
   normalizeServerPage('posts')
   if (!posts.value.length && pageState.posts.page > 1) {
     pageState.posts.page -= 1
@@ -783,20 +1078,130 @@ async function loadPosts() {
   }
 }
 
-async function deletePost(id) {
-  await api.adminDeletePost(id)
+function pruneSelectedPostIds() {
+  if (!selectedPostIds.value.length) return
+  const validIds = new Set(posts.value.map(item => item.postId))
+  selectedPostIds.value = selectedPostIds.value.filter(id => validIds.has(id))
+}
+
+async function applyPostFilters() {
+  pageState.posts.page = 1
+  selectedPostIds.value = []
   await loadPosts()
+}
+
+function resetPostFilters() {
+  postFilters.keyword = ''
+  postFilters.category = ''
+  postFilters.top = 'all'
+  postFilters.sort = 'latest'
+  pageState.posts.page = 1
+  selectedPostIds.value = []
+  loadPosts()
+}
+
+function toggleSelectPost(postId, checked) {
+  if (!postId) return
+  if (checked) {
+    if (!selectedPostIds.value.includes(postId)) selectedPostIds.value.push(postId)
+  } else {
+    selectedPostIds.value = selectedPostIds.value.filter(id => id !== postId)
+  }
+}
+
+function toggleSelectAllPosts(checked) {
+  selectedPostIds.value = checked ? posts.value.map(item => item.postId) : []
+}
+
+function clearSelectedPosts() {
+  selectedPostIds.value = []
+}
+
+async function deletePost(id) {
+  if (!confirm('确认删除这篇帖子吗？该操作会影响帖子下的评论展示。')) return false
+  await api.adminDeletePost(id)
+  selectedPostIds.value = selectedPostIds.value.filter(postId => postId !== id)
+  await loadPosts()
+  return true
 }
 
 async function topPost(item) {
   await api.adminTopPost(item.postId, item.isTop === '1' ? '0' : '1')
   await loadPosts()
+  if (activePostDetail.value?.post?.postId === item.postId) {
+    await openPostDetailDrawer({ postId: item.postId }, false)
+  }
+}
+
+async function batchTopPosts(top) {
+  if (!selectedPosts.value.length) {
+    alert('请先选择要处理的帖子')
+    return
+  }
+  const label = top === '1' ? '置顶' : '取消置顶'
+  if (!confirm(`确认批量${label} ${selectedPosts.value.length} 篇帖子吗？`)) return
+  const result = await api.adminBatchTopPosts({ postIds: selectedPostIds.value, top })
+  selectedPostIds.value = []
+  await loadPosts()
+  alert(`已${label} ${result?.updatedCount || 0} 篇帖子`)
+}
+
+async function batchDeletePosts() {
+  if (!selectedPosts.value.length) {
+    alert('请先选择要删除的帖子')
+    return
+  }
+  const commentCount = selectedPosts.value.reduce((sum, item) => sum + Number(item.commentCount || 0), 0)
+  if (!confirm(`确认删除 ${selectedPosts.value.length} 篇帖子吗？这些帖子下共有 ${commentCount} 条评论。`)) return
+  const result = await api.adminBatchDeletePosts({ postIds: selectedPostIds.value })
+  selectedPostIds.value = []
+  await loadPosts()
+  alert(`已删除 ${result?.deletedCount || 0} 篇帖子`)
+}
+
+function closePostDetailDrawer() {
+  postDetailVisible.value = false
+  postDetailLoading.value = false
+  activePostDetail.value = null
+}
+
+async function openPostDetailDrawer(item, showDrawer = true) {
+  if (!item?.postId) return
+  if (showDrawer) {
+    postDetailVisible.value = true
+  }
+  postDetailLoading.value = true
+  try {
+    activePostDetail.value = await api.adminPostDetail(item.postId)
+  } catch (error) {
+    alert(error?.message || '帖子详情加载失败')
+    if (showDrawer) closePostDetailDrawer()
+  } finally {
+    postDetailLoading.value = false
+  }
+}
+
+async function deletePostFromDetail() {
+  if (!activePostDetail.value?.post?.postId) return
+  const deleted = await deletePost(activePostDetail.value.post.postId)
+  if (deleted) {
+    closePostDetailDrawer()
+  }
 }
 
 async function loadComments() {
-  const res = await api.adminComments({ page: pageState.comments.page, size: ADMIN_PAGE_SIZE })
+  const res = await api.adminComments({
+    page: pageState.comments.page,
+    size: ADMIN_PAGE_SIZE,
+    keyword: String(commentFilters.keyword || '').trim() || undefined,
+    postId: String(commentFilters.postId || '').trim() || undefined,
+    userId: String(commentFilters.userId || '').trim() || undefined,
+    type: commentFilters.type,
+    sort: commentFilters.sort
+  })
   comments.value = res.list || []
   pageState.comments.total = Number(res.total || 0)
+  pruneSelectedCommentIds()
   normalizeServerPage('comments')
   if (!comments.value.length && pageState.comments.page > 1) {
     pageState.comments.page -= 1
@@ -804,9 +1209,98 @@ async function loadComments() {
   }
 }
 
-async function deleteComment(id) {
-  await api.adminDeleteComment(id)
+function pruneSelectedCommentIds() {
+  if (!selectedCommentIds.value.length) return
+  const validIds = new Set(comments.value.map(item => item.commentId))
+  selectedCommentIds.value = selectedCommentIds.value.filter(id => validIds.has(id))
+}
+
+function commentTypeLabel(item) {
+  return item?.replyType === 'reply' ? '回复评论' : '一级评论'
+}
+
+function resetCommentFilters() {
+  commentFilters.keyword = ''
+  commentFilters.postId = ''
+  commentFilters.userId = ''
+  commentFilters.type = 'all'
+  commentFilters.sort = 'latest'
+  pageState.comments.page = 1
+  selectedCommentIds.value = []
+  loadComments()
+}
+
+async function applyCommentFilters() {
+  pageState.comments.page = 1
+  selectedCommentIds.value = []
   await loadComments()
+}
+
+function toggleSelectComment(commentId, checked) {
+  if (!commentId) return
+  if (checked) {
+    if (!selectedCommentIds.value.includes(commentId)) selectedCommentIds.value.push(commentId)
+  } else {
+    selectedCommentIds.value = selectedCommentIds.value.filter(id => id !== commentId)
+  }
+}
+
+function toggleSelectAllComments(checked) {
+  if (checked) {
+    selectedCommentIds.value = comments.value.map(item => item.commentId)
+  } else {
+    selectedCommentIds.value = []
+  }
+}
+
+function clearSelectedComments() {
+  selectedCommentIds.value = []
+}
+
+function openPostDetail(postId) {
+  if (!postId) return
+  window.open(`/community/post/${postId}`, '_blank', 'noopener,noreferrer')
+}
+
+function closeCommentContext() {
+  commentContextVisible.value = false
+  activeCommentContext.value = null
+}
+
+async function openCommentContext(item) {
+  if (!item?.commentId) return
+  commentContextVisible.value = true
+  commentContextLoading.value = true
+  activeCommentContext.value = null
+  try {
+    activeCommentContext.value = await api.adminCommentContext(item.commentId)
+  } catch (error) {
+    alert(error?.message || '评论上下文加载失败')
+    closeCommentContext()
+  } finally {
+    commentContextLoading.value = false
+  }
+}
+
+async function deleteComment(id) {
+  if (!confirm('确认删除这条评论吗？')) return
+  await api.adminDeleteComment(id)
+  selectedCommentIds.value = selectedCommentIds.value.filter(commentId => commentId !== id)
+  await loadComments()
+}
+
+async function batchDeleteComments() {
+  if (!selectedComments.value.length) {
+    alert('请先选择要删除的评论')
+    return
+  }
+  const postCount = new Set(selectedComments.value.map(item => item.postId)).size
+  const userCount = new Set(selectedComments.value.map(item => item.userId)).size
+  if (!confirm(`确认删除 ${selectedComments.value.length} 条评论吗？涉及 ${postCount} 个帖子、${userCount} 个用户。`)) return
+  const result = await api.adminBatchDeleteComments({ commentIds: selectedCommentIds.value })
+  selectedCommentIds.value = []
+  await loadComments()
+  alert(`已删除 ${result?.deletedCount || 0} 条评论`)
 }
 
 async function loadActivities() {
@@ -871,10 +1365,21 @@ async function loadContentData() {
   placeReviews.value = placeReviewData || []
   videos.value = videoData || []
   normalizeContentPages()
+  pruneSelectedNewsIds()
 }
 
 async function loadReports() {
   reports.value = await api.adminReports()
+}
+
+async function loadWorkbench() {
+  await Promise.all([
+    loadStats(),
+    loadReviewCenterData(),
+    loadContentData(),
+    loadPosts(),
+    loadComments()
+  ])
 }
 
 async function loadReviewCenterData() {
@@ -945,6 +1450,45 @@ async function changeActivityReviewFilter(next) {
 function changeContentPage(key, next, totalPages) {
   if (next < 1 || next > totalPages || next === contentPageState[key]) return
   contentPageState[key] = next
+}
+
+function pruneSelectedNewsIds() {
+  if (!selectedNewsIds.value.length) return
+  const validIds = new Set(newsList.value.map(item => item.newsId))
+  selectedNewsIds.value = selectedNewsIds.value.filter(id => validIds.has(id))
+}
+
+function toggleSelectNews(newsId, checked) {
+  if (!newsId) return
+  if (checked) {
+    if (!selectedNewsIds.value.includes(newsId)) selectedNewsIds.value.push(newsId)
+  } else {
+    selectedNewsIds.value = selectedNewsIds.value.filter(id => id !== newsId)
+  }
+}
+
+function toggleSelectAllPagedNews(checked) {
+  const pageIds = pagedNews.value.map(item => item.newsId).filter(Boolean)
+  if (checked) {
+    const next = new Set(selectedNewsIds.value)
+    pageIds.forEach(id => next.add(id))
+    selectedNewsIds.value = [...next]
+  } else {
+    const pageIdSet = new Set(pageIds)
+    selectedNewsIds.value = selectedNewsIds.value.filter(id => !pageIdSet.has(id))
+  }
+}
+
+function selectPagedPendingNews() {
+  const next = new Set(selectedNewsIds.value)
+  pagedNews.value
+    .filter(item => String(item?.status || '0') === '0')
+    .forEach(item => next.add(item.newsId))
+  selectedNewsIds.value = [...next]
+}
+
+function clearSelectedNews() {
+  selectedNewsIds.value = []
 }
 
 function resetNewsForm() {
@@ -1149,6 +1693,52 @@ async function reviewNews(status) {
   }
 }
 
+async function reviewNewsItem(item, status) {
+  if (!item?.newsId || newsQuickReviewId.value || newsBatchReviewLoading.value) return
+  newsQuickReviewId.value = item.newsId
+  try {
+    await api.adminReviewNews(item.newsId, { status })
+    await loadContentData()
+    if (activeNewsDetail.value?.newsId === item.newsId) {
+      const detail = await api.adminNewsDetail(item.newsId)
+      activeNewsDetail.value = detail
+      fillNewsEditForm(detail)
+    }
+  } catch (error) {
+    alert(error?.message || '资讯审核失败')
+  } finally {
+    newsQuickReviewId.value = ''
+  }
+}
+
+async function batchReviewNews(status) {
+  if (!selectedNewsItems.value.length) {
+    alert('请先勾选要审核的资讯')
+    return
+  }
+  if (!canBatchReviewNews.value) {
+    alert('批量审核仅处理待审核资讯，请清空后重新选择，或点击“仅选本页待审”。')
+    return
+  }
+  const actionLabel = status === '1' ? '通过' : '驳回'
+  const targets = [...selectedNewsItems.value]
+  if (!confirm(`确认批量${actionLabel}${targets.length}条资讯吗？`)) return
+
+  newsBatchReviewLoading.value = true
+  try {
+    const results = await Promise.allSettled(
+      targets.map(item => api.adminReviewNews(item.newsId, { status }))
+    )
+    const successCount = results.filter(item => item.status === 'fulfilled').length
+    const failedCount = results.length - successCount
+    selectedNewsIds.value = []
+    await loadContentData()
+    alert(failedCount ? `已处理 ${successCount} 条，失败 ${failedCount} 条。` : `已批量${actionLabel} ${successCount} 条资讯。`)
+  } finally {
+    newsBatchReviewLoading.value = false
+  }
+}
+
 async function createNotice() {
   clearGroupErrors('notice')
   if (!String(noticeForm.title || '').trim()) setError('notice', 'title', '请填写公告标题')
@@ -1190,6 +1780,7 @@ async function createNews() {
 
 async function deleteNews(id) {
   await api.adminDeleteNews(id)
+  selectedNewsIds.value = selectedNewsIds.value.filter(newsId => newsId !== id)
   await loadContentData()
 }
 
@@ -1361,7 +1952,9 @@ async function refreshAll() {
 async function loadTabData(tabKey, force = false) {
   if (!force && loadedTabs[tabKey]) return
 
-  if (tabKey === 'stats') {
+  if (tabKey === 'workbench') {
+    await loadWorkbench()
+  } else if (tabKey === 'stats') {
     await loadStats()
   } else if (tabKey === 'analytics') {
     await loadAnalytics()
@@ -1432,29 +2025,116 @@ onBeforeUnmount(() => {
     <aside class="left-nav">
       <div class="brand-block">
         <h2>后台管理中心</h2>
-        <p>君临天下</p>
+        <p>按职责分区管理社区运营</p>
       </div>
-      <button
-        v-for="item in navItems"
-        :key="item.key"
-        :class="['nav-btn', { active: tab === item.key }]"
-        @click="tab = item.key"
-      >
-        <AppIcon :name="item.icon" :size="16" />
-        <span>{{ item.label }}</span>
-      </button>
+      <div v-for="group in navGroups" :key="group.key" class="nav-group">
+        <div class="nav-group-head">
+          <strong>{{ group.label }}</strong>
+          <span>{{ group.hint }}</span>
+        </div>
+        <button
+          v-for="item in group.items"
+          :key="item.key"
+          :class="['nav-btn', { active: tab === item.key }]"
+          @click="switchAdminTab(item.key)"
+        >
+          <AppIcon :name="item.icon" :size="16" />
+          <span class="nav-btn-text">
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.desc }}</small>
+          </span>
+          <em v-if="navBadge(item.key)" class="nav-badge">{{ navBadge(item.key) }}</em>
+        </button>
+      </div>
     </aside>
 
     <section class="main-panel">
-      <div class="panel-head card">
-        <div>
-          <h1>{{ navItems.find(item => item.key === tab)?.label || '后台管理中心' }}</h1>
-          <p>统一管理用户、帖子、评论、活动、公告和轮播图。</p>
+      <div class="panel-head card admin-command-center">
+        <div class="panel-title-block">
+          <span class="section-kicker">{{ activeNavGroup.label }}</span>
+          <h1>{{ activeNavItem?.label || '后台管理中心' }}</h1>
+          <p>{{ activeNavItem?.desc || '统一管理社区运营内容。' }}</p>
+          <div v-if="panelSummaryItems.length" class="panel-summary">
+            <span v-for="item in panelSummaryItems" :key="item.label" class="summary-pill">
+              {{ item.label }} <strong>{{ item.value }}</strong>
+            </span>
+          </div>
         </div>
-        <button class="btn-primary" @click="refreshCurrentTab">
-          <AppIcon name="refresh" :size="15" />
-          刷新当前
-        </button>
+        <div class="admin-head-actions">
+          <button class="btn-primary module-primary-action" @click="currentPrimaryAction.handler">
+            <AppIcon :name="currentPrimaryAction.icon" :size="15" />
+            {{ currentPrimaryAction.label }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="tab === 'workbench'" class="workbench-grid">
+        <section class="card workbench-priority">
+          <div class="module-section-head">
+            <div>
+              <span class="section-kicker">今日优先</span>
+              <h3>先处理会影响前台体验的事项</h3>
+            </div>
+            <button class="btn-soft" @click="refreshCurrentTab">刷新工作台</button>
+          </div>
+          <div class="todo-card-grid">
+            <button
+              v-for="item in workbenchTodoCards"
+              :key="item.key"
+              type="button"
+              :class="['todo-card', `priority-${item.priority}`]"
+              @click="runQuickAdminAction(item.action)"
+            >
+              <span>
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.detail }}</small>
+              </span>
+              <em>{{ item.value }}</em>
+            </button>
+          </div>
+        </section>
+
+        <section class="card workbench-shortcuts">
+          <div class="module-section-head">
+            <div>
+              <span class="section-kicker">快捷处理</span>
+              <h3>常用后台任务</h3>
+            </div>
+          </div>
+          <div class="quick-admin-actions workbench-actions">
+            <button
+              v-for="action in quickAdminActions"
+              :key="action.key"
+              type="button"
+              class="quick-admin-btn"
+              @click="runQuickAdminAction(action)"
+            >
+              <AppIcon :name="action.icon" :size="15" />
+              <span>
+                <strong>{{ action.label }}</strong>
+                <small>{{ action.desc }}</small>
+              </span>
+              <em v-if="quickActionBadge(action)">{{ quickActionBadge(action) }}</em>
+            </button>
+          </div>
+        </section>
+
+        <section class="card workbench-stats">
+          <div class="module-section-head">
+            <div>
+              <span class="section-kicker">轻量概览</span>
+              <h3>社区规模</h3>
+            </div>
+            <button class="btn-soft" @click="switchAdminTab('stats')">查看统计</button>
+          </div>
+          <div class="workbench-stat-grid">
+            <div v-for="item in workbenchStats" :key="item.label" class="workbench-stat-card">
+              <span class="icon-chip"><AppIcon :name="item.icon" :size="14" /></span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.label }}</small>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div v-if="tab === 'stats'" class="card">
@@ -1568,6 +2248,13 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="tab === 'reviewCenter'" class="review-center">
+        <div class="card module-section-head compact">
+          <div>
+            <span class="section-kicker">集中审核</span>
+            <h3>统一处理活动、快讯、举报和场地评价</h3>
+          </div>
+          <span class="muted">待办 {{ pendingReviewTotal }} 条</span>
+        </div>
         <div class="card review-filter-bar">
           <select v-model="reviewStatusFilter">
             <option value="all">状态：全部</option>
@@ -1787,57 +2474,317 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="tab === 'posts'" class="card content-list">
-        <div v-for="p in posts" :key="p.postId" class="post-admin-card">
-          <div class="data-row">
-            <div>
-              <strong>{{ p.title }}</strong>
-              <p>置顶：{{ p.isTop === '1' ? '是' : '否' }}</p>
-            </div>
-            <div class="row-actions">
-              <button class="btn-soft" :disabled="postModerationLoadingId === p.postId" @click="fetchModerationSuggestForPost(p)">
-                {{ postModerationLoadingId === p.postId ? '分析中...' : 'AI 审核建议' }}
-              </button>
-              <button @click="topPost(p)">{{ p.isTop === '1' ? '取消置顶' : '置顶' }}</button>
-              <button class="btn-danger" @click="deletePost(p.postId)">删除</button>
-            </div>
+      <div v-if="tab === 'posts'" class="card content-list post-admin-panel">
+        <div class="module-section-head compact">
+          <div>
+            <span class="section-kicker">筛选与批量</span>
+            <h3>先缩小范围，再处理帖子</h3>
           </div>
-          <div v-if="postModerationResultId === p.postId && postModerationResult" class="moderation-inline-panel">
-            <p><strong>风险等级：</strong>{{ postModerationResult.riskLevel }}</p>
-            <p><strong>处理建议：</strong>{{ postModerationResult.suggestion || '暂无建议' }}</p>
-            <p><strong>规范摘要：</strong>{{ postModerationResult.normalizedSummary || '暂无摘要' }}</p>
-            <div v-if="postModerationResult.riskPoints.length" class="moderation-points">
+          <span class="muted">{{ postBatchSummary }}</span>
+        </div>
+        <div class="post-filter-grid">
+          <label>
+            <span class="field-caption">关键词</span>
+            <input v-model="postFilters.keyword" placeholder="搜标题、正文、作者" @keyup.enter="applyPostFilters" />
+          </label>
+          <label>
+            <span class="field-caption">分类</span>
+            <select v-model="postFilters.category" @change="applyPostFilters">
+              <option value="">全部分类</option>
+              <option value="技巧教学">技巧教学</option>
+              <option value="装备分享">装备分享</option>
+              <option value="赛事讨论">赛事讨论</option>
+              <option value="日常交流">日常交流</option>
+              <option value="同城约板">同城约板</option>
+            </select>
+          </label>
+          <label>
+            <span class="field-caption">置顶状态</span>
+            <select v-model="postFilters.top" @change="applyPostFilters">
+              <option value="all">全部帖子</option>
+              <option value="top">已置顶</option>
+              <option value="normal">未置顶</option>
+            </select>
+          </label>
+          <label>
+            <span class="field-caption">排序</span>
+            <select v-model="postFilters.sort" @change="applyPostFilters">
+              <option value="latest">最新发布</option>
+              <option value="likes">点赞最多</option>
+              <option value="comments">评论最多</option>
+              <option value="collects">收藏最多</option>
+            </select>
+          </label>
+          <div class="comment-filter-actions">
+            <button class="btn-primary" @click="applyPostFilters">筛选</button>
+            <button class="btn-soft" @click="resetPostFilters">重置</button>
+          </div>
+        </div>
+
+        <div class="post-batch-bar">
+          <label class="news-check-control">
+            <input
+              type="checkbox"
+              :checked="allPostsSelected"
+              :disabled="!posts.length"
+              @change="toggleSelectAllPosts($event.target.checked)"
+            />
+            <span>本页全选</span>
+          </label>
+          <span class="muted">{{ postBatchSummary }}</span>
+          <div class="row-actions">
+            <button class="btn-soft compact-btn" :disabled="!selectedPostIds.length" @click="clearSelectedPosts">清空选择</button>
+            <button class="btn-soft compact-btn" :disabled="!selectedPostIds.length" @click="batchTopPosts('1')">批量置顶</button>
+            <button class="btn-soft compact-btn" :disabled="!selectedPostIds.length" @click="batchTopPosts('0')">取消置顶</button>
+            <button class="btn-danger compact-btn" :disabled="!selectedPostIds.length" @click="batchDeletePosts">批量删除</button>
+          </div>
+        </div>
+
+        <div v-for="p in posts" :key="p.postId" class="post-review-card">
+          <label class="news-row-check" :title="`选择帖子 #${p.postId}`">
+            <input
+              type="checkbox"
+              :checked="selectedPostIds.includes(p.postId)"
+              @change="toggleSelectPost(p.postId, $event.target.checked)"
+            />
+          </label>
+          <div class="post-review-main">
+            <div class="post-review-head">
+              <strong>{{ p.title }}</strong>
+              <span class="status-chip">{{ p.category || '未分类' }}</span>
+              <span class="status-chip" :class="{ active: p.isTop === '1' }">{{ p.isTop === '1' ? '已置顶' : '普通帖' }}</span>
+              <span class="post-risk-chip" :class="postRiskClass(p.postId)">{{ postRiskLabel(p.postId) }}</span>
+              <span v-if="Number(p.reportCount || 0) > 0" class="post-risk-chip risk-high">举报 {{ p.reportCount }}</span>
+            </div>
+            <p class="post-meta">
+              {{ p.username || '已注销用户' }}（ID {{ p.userId }}） · {{ fmtTime(p.createTime) }} ·
+              图 {{ p.imageCount || 0 }} · 赞 {{ p.likeCount || 0 }} · 收藏 {{ p.collectCount || 0 }} · 评论 {{ p.commentCount || 0 }}
+            </p>
+            <p class="post-preview clamp-3">{{ p.contentPreview || '暂无正文摘要' }}</p>
+          </div>
+          <div class="row-actions post-card-actions">
+            <button class="btn-soft" :disabled="postModerationLoadingId === p.postId" @click="fetchModerationSuggestForPost(p)">
+              {{ postModerationLoadingId === p.postId ? '分析中...' : 'AI 审核建议' }}
+            </button>
+            <button class="btn-soft" @click="openPostDetailDrawer(p)">查看详情</button>
+            <button class="btn-soft" @click="openPostDetail(p.postId)">查看帖子</button>
+            <button class="btn-soft" @click="topPost(p)">{{ p.isTop === '1' ? '取消置顶' : '置顶' }}</button>
+            <button class="btn-danger" @click="deletePost(p.postId)">删除</button>
+          </div>
+          <div v-if="postModerationResults[p.postId]" class="moderation-inline-panel post-risk-panel">
+            <p><strong>风险等级：</strong>{{ postModerationResults[p.postId].riskLevel }}</p>
+            <p><strong>处理建议：</strong>{{ postModerationResults[p.postId].suggestion || '暂无建议' }}</p>
+            <p><strong>规范摘要：</strong>{{ postModerationResults[p.postId].normalizedSummary || '暂无摘要' }}</p>
+            <div v-if="postModerationResults[p.postId].riskPoints.length" class="moderation-points">
               <strong>风险点：</strong>
               <ul>
-                <li v-for="point in postModerationResult.riskPoints" :key="point">{{ point }}</li>
+                <li v-for="point in postModerationResults[p.postId].riskPoints" :key="point">{{ point }}</li>
               </ul>
             </div>
             <p v-else><strong>风险点：</strong>未发现明显风险点</p>
           </div>
         </div>
+        <div v-if="!posts.length" class="muted empty-state">没有找到匹配的帖子。</div>
         <div class="pagination-bar">
           <button class="btn-soft" :disabled="pageState.posts.page <= 1" @click="changePostsPage(pageState.posts.page - 1)">上一页</button>
           <span class="muted">第 {{ pageState.posts.page }} / {{ postsTotalPages }} 页（共 {{ pageState.posts.total }} 条）</span>
           <button class="btn-soft" :disabled="pageState.posts.page >= postsTotalPages" @click="changePostsPage(pageState.posts.page + 1)">下一页</button>
         </div>
+
+        <div v-if="postDetailVisible" class="review-drawer-mask" @click.self="closePostDetailDrawer">
+          <aside class="review-drawer post-detail-drawer">
+            <div class="review-drawer-head">
+              <h3>帖子详情</h3>
+              <button class="btn-soft" @click="closePostDetailDrawer">关闭</button>
+            </div>
+            <div class="review-drawer-body">
+              <div v-if="postDetailLoading" class="muted">正在加载帖子详情...</div>
+              <template v-else-if="activePostDetail?.post">
+                <div class="review-drawer-block">
+                  <strong>{{ activePostDetail.post.title }}</strong>
+                  <p>
+                    {{ activePostDetail.post.username || '已注销用户' }}（ID {{ activePostDetail.post.userId }}） ·
+                    {{ activePostDetail.post.category || '未分类' }} · {{ fmtTime(activePostDetail.post.createTime) }}
+                  </p>
+                  <p>赞 {{ activePostDetail.post.likeCount || 0 }} · 收藏 {{ activePostDetail.post.collectCount || 0 }} · 评论 {{ activePostDetail.post.commentCount || 0 }} · 举报 {{ activePostDetail.post.reportCount || 0 }}</p>
+                </div>
+                <div class="review-drawer-block">
+                  <strong>完整正文</strong>
+                  <p>{{ activePostDetail.post.content || '暂无正文' }}</p>
+                </div>
+                <div v-if="activePostDetail.imageList?.length" class="review-drawer-block">
+                  <strong>图片预览</strong>
+                  <div class="post-image-grid">
+                    <img v-for="image in activePostDetail.imageList" :key="image" :src="image" alt="帖子图片" />
+                  </div>
+                </div>
+                <div class="review-drawer-block">
+                  <strong>最近评论</strong>
+                  <div v-if="!activePostDetail.recentComments?.length" class="muted">暂无评论</div>
+                  <div v-for="item in activePostDetail.recentComments" :key="`post-comment-${item.commentId}`" class="context-comment-row">
+                    <span>#{{ item.commentId }} · {{ item.username }} · {{ fmtTime(item.createTime) }}</span>
+                    <p>{{ item.content }}</p>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="review-drawer-actions" v-if="activePostDetail?.post">
+              <button class="btn-soft" @click="openPostDetail(activePostDetail.post.postId)">查看前台帖子</button>
+              <button class="btn-soft" @click="topPost(activePostDetail.post)">{{ activePostDetail.post.isTop === '1' ? '取消置顶' : '置顶' }}</button>
+              <button class="btn-danger" @click="deletePostFromDetail">删除帖子</button>
+            </div>
+          </aside>
+        </div>
       </div>
 
-      <div v-if="tab === 'comments'" class="card content-list">
-        <div v-for="c in comments" :key="c.commentId" class="data-row">
+      <div v-if="tab === 'comments'" class="card content-list comment-admin-panel">
+        <div class="module-section-head compact">
           <div>
-            <strong>帖子 {{ c.postId }}</strong>
-            <p>{{ c.content }}</p>
+            <span class="section-kicker">评论上下文</span>
+            <h3>按帖子定位评论问题</h3>
           </div>
-          <button class="btn-danger" @click="deleteComment(c.commentId)">删除</button>
+          <span class="muted">{{ commentBatchSummary }}</span>
         </div>
+        <div class="comment-filter-grid">
+          <label>
+            <span class="field-caption">关键词</span>
+            <input v-model="commentFilters.keyword" placeholder="搜评论、帖子标题、用户名" @keyup.enter="applyCommentFilters" />
+          </label>
+          <label>
+            <span class="field-caption">帖子 ID</span>
+            <input v-model="commentFilters.postId" type="number" min="1" placeholder="例如 9" @keyup.enter="applyCommentFilters" />
+          </label>
+          <label>
+            <span class="field-caption">用户 ID</span>
+            <input v-model="commentFilters.userId" type="number" min="1" placeholder="例如 2" @keyup.enter="applyCommentFilters" />
+          </label>
+          <label>
+            <span class="field-caption">评论类型</span>
+            <select v-model="commentFilters.type" @change="applyCommentFilters">
+              <option value="all">全部评论</option>
+              <option value="root">一级评论</option>
+              <option value="reply">回复评论</option>
+            </select>
+          </label>
+          <label>
+            <span class="field-caption">排序</span>
+            <select v-model="commentFilters.sort" @change="applyCommentFilters">
+              <option value="latest">最新评论</option>
+              <option value="oldest">最早评论</option>
+            </select>
+          </label>
+          <div class="comment-filter-actions">
+            <button class="btn-primary" @click="applyCommentFilters">筛选</button>
+            <button class="btn-soft" @click="resetCommentFilters">重置</button>
+          </div>
+        </div>
+
+        <div class="comment-batch-bar">
+          <label class="news-check-control">
+            <input
+              type="checkbox"
+              :checked="allCommentsSelected"
+              :disabled="!comments.length"
+              @change="toggleSelectAllComments($event.target.checked)"
+            />
+            <span>本页全选</span>
+          </label>
+          <span class="muted">{{ commentBatchSummary }}</span>
+          <div class="row-actions">
+            <button class="btn-soft compact-btn" :disabled="!selectedCommentIds.length" @click="clearSelectedComments">清空选择</button>
+            <button class="btn-danger compact-btn" :disabled="!selectedCommentIds.length" @click="batchDeleteComments">批量删除</button>
+          </div>
+        </div>
+
+        <div v-for="c in comments" :key="c.commentId" class="comment-card">
+          <label class="news-row-check" :title="`选择评论 #${c.commentId}`">
+            <input
+              type="checkbox"
+              :checked="selectedCommentIds.includes(c.commentId)"
+              @change="toggleSelectComment(c.commentId, $event.target.checked)"
+            />
+          </label>
+          <div class="comment-card-main">
+            <div class="comment-card-head">
+              <strong>{{ c.postTitle || `帖子 ${c.postId}` }}</strong>
+              <span class="status-chip">{{ commentTypeLabel(c) }}</span>
+              <span class="status-chip">#{{ c.commentId }}</span>
+            </div>
+            <p class="comment-meta">
+              用户 {{ c.username || '已注销用户' }}（ID {{ c.userId }}） ·
+              帖子 ID {{ c.postId }} ·
+              {{ fmtTime(c.createTime) }} ·
+              {{ c.contentLength || 0 }}/500
+            </p>
+            <p v-if="c.parentId && c.parentId !== 0" class="comment-parent">
+              回复 #{{ c.parentId }}：{{ c.parentContent || '父评论已删除或暂无内容' }}
+            </p>
+            <p class="comment-content">{{ c.content }}</p>
+          </div>
+          <div class="row-actions comment-card-actions">
+            <button class="btn-soft" @click="openCommentContext(c)">查看上下文</button>
+            <button class="btn-soft" @click="openPostDetail(c.postId)">查看帖子</button>
+            <button class="btn-danger" @click="deleteComment(c.commentId)">删除</button>
+          </div>
+        </div>
+        <div v-if="!comments.length" class="muted empty-state">没有找到匹配的帖子评论。</div>
         <div class="pagination-bar">
           <button class="btn-soft" :disabled="pageState.comments.page <= 1" @click="changeCommentsPage(pageState.comments.page - 1)">上一页</button>
           <span class="muted">第 {{ pageState.comments.page }} / {{ commentsTotalPages }} 页（共 {{ pageState.comments.total }} 条）</span>
           <button class="btn-soft" :disabled="pageState.comments.page >= commentsTotalPages" @click="changeCommentsPage(pageState.comments.page + 1)">下一页</button>
         </div>
+
+        <div v-if="commentContextVisible" class="review-drawer-mask" @click.self="closeCommentContext">
+          <aside class="review-drawer comment-context-drawer">
+            <div class="review-drawer-head">
+              <h3>评论上下文</h3>
+              <button class="btn-soft" @click="closeCommentContext">关闭</button>
+            </div>
+            <div class="review-drawer-body">
+              <div v-if="commentContextLoading" class="muted">正在加载评论上下文...</div>
+              <template v-else-if="activeCommentContext">
+                <div class="review-drawer-block">
+                  <strong>{{ activeCommentContext.postTitle }}</strong>
+                  <p>帖子 ID：{{ activeCommentContext.postId }} · 发布时间：{{ fmtTime(activeCommentContext.postCreateTime) }}</p>
+                  <p>{{ activeCommentContext.postContentPreview || '暂无帖子正文摘要' }}</p>
+                </div>
+                <div v-if="activeCommentContext.parentComment" class="review-drawer-block">
+                  <strong>父评论</strong>
+                  <p>{{ activeCommentContext.parentComment.username }}：{{ activeCommentContext.parentComment.content }}</p>
+                </div>
+                <div class="review-drawer-block current-comment-block">
+                  <strong>当前评论</strong>
+                  <p>{{ activeCommentContext.currentComment.username }}：{{ activeCommentContext.currentComment.content }}</p>
+                </div>
+                <div class="review-drawer-block">
+                  <strong>同帖评论脉络</strong>
+                  <div
+                    v-for="item in activeCommentContext.nearbyComments"
+                    :key="`ctx-${item.commentId}`"
+                    :class="['context-comment-row', { active: item.commentId === activeCommentContext.currentComment.commentId }]"
+                  >
+                    <span>#{{ item.commentId }} · {{ item.username }} · {{ fmtTime(item.createTime) }}</span>
+                    <p>{{ item.content }}</p>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="review-drawer-actions" v-if="activeCommentContext">
+              <button class="btn-soft" @click="openPostDetail(activeCommentContext.postId)">查看帖子</button>
+              <button class="btn-danger" @click="deleteComment(activeCommentContext.currentComment.commentId); closeCommentContext()">删除当前评论</button>
+            </div>
+          </aside>
+        </div>
       </div>
 
       <div v-if="tab === 'activities'" class="card content-list">
+        <div class="module-section-head compact">
+          <div>
+            <span class="section-kicker">活动审核</span>
+            <h3>优先处理待审核活动</h3>
+          </div>
+          <span class="muted">共 {{ pageState.activities.total }} 条</span>
+        </div>
         <div class="inline">
           <button class="btn-soft" :class="{ active: activityReviewFilter === '0' }" @click="changeActivityReviewFilter('0')">待审核</button>
           <button class="btn-soft" :class="{ active: activityReviewFilter === '1' }" @click="changeActivityReviewFilter('1')">已通过</button>
@@ -1864,6 +2811,13 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="tab === 'reports'" class="card content-list">
+        <div class="module-section-head compact">
+          <div>
+            <span class="section-kicker">举报处理</span>
+            <h3>先看被举报对象，再决定处理方式</h3>
+          </div>
+          <span class="muted">{{ reports.length }} 条记录</span>
+        </div>
         <div v-if="!reports.length" class="muted">暂无举报记录</div>
         <div v-for="item in reports" :key="item.reportId" class="data-row">
           <div>
@@ -1884,6 +2838,13 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="tab === 'content'" class="content-tab-panel">
+        <div class="card module-section-head compact">
+          <div>
+            <span class="section-kicker">发布配置</span>
+            <h3>公告、资讯、场地和首页展示统一维护</h3>
+          </div>
+          <span class="muted">资讯待审 {{ newsAuditStats.pending }} 条</span>
+        </div>
         <div class="card review-tabs">
           <button
             v-for="item in contentTabs"
@@ -1983,6 +2944,32 @@ onBeforeUnmount(() => {
               </p>
             </div>
           </div>
+          <div class="news-batch-bar">
+            <div class="news-batch-select">
+              <label class="news-check-control">
+                <input
+                  type="checkbox"
+                  :checked="allPagedNewsSelected"
+                  :disabled="!pagedNews.length || newsBatchReviewLoading"
+                  @change="toggleSelectAllPagedNews($event.target.checked)"
+                />
+                <span>本页全选</span>
+              </label>
+              <button class="btn-soft compact-btn" :disabled="!pagedNews.length || newsBatchReviewLoading" @click="selectPagedPendingNews">
+                仅选本页待审
+              </button>
+              <button class="btn-soft compact-btn" :disabled="!selectedNewsIds.length || newsBatchReviewLoading" @click="clearSelectedNews">
+                清空选择
+              </button>
+            </div>
+            <div class="news-batch-actions">
+              <span class="muted">{{ newsBatchStatusText }}</span>
+              <button class="btn-primary compact-btn" :disabled="!canBatchReviewNews" @click="batchReviewNews('1')">
+                {{ newsBatchReviewLoading ? '处理中...' : '批量通过' }}
+              </button>
+              <button class="btn-soft compact-btn" :disabled="!canBatchReviewNews" @click="batchReviewNews('2')">批量驳回</button>
+            </div>
+          </div>
           <label class="field-caption">资讯标题 <span class="required">*</span></label>
           <input
             v-model="newsForm.title"
@@ -2011,7 +2998,15 @@ onBeforeUnmount(() => {
           />
           <p v-if="formErrors.news.content" class="field-error">{{ formErrors.news.content }}</p>
           <button class="btn-primary" @click="createNews">新增资讯</button>
-          <div v-for="n in pagedNews" :key="n.newsId" class="mini-row">
+          <div v-for="n in pagedNews" :key="n.newsId" class="mini-row news-review-row">
+            <label class="news-row-check" :title="`选择：${n.title}`">
+              <input
+                type="checkbox"
+                :checked="selectedNewsIds.includes(n.newsId)"
+                :disabled="newsBatchReviewLoading"
+                @change="toggleSelectNews(n.newsId, $event.target.checked)"
+              />
+            </label>
             <div class="news-row-main">
               <div class="news-row-head">
                 <strong>{{ n.title }}</strong>
@@ -2023,6 +3018,20 @@ onBeforeUnmount(() => {
               <p class="clamp-2">{{ n.summary || n.aiSummary || '暂无摘要' }}</p>
             </div>
             <div class="row-actions">
+              <button
+                class="btn-soft news-approve-btn"
+                :disabled="newsQuickReviewId === n.newsId || newsBatchReviewLoading || n.status === '1'"
+                @click="reviewNewsItem(n, '1')"
+              >
+                通过
+              </button>
+              <button
+                class="btn-soft"
+                :disabled="newsQuickReviewId === n.newsId || newsBatchReviewLoading || n.status === '2'"
+                @click="reviewNewsItem(n, '2')"
+              >
+                驳回
+              </button>
               <button class="btn-soft" @click="openNewsDetail(n)">查看详情</button>
               <button class="btn-danger" @click="deleteNews(n.newsId)">删除</button>
             </div>
@@ -2278,7 +3287,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .admin-layout {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -2309,17 +3318,47 @@ onBeforeUnmount(() => {
   font-size: 13px;
 }
 
+.nav-group {
+  padding: 10px 0 12px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.nav-group:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.nav-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 8px;
+}
+
+.nav-group-head strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.nav-group-head span {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .nav-btn {
   width: 100%;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-soft);
   border-radius: 10px;
-  padding: 10px 11px;
+  padding: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  text-align: left;
 }
 
 .nav-btn:hover,
@@ -2327,6 +3366,53 @@ onBeforeUnmount(() => {
   background: var(--surface-muted);
   border-color: var(--line);
   color: var(--text);
+}
+
+.nav-btn.active {
+  border-color: #cbd5e1;
+  box-shadow: inset 3px 0 0 #111827;
+}
+
+.nav-btn-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav-btn-text strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.nav-btn-text small {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.3;
+  display: none;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-btn:hover .nav-btn-text small,
+.nav-btn.active .nav-btn-text small {
+  display: block;
+}
+
+.nav-badge,
+.quick-admin-btn em {
+  flex: 0 0 auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  display: inline-grid;
+  place-items: center;
 }
 
 .main-panel {
@@ -2341,6 +3427,26 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
+.admin-command-center {
+  align-items: stretch;
+}
+
+.panel-title-block {
+  min-width: 0;
+}
+
+.section-kicker {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .panel-head h1 {
   margin: 0;
   font-size: 24px;
@@ -2348,6 +3454,218 @@ onBeforeUnmount(() => {
 
 .panel-head p {
   margin: 6px 0 0;
+  color: var(--text-muted);
+}
+
+.panel-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d8dee8;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #f8fafc;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.summary-pill strong {
+  color: #111827;
+}
+
+.admin-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.module-primary-action {
+  min-width: 120px;
+  justify-content: center;
+}
+
+.quick-admin-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.quick-admin-btn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  padding: 9px 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-admin-btn:hover,
+.quick-admin-btn.active {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.quick-admin-btn span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quick-admin-btn strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.quick-admin-btn small {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.workbench-priority {
+  grid-row: span 2;
+}
+
+.module-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.module-section-head.compact {
+  margin-bottom: 0;
+}
+
+.module-section-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.todo-card-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.todo-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+
+.todo-card:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.todo-card span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.todo-card strong {
+  color: #111827;
+  font-size: 16px;
+}
+
+.todo-card small {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.todo-card em {
+  min-width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #111827;
+  display: inline-grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.todo-card.priority-high {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.todo-card.priority-high em {
+  background: #dc2626;
+  color: #fff;
+}
+
+.todo-card.priority-medium {
+  border-color: #fde68a;
+  background: #fffdf3;
+}
+
+.todo-card.priority-medium em {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.workbench-actions {
+  grid-template-columns: 1fr;
+}
+
+.workbench-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workbench-stat-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  display: grid;
+  gap: 7px;
+}
+
+.workbench-stat-card strong {
+  color: #111827;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.workbench-stat-card small {
   color: var(--text-muted);
 }
 
@@ -2691,6 +4009,42 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
+.comment-context-drawer {
+  width: min(720px, 94vw);
+}
+
+.current-comment-block {
+  background: #fff8e8;
+  border-color: #f1d9a6;
+}
+
+.context-comment-row {
+  border-top: 1px solid var(--line);
+  padding: 9px 0;
+}
+
+.context-comment-row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.context-comment-row span {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.context-comment-row p {
+  margin: 4px 0 0;
+  color: #1f2937;
+}
+
+.context-comment-row.active {
+  border-radius: 10px;
+  border: 1px solid #f1d9a6;
+  background: #fff8e8;
+  padding: 9px 10px;
+}
+
 .moderation-block,
 .moderation-inline-panel {
   background: #fffdf7;
@@ -2774,6 +4128,230 @@ onBeforeUnmount(() => {
 .content-list {
   display: grid;
   gap: 10px;
+}
+
+.comment-admin-panel {
+  gap: 12px;
+}
+
+.post-admin-panel {
+  gap: 12px;
+}
+
+.post-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(140px, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.post-filter-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.post-batch-bar {
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.post-review-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 12px;
+  background: #fff;
+}
+
+.post-review-main {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.post-review-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.post-review-head strong {
+  color: #111827;
+  font-size: 16px;
+}
+
+.post-meta,
+.post-preview {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.post-preview {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.post-card-actions {
+  justify-content: flex-end;
+}
+
+.post-risk-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.post-risk-chip.risk-unknown {
+  background: #f8fafc;
+  color: var(--text-soft);
+}
+
+.post-risk-chip.risk-low {
+  background: #eefaf2;
+  border-color: #bfd9c8;
+  color: #18603b;
+}
+
+.post-risk-chip.risk-medium {
+  background: #fff8e8;
+  border-color: #f1d9a6;
+  color: #8a5a00;
+}
+
+.post-risk-chip.risk-high {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #b42318;
+}
+
+.post-risk-panel {
+  grid-column: 2 / -1;
+}
+
+.post-detail-drawer {
+  width: min(760px, 94vw);
+}
+
+.post-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.post-image-grid img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.comment-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(130px, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.comment-filter-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.comment-filter-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-batch-bar {
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comment-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 12px;
+  background: #fff;
+}
+
+.comment-card-main {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.comment-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-card-head strong {
+  color: #111827;
+}
+
+.comment-meta,
+.comment-parent,
+.comment-content {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.comment-parent {
+  border-left: 3px solid #d8dee8;
+  padding: 6px 9px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.comment-content {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.comment-card-actions {
+  justify-content: flex-end;
+}
+
+.empty-state {
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  text-align: center;
 }
 
 .data-row {
@@ -2876,6 +4454,24 @@ onBeforeUnmount(() => {
 .news-row-main {
   flex: 1;
   min-width: 0;
+}
+
+.news-review-row {
+  align-items: flex-start;
+}
+
+.news-row-check {
+  width: 28px;
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+}
+
+.news-approve-btn {
+  border-color: #bfd9c8;
+  background: #eefaf2;
+  color: #18603b;
 }
 
 .news-sync-floating {
@@ -3013,6 +4609,45 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px 12px;
   margin-bottom: 12px;
+}
+
+.news-batch-bar {
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.news-batch-select,
+.news-batch-actions,
+.news-check-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.news-check-control {
+  min-height: 34px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.news-check-control input,
+.news-row-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #1f2937;
+}
+
+.compact-btn {
+  min-height: 34px;
+  padding: 7px 12px;
 }
 
 .news-status-select {
@@ -3289,6 +4924,33 @@ onBeforeUnmount(() => {
     min-height: auto;
   }
 
+  .nav-group {
+    padding: 8px 0;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-head-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quick-admin-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workbench-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workbench-priority {
+    grid-row: auto;
+  }
+
   .stat-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
@@ -3307,6 +4969,45 @@ onBeforeUnmount(() => {
 
   .review-filter-bar {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .post-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .post-batch-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .post-review-card {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .post-card-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  .post-risk-panel {
+    grid-column: 2;
+  }
+
+  .post-image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .comment-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comment-card {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .comment-card-actions {
+    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .review-batch-bar {
@@ -3345,9 +5046,62 @@ onBeforeUnmount(() => {
     width: auto;
   }
 
+  .news-batch-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .news-batch-actions {
+    width: 100%;
+  }
+
+  .news-review-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .news-review-row .row-actions {
+    grid-column: 2;
+  }
+
   .pagination-bar {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 680px) {
+  .quick-admin-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .module-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .todo-card {
+    grid-template-columns: 1fr;
+  }
+
+  .todo-card em {
+    width: fit-content;
+  }
+
+  .workbench-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-group-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-group-head span,
+  .nav-btn-text small,
+  .quick-admin-btn small {
+    white-space: normal;
   }
 }
 </style>

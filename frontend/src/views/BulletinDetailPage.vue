@@ -65,7 +65,7 @@ async function reportBulletin() {
       <h2>{{ detail.title }}</h2>
       <p class="muted meta">{{ detail.createTime?.replace('T', ' ') }} · {{ detail.publisherName || '匿名发布' }} · {{ detail.bulletinType || '社区快讯' }}</p>
       <div v-if="imageList.length" class="image-grid">
-        <img v-for="img in imageList" :key="img" :src="img" alt="快讯图片" />
+        <img v-for="img in imageList" :key="img" :src="img" alt="快讯图片" loading="lazy" decoding="async" />
       </div>
       <p class="content">{{ detail.content }}</p>
     </template>

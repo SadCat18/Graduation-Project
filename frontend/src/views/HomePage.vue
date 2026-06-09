@@ -23,18 +23,61 @@ const recommendPosts = ref([])
 const recommendActivities = ref([])
 const currentSlide = ref(0)
 let timerId = null
+let deferredHomeDataId = null
+let deferredHomeDataMode = ''
 
 const fallbackBanners = [
   {
     bannerId: -1,
-    title: '城市滑板社群 · 发现同好',
-    imageUrl: '/brand/skate-hero-apple.svg',
+    title: '城市街区 · 动作瞬间',
+    imageUrl: 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=1800',
     linkUrl: '/community'
+  },
+  {
+    bannerId: -2,
+    title: '夜间公园 · 灯下练板',
+    imageUrl: 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=1800',
+    linkUrl: '/activities'
+  },
+  {
+    bannerId: -3,
+    title: '晴天约板 · 一起开练',
+    imageUrl: 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=1800',
+    linkUrl: '/community'
+  },
+  {
+    bannerId: -4,
+    title: '碗池训练 · 控制路线',
+    imageUrl: 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=1800',
+    linkUrl: '/community'
+  },
+  {
+    bannerId: -5,
+    title: '黑白街式 · 线条感',
+    imageUrl: 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=1800',
+    linkUrl: '/community'
+  },
+  {
+    bannerId: -6,
+    title: '公园斜坡 · 速度练习',
+    imageUrl: 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=1800',
+    linkUrl: '/activities'
   }
 ]
 
 const activeBanners = computed(() => (bannerList.value.length ? bannerList.value : fallbackBanners))
 const currentBanner = computed(() => activeBanners.value[currentSlide.value] || activeBanners.value[0])
+const entryCards = [
+  { key: 'community', title: '看社区帖子', desc: '动作经验、装备讨论、路线分享都在这里', icon: 'posts', path: '/community', action: '进入社区' },
+  { key: 'activities', title: '找同城约板', desc: '浏览附近活动，报名一起练板', icon: 'activities', path: '/activities', action: '查看活动' },
+  { key: 'news', title: '看滑板资讯', desc: '赛事、品牌、装备和社区动态', icon: 'news', path: '/bulletins', action: '浏览快讯' },
+  { key: 'coach', title: '问 AI 滑板老师', desc: '动作要点、训练计划和安全提醒', icon: 'skateboard', path: '/ai-coach', action: '开始提问' }
+]
+const homeStats = computed(() => [
+  { label: '精选帖子', value: posts.value.length },
+  { label: '同城活动', value: activities.value.length },
+  { label: '资讯更新', value: newsList.value.length }
+])
 const autoplayIntervalMs = computed(() => {
   const raw = Number(currentBanner.value?.intervalSeconds || activeBanners.value?.[0]?.intervalSeconds || 5)
   const seconds = Number.isFinite(raw) ? Math.min(Math.max(raw, 2), 60) : 5
@@ -159,12 +202,40 @@ async function loadRecommendations() {
   }
 }
 
+function cancelDeferredHomeData() {
+  if (!deferredHomeDataId) return
+  if (deferredHomeDataMode === 'idle' && 'cancelIdleCallback' in window) {
+    window.cancelIdleCallback(deferredHomeDataId)
+  } else {
+    clearTimeout(deferredHomeDataId)
+  }
+  deferredHomeDataId = null
+  deferredHomeDataMode = ''
+}
+
+function scheduleDeferredHomeData() {
+  cancelDeferredHomeData()
+  const run = () => {
+    deferredHomeDataId = null
+    deferredHomeDataMode = ''
+    loadHomeSecondaryData()
+    loadRecommendations()
+  }
+  if ('requestIdleCallback' in window) {
+    deferredHomeDataMode = 'idle'
+    deferredHomeDataId = window.requestIdleCallback(run, { timeout: 1800 })
+  } else {
+    deferredHomeDataMode = 'timeout'
+    deferredHomeDataId = window.setTimeout(run, 700)
+  }
+}
+
 onMounted(async () => {
   await loadHomePrimaryData()
-  loadHomeSecondaryData()
-  loadRecommendations()
+  scheduleDeferredHomeData()
 })
 onBeforeUnmount(() => {
+  cancelDeferredHomeData()
   stopAutoplay()
 })
 onActivated(() => {
@@ -180,7 +251,7 @@ onDeactivated(() => {
     <section class="hero-stage" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
       <div class="carousel-main" @click="goBannerTarget">
         <transition name="carousel-fade" mode="out-in">
-          <img :key="currentSlide" :src="currentBanner.imageUrl" :alt="currentBanner.title" />
+          <img :key="currentSlide" :src="currentBanner.imageUrl" :alt="currentBanner.title" fetchpriority="high" decoding="async" />
         </transition>
         <div class="hero-shade"></div>
         <button class="carousel-nav nav-prev" type="button" aria-label="上一张" @click.stop="prevBanner">
@@ -189,14 +260,10 @@ onDeactivated(() => {
         <button class="carousel-nav nav-next" type="button" aria-label="下一张" @click.stop="nextBanner">
           >
         </button>
-        <div class="carousel-mask">
-          <p class="hero-sub">SKATE COMMUNITY</p>
-          <h1>{{ currentBanner.title }}</h1>
-          <p v-if="currentBanner.linkUrl" class="muted">点击前往：{{ bannerLinkText(currentBanner.linkUrl) }}</p>
-          <div class="inline hero-actions">
-            <button class="btn-primary" @click.stop="$router.push('/community')">社区帖子</button>
-            <button class="btn-soft" @click.stop="$router.push('/activities')">同城约板</button>
-          </div>
+        <div class="hero-caption">
+          <span>今日推荐</span>
+          <strong>{{ currentBanner.title }}</strong>
+          <small v-if="currentBanner.linkUrl">{{ bannerLinkText(currentBanner.linkUrl) }}</small>
         </div>
         <aside class="event-panel">
           <h3>滑板资讯</h3>
@@ -221,9 +288,29 @@ onDeactivated(() => {
       </div>
     </section>
 
+    <section class="entry-grid" aria-label="主要入口">
+      <button
+        v-for="item in entryCards"
+        :key="item.key"
+        type="button"
+        class="entry-card"
+        @click="$router.push(item.path)"
+      >
+        <span class="entry-icon"><AppIcon :name="item.icon" :size="20" /></span>
+        <span class="entry-copy">
+          <strong>{{ item.title }}</strong>
+          <small>{{ item.desc }}</small>
+        </span>
+        <em>{{ item.action }}</em>
+      </button>
+    </section>
+
     <section class="card info-stage">
       <div class="section-head info-head">
-        <h3>社区帖子</h3>
+        <div>
+          <p class="section-eyebrow">COMMUNITY</p>
+          <h3>先看大家最近在聊什么</h3>
+        </div>
         <button class="btn-soft" @click="$router.push('/community')">更多</button>
       </div>
       <div class="info-grid">
@@ -234,7 +321,7 @@ onDeactivated(() => {
             class="featured-card"
             @click="goPostDetail(item.postId)"
           >
-            <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" />
+            <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" loading="lazy" decoding="async" />
             <div class="featured-text">
               <h4>{{ item.title }}</h4>
               <p class="line-clamp">{{ item.content }}</p>
@@ -254,7 +341,11 @@ onDeactivated(() => {
 
     <section class="card news-stage">
       <div class="section-head">
-        <h3>滑板资讯</h3>
+        <div>
+          <p class="section-eyebrow">NEWS</p>
+          <h3>滑板资讯</h3>
+        </div>
+        <button class="btn-soft" @click="$router.push('/bulletins')">更多快讯</button>
       </div>
         <div class="news-list">
           <div v-for="item in newsList.slice(0, 6)" :key="item.newsId" class="news-row">
@@ -276,7 +367,7 @@ onDeactivated(() => {
           class="feed-item clickable-feed-item"
           @click="goPostDetail(item.postId)"
         >
-          <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="推荐帖子封面" />
+          <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="推荐帖子封面" loading="lazy" decoding="async" />
           <div>
             <h4>{{ item.title }}</h4>
             <p class="muted">{{ item.authorName }} · {{ item.category || '未分类' }}</p>
@@ -300,7 +391,7 @@ onDeactivated(() => {
           class="feed-item clickable-feed-item"
           @click="goPostDetail(item.postId)"
         >
-          <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" />
+          <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" loading="lazy" decoding="async" />
           <div>
             <h4>{{ item.title }}</h4>
             <p class="muted">{{ item.authorName }} · {{ item.category || '未分类' }}</p>
@@ -374,8 +465,38 @@ onDeactivated(() => {
 .hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.08) 42%, rgba(15, 23, 42, 0.24) 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0) 65%, rgba(15, 23, 42, 0.18) 100%);
   z-index: 1;
+  pointer-events: none;
+}
+
+.hero-caption {
+  position: absolute;
+  left: 26px;
+  bottom: 24px;
+  z-index: 4;
+  max-width: min(420px, calc(100% - 460px));
+  color: #fff;
+  display: grid;
+  gap: 4px;
+  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.42);
+}
+
+.hero-caption span,
+.hero-caption small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.hero-caption strong {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .carousel-fade-enter-active,
@@ -409,7 +530,7 @@ onDeactivated(() => {
   z-index: 3;
 }
 
-.carousel-card:hover .carousel-nav {
+.carousel-main:hover .carousel-nav {
   opacity: 0.35;
 }
 
@@ -425,15 +546,6 @@ onDeactivated(() => {
   right: 12px;
 }
 
-.carousel-mask {
-  position: absolute;
-  left: 46px;
-  top: 86px;
-  width: min(620px, 55%);
-  z-index: 4;
-  color: #ffffff;
-}
-
 .hero-sub {
   margin: 0;
   font-size: 12px;
@@ -441,20 +553,70 @@ onDeactivated(() => {
   color: rgba(255, 255, 255, 0.88);
 }
 
-.carousel-mask h1 {
-  margin: 12px 0 10px;
-  font-size: clamp(34px, 4.6vw, 62px);
-  line-height: 1.06;
-  word-break: break-word;
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.carousel-mask p {
-  margin: 4px 0 0;
-  color: rgba(241, 245, 249, 0.92);
+.entry-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  min-height: 142px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+  text-align: left;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
-.hero-actions {
-  margin-top: 16px;
+.entry-card:hover {
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+}
+
+.entry-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #111827;
+  color: #fff;
+}
+
+.entry-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.entry-copy strong {
+  font-size: 17px;
+  color: #111827;
+}
+
+.entry-copy small {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.entry-card em {
+  color: #111827;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.section-eyebrow {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
 .event-panel {
@@ -465,8 +627,8 @@ onDeactivated(() => {
   max-height: calc(100% - 96px);
   overflow: auto;
   z-index: 5;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.85);
   padding: 18px 20px;
   color: var(--text);
   border-radius: var(--radius-md);
@@ -554,9 +716,8 @@ onDeactivated(() => {
 }
 
 .info-head h3 {
-  font-size: 44px;
+  font-size: 30px;
   margin: 0;
-  letter-spacing: 0.02em;
 }
 
 .info-grid {
@@ -727,23 +888,25 @@ onDeactivated(() => {
     height: 420px;
   }
 
-  .carousel-mask {
-    top: 42px;
-    left: 18px;
-    width: calc(100% - 36px);
+  .info-grid,
+  .grid-2 {
+    grid-template-columns: 1fr;
   }
 
   .event-panel {
     display: none;
   }
 
-  .info-grid,
-  .grid-2 {
-    grid-template-columns: 1fr;
+  .hero-caption {
+    max-width: calc(100% - 52px);
   }
 
   .notice-grid {
     grid-template-columns: 1fr;
+  }
+
+  .entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -759,12 +922,17 @@ onDeactivated(() => {
     height: 340px;
   }
 
-  .hero-actions {
-    width: 100%;
+  .hero-caption {
+    left: 18px;
+    bottom: 20px;
   }
 
-  .hero-actions button {
-    min-height: 42px;
+  .hero-caption strong {
+    font-size: 16px;
+  }
+
+  .entry-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -780,29 +948,15 @@ onDeactivated(() => {
     height: 290px;
   }
 
-  .carousel-mask {
-    top: 20px;
-    left: 12px;
-    width: calc(100% - 24px);
-  }
-
-  .carousel-mask h1 {
-    margin: 8px 0;
-    font-size: 28px;
-    line-height: 1.15;
-  }
-
-  .hero-actions {
-    margin-top: 10px;
-    flex-wrap: wrap;
-  }
-
-  .hero-actions button {
-    flex: 1 1 100%;
+  .hero-caption {
+    left: 14px;
+    right: 14px;
+    bottom: 18px;
+    max-width: none;
   }
 
   .info-head h3 {
-    font-size: 32px;
+    font-size: 24px;
   }
 
   .featured-text h4 {

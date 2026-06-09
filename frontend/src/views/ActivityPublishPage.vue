@@ -6,6 +6,8 @@ import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
 import { amapKeyTail, loadAMap } from '../utils/amap'
+import { resolveCitySelection } from '../utils/regionSelection'
+import { buildActivityAiFields, resolveActivitySubmitText } from '../utils/activityAiContent'
 
 const router = useRouter()
 const amapWebKey = (process.env.VUE_APP_AMAP_KEY || '').trim()
@@ -170,14 +172,35 @@ async function onCityChange() {
 
 async function setProvinceCityDistrict(provinceName, cityName, districtName = '') {
   if (!provinceName) return
+  const currentCity = form.city
   form.province = provinceName
   await loadCityOptions(provinceName)
-  const targetCity = cityName || provinceName
-  form.city = cityOptions.value.includes(targetCity) ? targetCity : (cityOptions.value[0] || '')
-  await loadDistrictOptions(form.city)
+  form.city = resolveCitySelection(cityOptions.value, cityName, provinceName, currentCity)
+  if (form.city) {
+    await loadDistrictOptions(form.city)
+  } else {
+    districtOptions.value = []
+    form.district = ''
+  }
   if (districtName && districtOptions.value.includes(districtName)) {
     form.district = districtName
   }
+}
+
+function reverseGeocode(lng, lat) {
+  return new Promise((resolve) => {
+    if (!geocoderInstance || !Number.isFinite(lng) || !Number.isFinite(lat)) {
+      resolve(null)
+      return
+    }
+    geocoderInstance.getAddress([lng, lat], (status, result) => {
+      if (status !== 'complete') {
+        resolve(null)
+        return
+      }
+      resolve(result?.regeocode || null)
+    })
+  })
 }
 
 async function initMap() {
@@ -248,16 +271,22 @@ async function searchPoi() {
 
 async function selectPoi(poi) {
   if (!poi?.location) return
+  const lng = Number(poi.location.lng)
+  const lat = Number(poi.location.lat)
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return
+
   selectedPlaceId.value = null
   form.place = poi.name || ''
-  form.address = poi.address || poi.name || ''
+  const regeocode = await reverseGeocode(lng, lat)
+  const component = regeocode?.addressComponent
+  form.address = regeocode?.formattedAddress || poi.address || poi.name || ''
   await setProvinceCityDistrict(
-    normalizeRegionName(poi.pname) || form.province,
-    normalizeRegionName(poi.cityname) || normalizeRegionName(poi.pname),
-    normalizeRegionName(poi.adname)
+    normalizeRegionName(component?.province) || normalizeRegionName(poi.pname) || form.province,
+    normalizeRegionName(component?.city) || normalizeRegionName(poi.cityname),
+    normalizeRegionName(component?.district) || normalizeRegionName(poi.adname)
   )
-  form.longitude = Number(poi.location.lng)
-  form.latitude = Number(poi.location.lat)
+  form.longitude = lng
+  form.latitude = lat
   showPickedMarker(form.longitude, form.latitude)
 }
 
@@ -341,46 +370,24 @@ function applyAiTitle() {
   }
 }
 
-function buildAiDetailContent() {
-  if (!aiResult.value) return ''
-
-  const sections = []
-  const description = (aiResult.value.description || '').trim()
-  const suitableFor = (aiResult.value.suitableFor || '').trim()
-  const highlights = Array.isArray(aiResult.value.highlights) ? aiResult.value.highlights.filter(Boolean) : []
-  const tips = Array.isArray(aiResult.value.tips) ? aiResult.value.tips.filter(Boolean) : []
-  const riskTips = Array.isArray(aiResult.value.riskTips) ? aiResult.value.riskTips.filter(Boolean) : []
-
-  if (description) {
-    sections.push(`活动介绍\n${description}`)
+function applyAiDescription() {
+  const { activityDesc } = buildActivityAiFields(aiResult.value)
+  if (activityDesc) {
+    form.activityDesc = activityDesc
   }
-  if (suitableFor) {
-    sections.push(`适合人群\n${suitableFor}`)
-  }
-  if (highlights.length) {
-    sections.push(`活动亮点\n${highlights.map(item => `- ${item}`).join('\n')}`)
-  }
-  if (tips.length) {
-    sections.push(`注意事项\n${tips.map(item => `- ${item}`).join('\n')}`)
-  }
-  if (riskTips.length) {
-    sections.push(`风险提示\n${riskTips.map(item => `- ${item}`).join('\n')}`)
-  }
-
-  return sections.join('\n\n')
 }
 
-function applyAiDescription() {
-  const mergedContent = buildAiDetailContent()
-  if (mergedContent) {
-    form.content = mergedContent
-    form.activityDesc = mergedContent
+function applyAiContent() {
+  const { content } = buildActivityAiFields(aiResult.value)
+  if (content) {
+    form.content = content
   }
 }
 
 function applyAiAll() {
   applyAiTitle()
   applyAiDescription()
+  applyAiContent()
 }
 
 async function publishActivity() {
@@ -413,7 +420,7 @@ async function publishActivity() {
     return
   }
 
-  const activityDesc = (form.activityDesc || form.content || '').trim()
+  const { activityDesc, content } = resolveActivitySubmitText(form)
   if (!activityDesc) {
     alert('活动说明不能为空')
     return
@@ -431,7 +438,7 @@ async function publishActivity() {
 
   const payload = {
     title: form.title.trim(),
-    content: activityDesc,
+    content,
     activityDesc,
     activityType: form.activityType.trim(),
     placeId: selectedPlaceId.value,

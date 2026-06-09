@@ -1,8 +1,8 @@
-﻿# SE1 滑板社区系统（Spring Boot + Vue）
+# SkateHub 滑板社区系统（Spring Boot + Vue）
 
 ## 项目结构
 
-- 后端：`src/main/java/com/javademo1`
+- 后端：`src/main/java/com/skatehub`
 - 前端：`frontend`
 - 数据库脚本：`database/init.sql`
 - 高德安全代理（Nginx 示例）：`deploy/nginx/amap-security.conf.example`
@@ -133,12 +133,12 @@ news-sync:
 
 当前 AI 相关代码位置：
 
-- 配置：`src/main/java/com/javademo1/config/AiProperties.java`
-- 控制器：`src/main/java/com/javademo1/controller/AiController.java`
-- 统一请求/响应：`src/main/java/com/javademo1/pojo/ai`
-- 网关与场景服务：`src/main/java/com/javademo1/service/ai`
-- 模型适配层：`src/main/java/com/javademo1/provider`
-- 场景处理层：`src/main/java/com/javademo1/scene`
+- 配置：`src/main/java/com/skatehub/config/AiProperties.java`
+- 控制器：`src/main/java/com/skatehub/controller/AiController.java`
+- 统一请求/响应：`src/main/java/com/skatehub/pojo/ai`
+- 网关与场景服务：`src/main/java/com/skatehub/service/ai`
+- 模型适配层：`src/main/java/com/skatehub/provider`
+- 场景处理层：`src/main/java/com/skatehub/scene`
 
 统一接口用途：
 
