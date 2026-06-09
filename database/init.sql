@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS tb_activity (
   user_id BIGINT NOT NULL,
   title VARCHAR(100) NOT NULL,
   content TEXT,
+  activity_desc TEXT,
   activity_type VARCHAR(20),
   place VARCHAR(100),
   address VARCHAR(200),
@@ -297,25 +298,25 @@ WHERE NOT EXISTS (SELECT 1 FROM tb_post WHERE title = '护具到底怎么戴才�
 -- 首页轮播图初始化数据
 -- ----------------------------
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '城市夜滑 · 街头线条', 'https://cdn.pixabay.com/photo/2020/07/01/17/21/skater-5360306_640.jpg', '/community', 1, 0, 5, '0', '2026-04-29 20:10:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '城市夜滑 · 街头线条');
+SELECT '城市街区 · 动作瞬间', 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=1800', '/community', 1, 0, 5, '0', '2026-04-29 20:10:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('城市夜滑 · 街头线条', '城市街区 · 动作瞬间'));
 
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '公园碗池 · 进阶训练', 'https://cdn.pixabay.com/photo/2020/09/11/15/32/skateboard-5563464_1280.jpg', '/activities', 1, 1, 5, '0', '2026-04-29 20:11:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '公园碗池 · 进阶训练');
+SELECT '夜间公园 · 灯下练板', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=1800', '/activities', 1, 1, 5, '0', '2026-04-29 20:11:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('公园碗池 · 进阶训练', '夜间公园 · 灯下练板'));
 
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '街式动作 · 连招节奏', 'https://cdn.pixabay.com/photo/2022/01/27/22/57/skateboarding-6973365_640.jpg', '/community', 1, 2, 5, '0', '2026-04-29 20:12:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '街式动作 · 连招节奏');
+SELECT '晴天约板 · 一起开练', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=1800', '/community', 1, 2, 5, '0', '2026-04-29 20:12:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('街式动作 · 连招节奏', '晴天约板 · 一起开练'));
 
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '新手入门 · 稳定起步', 'https://cdn.pixabay.com/photo/2022/08/22/11/04/skate-7403432_1280.jpg', '/community', 1, 3, 5, '0', '2026-04-29 20:13:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '新手入门 · 稳定起步');
+SELECT '碗池训练 · 控制路线', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=1800', '/community', 1, 3, 5, '0', '2026-04-29 20:13:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('新手入门 · 稳定起步', '碗池训练 · 控制路线'));
 
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '滑板装备 · 轮组搭配', 'https://cdn.pixabay.com/photo/2020/06/21/21/53/skateboard-5326930_640.jpg', '/community', 1, 4, 5, '0', '2026-04-29 20:14:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '滑板装备 · 轮组搭配');
+SELECT '黑白街式 · 线条感', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=1800', '/community', 1, 4, 5, '0', '2026-04-29 20:14:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('滑板装备 · 轮组搭配', '黑白街式 · 线条感'));
 
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
-SELECT '城市通勤 · 长板巡航', 'https://cdn.pixabay.com/photo/2022/06/18/18/05/skateboard-7270418_640.jpg', '/activities', 1, 5, 5, '0', '2026-04-29 20:15:00'
-WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title = '城市通勤 · 长板巡航');
+SELECT '公园斜坡 · 速度练习', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=1800', '/activities', 1, 5, 5, '0', '2026-04-29 20:15:00'
+WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('城市通勤 · 长板巡航', '公园斜坡 · 速度练习'));

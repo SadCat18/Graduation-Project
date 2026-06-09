@@ -106,7 +106,7 @@ onMounted(loadData)
               </div>
             </div>
             <div class="news-cover-wrap" :class="{ empty: !coverUrl }">
-              <img v-if="coverUrl" :src="coverUrl" alt="资讯封面" class="cover" />
+              <img v-if="coverUrl" :src="coverUrl" alt="资讯封面" class="cover" fetchpriority="high" decoding="async" />
               <div v-else class="cover-fallback">
                 <strong>{{ cleanInlineText(displayCategory) }}</strong>
                 <span>{{ cleanInlineText(displaySourceName) }}</span>

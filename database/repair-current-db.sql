@@ -1,6 +1,7 @@
 USE skate_exchange;
 
 ALTER TABLE tb_activity ADD COLUMN IF NOT EXISTS activity_type VARCHAR(20) NULL;
+ALTER TABLE tb_activity ADD COLUMN IF NOT EXISTS activity_desc TEXT NULL;
 ALTER TABLE tb_activity ADD COLUMN IF NOT EXISTS review_status CHAR(1) DEFAULT '0';
 ALTER TABLE tb_activity ADD COLUMN IF NOT EXISTS activity_status CHAR(1) DEFAULT '0';
 ALTER TABLE tb_activity_sign ADD COLUMN IF NOT EXISTS sign_status CHAR(1) DEFAULT '0';

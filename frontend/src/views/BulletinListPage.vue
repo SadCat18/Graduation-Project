@@ -124,7 +124,7 @@ onMounted(loadData)
       <p v-if="sortHint" class="muted sort-hint">{{ sortHint }}</p>
 
       <div v-if="topItem" class="top-card" @click="goDetail(topItem.bulletinId)">
-        <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" />
+        <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" fetchpriority="high" decoding="async" />
         <div v-else class="top-image placeholder">社区快讯</div>
         <div class="top-body">
           <p class="top-label">头条快讯</p>
@@ -146,7 +146,7 @@ onMounted(loadData)
             class="bulletin-card"
             @click="goDetail(item.bulletinId)"
           >
-            <img v-if="firstImage(item.imageUrls)" :src="firstImage(item.imageUrls)" alt="快讯封面" class="hero-image" />
+            <img v-if="firstImage(item.imageUrls)" :src="firstImage(item.imageUrls)" alt="快讯封面" class="hero-image" loading="lazy" decoding="async" />
             <div v-else class="hero-image placeholder">无图快讯</div>
             <div class="body">
               <h4>{{ item.title }}</h4>

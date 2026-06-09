@@ -1,9 +1,18 @@
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
-    name: javademo1
+    name: skatehub
+  messages:
+    encoding: UTF-8
   config:
     import: optional:classpath:application-local.yml
   datasource:
@@ -53,7 +62,7 @@ ai:
     news_discovery:
       provider: ${AI_PROVIDER_NEWS_DISCOVERY:${AI_PROVIDER_NEWS:}}
       model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-0-pro-260215}}
-      base-url: ${AI_BASE_URL_NEWS_DISCOVERY:${AI_BASE_URL_NEWS:https://ark.cn-beijing.volces.com/api/v3}}
+      base-url: ${AI_BASE_URL_NEWS_DISCOVERY:${AI_BASE_URL_NEWS:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
       api-key: ${AI_API_KEY_NEWS_DISCOVERY:${AI_API_KEY_NEWS:}}
     news_summary:
       provider: ${AI_PROVIDER_NEWS_SUMMARY:${AI_PROVIDER_NEWS:}}
