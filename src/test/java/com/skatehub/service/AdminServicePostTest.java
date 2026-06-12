@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -53,7 +54,7 @@ class AdminServicePostTest {
         Post post = post(9L, 2L, "Ollie 训练节奏", "今天练了十组 Ollie，重点是脚位、肩线和落地稳定。", "a.jpg,b.jpg", "技巧教学", "1");
         User user = user(2L, "skater-a", "/avatar-a.png");
 
-        when(postRepository.searchAdminPosts(eq("ollie"), eq("技巧教学"), eq("top"), eq("comments"), any(Pageable.class)))
+        when(postRepository.searchAdminPosts(eq("%ollie%"), eq("技巧教学"), eq("top"), eq("comments"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(post), PageRequest.of(0, 10), 1));
         when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(user));
         when(commentRepository.countByPostId(9L)).thenReturn(8L);
@@ -100,8 +101,8 @@ class AdminServicePostTest {
         Post second = post(10L, 2L, "B", "正文", "", "技巧教学", "0");
         when(postRepository.findAllById(List.of(9L, 10L))).thenReturn(List.of(first, second));
 
-        long topped = adminService.topPosts(Arrays.asList(9L, 10L, null, 9L), "1");
-        long deleted = adminService.deletePosts(Arrays.asList(9L, 10L, null, 9L));
+        long topped = adminService.topPosts(Arrays.asList(9L, 10L, 9L), "1");
+        long deleted = adminService.deletePosts(Arrays.asList(9L, 10L, 9L));
 
         assertThat(topped).isEqualTo(2);
         assertThat(first.getIsTop()).isEqualTo("1");
@@ -109,6 +110,14 @@ class AdminServicePostTest {
         verify(postRepository).saveAll(List.of(first, second));
         assertThat(deleted).isEqualTo(2);
         verify(postRepository).deleteAllByIdInBatch(List.of(9L, 10L));
+    }
+
+    @Test
+    void batchPostOperationsRejectInvalidIds() {
+        assertThatThrownBy(() -> adminService.topPosts(Arrays.asList(9L, null), "1"))
+                .hasMessageContaining("ID");
+        assertThatThrownBy(() -> adminService.deletePosts(Arrays.asList(9L, 0L)))
+                .hasMessageContaining("ID");
     }
 
     private Post post(Long postId, Long userId, String title, String content, String images, String category, String isTop) {

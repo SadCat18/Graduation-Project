@@ -13,6 +13,7 @@ import com.skatehub.pojo.post.PostCreateRequest;
 import com.skatehub.pojo.post.PostUpdateRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,10 +23,13 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class PostService {
+
+    private static final Set<String> PUBLIC_SORTS = Set.of("latest", "hot", "likes", "comments");
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
@@ -35,15 +39,11 @@ public class PostService {
     private final UserGrowthService userGrowthService;
 
     public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
-        int currentPage = page == null || page < 1 ? 1 : page;
-        int currentSize = size == null || size < 1 ? 10 : Math.min(size, 50);
-        String normalizedKeyword = keyword == null ? "" : keyword.trim();
-        String normalizedCategory = category == null ? "" : category.trim();
-        String normalizedSort = sort == null ? "latest" : sort.trim().toLowerCase();
-        if (!"latest".equals(normalizedSort) && !"hot".equals(normalizedSort)
-                && !"likes".equals(normalizedSort) && !"comments".equals(normalizedSort)) {
-            normalizedSort = "latest";
-        }
+        int currentPage = InputValidator.page(page);
+        int currentSize = InputValidator.size(size);
+        String normalizedKeyword = keyword == null ? "" : InputValidator.likeKeyword(keyword, 50, "搜索关键词");
+        String normalizedCategory = category == null ? "" : InputValidator.optionalSimpleText(category, 30, "分类");
+        String normalizedSort = InputValidator.optionalAllowed(sort, PUBLIC_SORTS, "latest", "排序方式");
         PageRequest pageRequest = PageRequest.of(currentPage - 1, currentSize);
         Page<Post> postPage = postRepository.searchPublicPosts(
                 normalizedKeyword,
@@ -56,25 +56,29 @@ public class PostService {
     }
 
     public Map<String, Object> detail(Long postId) {
+        InputValidator.positiveId(postId, "帖子ID");
         Post post = getPost(postId);
         return toPostVO(post);
     }
 
     public Post create(CurrentUser currentUser, PostCreateRequest request) {
+        Long currentUserId = requireCurrentUserId(currentUser);
         Post post = new Post();
-        post.setUserId(currentUser.id());
+        post.setUserId(currentUserId);
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setImages(request.getImages());
         post.setCategory(request.getCategory());
         Post saved = postRepository.save(post);
-        userGrowthService.grantExp(currentUser.id(), "POST_CREATE", "POST", saved.getPostId(), 20);
+        userGrowthService.grantExp(currentUserId, "POST_CREATE", "POST", saved.getPostId(), 20);
         return saved;
     }
 
     public Post update(CurrentUser currentUser, Long postId, PostUpdateRequest request) {
+        InputValidator.positiveId(postId, "帖子ID");
+        Long currentUserId = requireCurrentUserId(currentUser);
         Post post = getPost(postId);
-        if (!post.getUserId().equals(currentUser.id())) {
+        if (!post.getUserId().equals(currentUserId)) {
             throw new BizException("只能编辑自己发布的帖子");
         }
         post.setTitle(request.getTitle());
@@ -85,14 +89,18 @@ public class PostService {
     }
 
     public void delete(CurrentUser currentUser, Long postId, boolean isAdmin) {
+        InputValidator.positiveId(postId, "帖子ID");
+        Long currentUserId = requireCurrentUserId(currentUser);
+        boolean adminMode = requireAdminModeIfRequested(currentUser, isAdmin);
         Post post = getPost(postId);
-        if (!isAdmin && !post.getUserId().equals(currentUser.id())) {
+        if (!adminMode && !post.getUserId().equals(currentUserId)) {
             throw new BizException("无权删除该帖子");
         }
         postRepository.delete(post);
     }
 
     public List<Map<String, Object>> comments(Long postId) {
+        InputValidator.positiveId(postId, "帖子ID");
         getPost(postId);
         return commentRepository.findByPostIdOrderByCreateTimeAsc(postId).stream()
                 .map(this::toCommentVO)
@@ -100,28 +108,33 @@ public class PostService {
     }
 
     public Comment addComment(CurrentUser currentUser, Long postId, CommentCreateRequest request) {
+        InputValidator.positiveId(postId, "帖子ID");
+        Long currentUserId = requireCurrentUserId(currentUser);
         Post post = getPost(postId);
         Comment comment = new Comment();
         comment.setPostId(postId);
-        comment.setUserId(currentUser.id());
+        comment.setUserId(currentUserId);
         comment.setParentId(request.getParentId() == null ? 0L : request.getParentId());
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
-        userGrowthService.grantExp(currentUser.id(), "POST_COMMENT", "COMMENT", saved.getCommentId(), 8);
-        if (!post.getUserId().equals(currentUser.id())) {
+        userGrowthService.grantExp(currentUserId, "POST_COMMENT", "COMMENT", saved.getCommentId(), 8);
+        if (!post.getUserId().equals(currentUserId)) {
             messageNotifyService.send(post.getUserId(), "COMMENT", "你的帖子收到新评论：" + post.getTitle(), "POST", post.getPostId());
         }
         return saved;
     }
 
     public void deleteComment(CurrentUser currentUser, Long commentId, boolean isAdmin) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        boolean adminMode = requireAdminModeIfRequested(currentUser, isAdmin);
+        InputValidator.positiveId(commentId, "评论ID");
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new BizException("评论不存在"));
-        if (isAdmin || comment.getUserId().equals(currentUser.id())) {
+        if (adminMode || comment.getUserId().equals(currentUserId)) {
             commentRepository.delete(comment);
             return;
         }
         Post post = getPost(comment.getPostId());
-        if (post.getUserId().equals(currentUser.id())) {
+        if (post.getUserId().equals(currentUserId)) {
             commentRepository.delete(comment);
             return;
         }
@@ -141,30 +154,33 @@ public class PostService {
     }
 
     public Post top(Long postId, String top) {
+        InputValidator.positiveId(postId, "帖子ID");
+        String value = InputValidator.requiredAllowed(top, Set.of("0", "1"), "置顶值");
         Post post = getPost(postId);
-        post.setIsTop("1".equals(top) ? "1" : "0");
+        post.setIsTop(value);
         return postRepository.save(post);
     }
 
     private Map<String, Object> toggleInteraction(CurrentUser currentUser, Long postId, String type) {
+        Long currentUserId = requireCurrentUserId(currentUser);
         Post post = getPost(postId);
         Interaction exists = interactionRepository
-                .findByUserIdAndTargetTypeAndTargetIdAndType(currentUser.id(), "POST", postId, type)
+                .findByUserIdAndTargetTypeAndTargetIdAndType(currentUserId, "POST", postId, type)
                 .orElse(null);
         boolean active;
         if (exists == null) {
             Interaction interaction = new Interaction();
-            interaction.setUserId(currentUser.id());
+            interaction.setUserId(currentUserId);
             interaction.setTargetType("POST");
             interaction.setTargetId(postId);
             interaction.setType(type);
             interactionRepository.save(interaction);
             active = true;
-            if (!post.getUserId().equals(currentUser.id()) && "LIKE".equals(type)) {
+            if (!post.getUserId().equals(currentUserId) && "LIKE".equals(type)) {
                 messageNotifyService.send(post.getUserId(), "LIKE", "你的帖子收到一个赞：" + post.getTitle(), "POST", post.getPostId());
             }
             if ("LIKE".equals(type)) {
-                userGrowthService.grantExp(currentUser.id(), "POST_LIKE", "POST", postId, 2);
+                userGrowthService.grantExp(currentUserId, "POST_LIKE", "POST", postId, 2);
             }
         } else {
             interactionRepository.delete(exists);
@@ -184,7 +200,23 @@ public class PostService {
     }
 
     private Post getPost(Long postId) {
+        InputValidator.positiveId(postId, "帖子ID");
         return postRepository.findById(postId).orElseThrow(() -> new BizException("帖子不存在"));
+    }
+
+    private Long requireCurrentUserId(CurrentUser currentUser) {
+        if (currentUser == null || currentUser.id() == null) {
+            throw new BizException("用户未登录，请先认证");
+        }
+        return currentUser.id();
+    }
+
+    private boolean requireAdminModeIfRequested(CurrentUser currentUser, boolean isAdmin) {
+        boolean adminMode = isAdmin && currentUser != null && "ADMIN".equalsIgnoreCase(currentUser.role());
+        if (isAdmin && !adminMode) {
+            throw new BizException("无管理员操作权限");
+        }
+        return adminMode;
     }
 
     private Map<String, Object> toPostVO(Post post) {

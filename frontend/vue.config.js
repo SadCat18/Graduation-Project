@@ -7,6 +7,16 @@ module.exports = {
   },
   devServer: {
     port: 5173,
+    client: {
+      overlay: {
+        warnings: false,
+        errors: true,
+        runtimeErrors: (error) => {
+          const message = String(error?.message || error || '')
+          return message !== 'Script error.'
+        }
+      }
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

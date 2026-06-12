@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -55,7 +56,7 @@ class AdminServiceCommentTest {
         Post post = post(9L, "ollie 练习记录");
         User user = user(2L, "skater-a", "/avatar-a.png");
 
-        when(commentRepository.searchAdminComments(eq("落地"), eq(9L), eq(2L), eq("reply"), any(Pageable.class)))
+        when(commentRepository.searchAdminComments(eq("%落地%"), eq(9L), eq(2L), eq("reply"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(reply), PageRequest.of(0, 10), 1));
         when(postRepository.findAllById(List.of(9L))).thenReturn(List.of(post));
         when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(user));
@@ -105,10 +106,18 @@ class AdminServiceCommentTest {
 
     @Test
     void batchDeleteCommentsReturnsDeletedCount() {
-        long deleted = adminService.deleteComments(Arrays.asList(11L, 12L, null, 11L));
+        long deleted = adminService.deleteComments(Arrays.asList(11L, 12L, 11L));
 
         assertThat(deleted).isEqualTo(2);
         verify(commentRepository).deleteAllByIdInBatch(List.of(11L, 12L));
+    }
+
+    @Test
+    void batchDeleteCommentsRejectsInvalidIds() {
+        assertThatThrownBy(() -> adminService.deleteComments(Arrays.asList(11L, null)))
+                .hasMessageContaining("ID");
+        assertThatThrownBy(() -> adminService.deleteComments(Arrays.asList(11L, -1L)))
+                .hasMessageContaining("ID");
     }
 
     private Comment comment(Long id, Long postId, Long userId, Long parentId, String content, String time) {

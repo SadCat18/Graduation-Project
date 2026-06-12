@@ -10,7 +10,9 @@ import com.skatehub.pojo.auth.RegisterRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CaptchaConstants;
 import com.skatehub.util.JwtTokenService;
+import com.skatehub.util.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final PasswordPolicy passwordPolicy;
+
+    @Value("${admin.default-password:SkateHub@2026}")
+    private String defaultAdminPassword;
 
     public void register(RegisterRequest request) {
         String username = request.getUsername() == null ? "" : request.getUsername().trim();
@@ -48,6 +54,8 @@ public class AuthService {
         userRepository.findByPhone(phone).ifPresent(user -> {
             throw new BizException("手机号已被占用");
         });
+
+        passwordPolicy.validateUserPassword(request.getPassword(), phone);
 
         User user = new User();
         user.setUsername(username);
@@ -88,7 +96,7 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BizException("账号或密码错误");
         }
-        String token = jwtTokenService.createToken(user.getUserId(), "USER", user.getUsername());
+        String token = jwtTokenService.createToken(user.getUserId(), "USER", user.getUsername(), user.getTokenVersion());
         return new LoginResponse(token, "USER", user.getUsername());
     }
 
@@ -108,7 +116,8 @@ public class AuthService {
         }
         Admin admin = new Admin();
         admin.setAccount("admin");
-        admin.setPassword(passwordEncoder.encode("123456"));
+        passwordPolicy.validateAdminPassword(defaultAdminPassword, null);
+        admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
         admin.setRealName("系统管理员");
         admin.setRole("1");
         adminRepository.save(admin);

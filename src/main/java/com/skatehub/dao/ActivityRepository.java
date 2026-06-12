@@ -14,6 +14,8 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
 
     Page<Activity> findByReviewStatusOrderByCreateTimeDesc(String reviewStatus, Pageable pageable);
 
+    Page<Activity> findByReviewStatusOrReviewStatusIsNullOrderByCreateTimeDesc(String reviewStatus, Pageable pageable);
+
     List<Activity> findByUserIdOrderByCreateTimeDesc(Long userId);
 
     long countByCreateTimeBetween(LocalDateTime start, LocalDateTime end);

@@ -7,12 +7,15 @@ import com.skatehub.util.CurrentUser;
 import com.skatehub.util.SecurityUtils;
 import com.skatehub.service.VideoService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/videos")
 @RequiredArgsConstructor
+@Validated
 public class VideoController {
 
     private final VideoService videoService;
@@ -24,7 +27,7 @@ public class VideoController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable("id") Long videoId) {
+    public ApiResponse<Void> delete(@PathVariable("id") @Positive(message = "id必须为正数") Long videoId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         videoService.delete(currentUser, videoId, false);
         return ApiResponse.success();

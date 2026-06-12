@@ -15,6 +15,7 @@ import com.skatehub.pojo.User;
 import com.skatehub.pojo.report.ReportCreateRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,7 @@ public class ReportService {
         String targetType = normalizeTargetType(request.getTargetType());
         String reason = normalizeReason(request.getReason());
         Long targetId = request.getTargetId();
+        InputValidator.positiveId(targetId, "举报目标ID");
         if (reportRecordRepository.existsByUserIdAndTargetTypeAndTargetId(currentUser.id(), targetType, targetId)) {
             throw new BizException("你已经举报过该内容，请勿重复提交");
         }
@@ -64,6 +66,7 @@ public class ReportService {
     }
 
     public ReportRecord handle(Long reportId, CurrentUser adminUser, String status, String handleNote) {
+        InputValidator.positiveId(reportId, "举报ID");
         ReportRecord record = reportRecordRepository.findById(reportId)
                 .orElseThrow(() -> new BizException("举报记录不存在"));
         if (!"1".equals(status) && !"2".equals(status)) {
@@ -77,6 +80,7 @@ public class ReportService {
     }
 
     public void deleteReportedTarget(Long reportId, CurrentUser adminUser) {
+        InputValidator.positiveId(reportId, "举报ID");
         ReportRecord record = reportRecordRepository.findById(reportId)
                 .orElseThrow(() -> new BizException("举报记录不存在"));
         String targetType = record.getTargetType();

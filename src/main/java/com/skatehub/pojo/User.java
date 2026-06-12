@@ -43,6 +43,8 @@ public class User {
     @Column(length = 200)
     private String bio;
 
+    private Integer tokenVersion = 0;
+
     private Integer exp = 0;
 
     @Transient
@@ -66,6 +68,9 @@ public class User {
         }
         if (bulletinPermission == null) {
             bulletinPermission = "0";
+        }
+        if (tokenVersion == null) {
+            tokenVersion = 0;
         }
         if (exp == null) {
             exp = 0;

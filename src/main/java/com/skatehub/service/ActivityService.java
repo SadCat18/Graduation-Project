@@ -12,6 +12,7 @@ import com.skatehub.util.ActivitySignStatus;
 import com.skatehub.util.ActivityStatus;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +40,8 @@ public class ActivityService {
     private final UserGrowthService userGrowthService;
 
     public PageResult<Map<String, Object>> list(Integer page, Integer size, Long userId, String city, String district, String keyword, Boolean expired) {
-        int currentPage = page == null || page < 1 ? 1 : page;
-        int currentSize = size == null || size < 1 ? 10 : Math.min(size, 50);
+        int currentPage = InputValidator.page(page);
+        int currentSize = InputValidator.size(size);
 
         String cityLike = normalizeKeyword(city);
         String districtLike = normalizeKeyword(district);
@@ -60,27 +61,24 @@ public class ActivityService {
                     : builder.greaterThanOrEqualTo(root.get("activityTime"), now));
 
             if (StringUtils.hasText(cityLike)) {
-                String likeCity = "%" + cityLike + "%";
                 predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("city")), likeCity),
-                        builder.like(builder.lower(root.get("place")), likeCity),
-                        builder.like(builder.lower(root.get("address")), likeCity)
+                        builder.like(builder.lower(root.get("city")), cityLike, '\\'),
+                        builder.like(builder.lower(root.get("place")), cityLike, '\\'),
+                        builder.like(builder.lower(root.get("address")), cityLike, '\\')
                 ));
             }
             if (StringUtils.hasText(districtLike)) {
-                String likeDistrict = "%" + districtLike + "%";
-                predicates.add(builder.like(builder.lower(root.get("district")), likeDistrict));
+                predicates.add(builder.like(builder.lower(root.get("district")), districtLike, '\\'));
             }
             if (StringUtils.hasText(keywordLike)) {
-                String likeKeyword = "%" + keywordLike + "%";
                 predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("title")), likeKeyword),
-                        builder.like(builder.lower(root.get("content")), likeKeyword),
-                        builder.like(builder.lower(root.get("activityDesc")), likeKeyword),
-                        builder.like(builder.lower(root.get("place")), likeKeyword),
-                        builder.like(builder.lower(root.get("address")), likeKeyword),
-                        builder.like(builder.lower(root.get("city")), likeKeyword),
-                        builder.like(builder.lower(root.get("district")), likeKeyword)
+                        builder.like(builder.lower(root.get("title")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("content")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("activityDesc")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("place")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("address")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("city")), keywordLike, '\\'),
+                        builder.like(builder.lower(root.get("district")), keywordLike, '\\')
                 ));
             }
             return builder.and(predicates.toArray(new Predicate[0]));
@@ -93,6 +91,7 @@ public class ActivityService {
     }
 
     public Map<String, Object> publicDetail(Long activityId) {
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         if (!ActivityReviewStatus.APPROVED.equals(activity.getReviewStatus())) {
             throw new BizException("活动暂未公开");
@@ -105,9 +104,10 @@ public class ActivityService {
     }
 
     public Activity create(CurrentUser currentUser, ActivityCreateRequest request) {
+        Long currentUserId = requireCurrentUserId(currentUser);
         validateCreateRequest(request);
         Activity activity = new Activity();
-        activity.setUserId(currentUser.id());
+        activity.setUserId(currentUserId);
         activity.setTitle(trimToNull(request.getTitle()));
         String activityDesc = trimToNull(request.getActivityDesc());
         activity.setContent(firstNonBlank(request.getContent(), activityDesc));
@@ -129,6 +129,8 @@ public class ActivityService {
     }
 
     public Map<String, Object> sign(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         if (isExpired(activity)) {
             throw new BizException("活动已过期，无法报名");
@@ -140,11 +142,11 @@ public class ActivityService {
             throw new BizException("活动名额已满");
         }
 
-        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUser.id()).orElse(null);
+        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUserId).orElse(null);
         if (sign == null) {
             sign = new ActivitySign();
             sign.setActivityId(activityId);
-            sign.setUserId(currentUser.id());
+            sign.setUserId(currentUserId);
         } else if (ActivitySignStatus.PENDING_CONFIRM.equals(sign.getSignStatus())
                 || ActivitySignStatus.APPROVED.equals(sign.getSignStatus())) {
             throw new BizException("已提交报名，请勿重复操作");
@@ -152,9 +154,9 @@ public class ActivityService {
         sign.setSignStatus(ActivitySignStatus.PENDING_CONFIRM);
         sign.setIsCheckin("0");
         activitySignRepository.save(sign);
-        userGrowthService.grantExp(currentUser.id(), "ACTIVITY_SIGN", "ACTIVITY", activityId, 10);
+        userGrowthService.grantExp(currentUserId, "ACTIVITY_SIGN", "ACTIVITY", activityId, 10);
 
-        if (!activity.getUserId().equals(currentUser.id())) {
+        if (!activity.getUserId().equals(currentUserId)) {
             messageNotifyService.send(activity.getUserId(), "ACTIVITY", "你的活动有新报名：" + activity.getTitle(), "ACTIVITY", activity.getActivityId());
         }
 
@@ -165,7 +167,9 @@ public class ActivityService {
     }
 
     public void checkin(CurrentUser currentUser, Long activityId) {
-        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUser.id())
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
+        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUserId)
                 .orElseThrow(() -> new BizException("请先报名该活动后再签到"));
         if (!ActivitySignStatus.APPROVED.equals(sign.getSignStatus())) {
             throw new BizException("仅已通过报名可签到");
@@ -175,20 +179,25 @@ public class ActivityService {
         }
         sign.setIsCheckin("1");
         activitySignRepository.save(sign);
-        userGrowthService.grantExp(currentUser.id(), "ACTIVITY_CHECKIN", "ACTIVITY", activityId, 15);
+        userGrowthService.grantExp(currentUserId, "ACTIVITY_CHECKIN", "ACTIVITY", activityId, 15);
     }
 
     public List<ActivitySign> signs(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
-        if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
+        if (!activity.getUserId().equals(currentUserId)) {
             throw new BizException("无权查看报名信息");
         }
         return activitySignRepository.findByActivityId(activityId);
     }
 
     public ActivitySign updateSignStatus(CurrentUser currentUser, Long activityId, Long signId, String signStatus) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
+        InputValidator.positiveId(signId, "报名ID");
         Activity activity = getActivity(activityId);
-        if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
+        if (!activity.getUserId().equals(currentUserId)) {
             throw new BizException("无权处理报名");
         }
         ActivitySign sign = activitySignRepository.findBySignIdAndActivityId(signId, activityId)
@@ -215,7 +224,7 @@ public class ActivityService {
         }
 
         ActivitySign saved = activitySignRepository.save(sign);
-        if (!sign.getUserId().equals(currentUser.id())) {
+        if (!sign.getUserId().equals(currentUserId)) {
             String actionText = ActivitySignStatus.APPROVED.equals(signStatus) ? "已通过" : "未通过";
             messageNotifyService.send(sign.getUserId(), "ACTIVITY", "你报名的活动" + actionText + "：" + activity.getTitle(), "ACTIVITY", activity.getActivityId());
         }
@@ -224,8 +233,10 @@ public class ActivityService {
     }
 
     public Activity closeSignup(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
-        if (!activity.getUserId().equals(currentUser.id()) && !"ADMIN".equals(currentUser.role())) {
+        if (!activity.getUserId().equals(currentUserId)) {
             throw new BizException("无权关闭报名");
         }
         if (!ActivityReviewStatus.APPROVED.equals(activity.getReviewStatus())) {
@@ -237,12 +248,14 @@ public class ActivityService {
     }
 
     public void cancelMySign(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         String activityStatus = resolveActivityStatus(activity);
         if (ActivityStatus.CANCELED.equals(activityStatus) || ActivityStatus.ENDED.equals(activityStatus) || isExpired(activity)) {
             throw new BizException("活动已取消或已结束，无法退出报名");
         }
-        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUser.id())
+        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUserId)
                 .orElseThrow(() -> new BizException("报名记录不存在"));
         if (!(ActivitySignStatus.PENDING_CONFIRM.equals(sign.getSignStatus()) || ActivitySignStatus.APPROVED.equals(sign.getSignStatus()))) {
             throw new BizException("当前报名状态不可取消");
@@ -253,7 +266,8 @@ public class ActivityService {
         refreshActivityCapacityAndStatus(activity);
     }
 
-    public List<Map<String, Object>> mySignedActivities(Long userId) {
+    public List<Map<String, Object>> mySignedActivities(CurrentUser currentUser) {
+        Long userId = requireCurrentUserId(currentUser);
         List<ActivitySign> signList = activitySignRepository.findByUserIdOrderBySignTimeDesc(userId);
         List<Long> activityIds = signList.stream().map(ActivitySign::getActivityId).distinct().toList();
         Map<Long, Activity> activityMap = activityRepository.findAllById(activityIds).stream()
@@ -274,13 +288,15 @@ public class ActivityService {
                 .collect(Collectors.toList());
     }
 
-    public List<Map<String, Object>> myPublishedActivities(Long userId) {
+    public List<Map<String, Object>> myPublishedActivities(CurrentUser currentUser) {
+        Long userId = requireCurrentUserId(currentUser);
         return activityRepository.findByUserIdOrderByCreateTimeDesc(userId).stream()
                 .map(activity -> toActivityVO(activity, userId))
                 .collect(Collectors.toList());
     }
 
     public Activity updateStatus(Long activityId, String status) {
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         String normalizedStatus = normalizeActivityStatus(status);
         activity.setActivityStatus(normalizedStatus);
@@ -296,6 +312,7 @@ public class ActivityService {
     }
 
     public Activity review(Long activityId, String reviewStatus) {
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         if (ActivityReviewStatus.APPROVED.equals(reviewStatus)) {
             activity.setReviewStatus(ActivityReviewStatus.APPROVED);
@@ -312,13 +329,15 @@ public class ActivityService {
     }
 
     public void delete(CurrentUser currentUser, Long activityId, boolean isAdmin) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        boolean adminMode = requireAdminModeIfRequested(currentUser, isAdmin);
+        InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
-        boolean isRealAdmin = "ADMIN".equalsIgnoreCase(currentUser.role());
-        boolean isOwner = activity.getUserId().equals(currentUser.id());
-        if (!isOwner && !isRealAdmin) {
+        boolean isOwner = activity.getUserId().equals(currentUserId);
+        if (!isOwner && !adminMode) {
             throw new BizException("无权删除活动");
         }
-        if (isRealAdmin && isAdmin) {
+        if (adminMode) {
             activityRepository.delete(activity);
             return;
         }
@@ -328,6 +347,7 @@ public class ActivityService {
     }
 
     public Activity getActivity(Long activityId) {
+        InputValidator.positiveId(activityId, "活动ID");
         return activityRepository.findById(activityId).orElseThrow(() -> new BizException("活动不存在"));
     }
 
@@ -403,6 +423,21 @@ public class ActivityService {
         throw new BizException("活动状态不合法");
     }
 
+    private Long requireCurrentUserId(CurrentUser currentUser) {
+        if (currentUser == null || currentUser.id() == null) {
+            throw new BizException("用户未登录，请先认证");
+        }
+        return currentUser.id();
+    }
+
+    private boolean requireAdminModeIfRequested(CurrentUser currentUser, boolean isAdmin) {
+        boolean adminMode = isAdmin && currentUser != null && "ADMIN".equalsIgnoreCase(currentUser.role());
+        if (isAdmin && !adminMode) {
+            throw new BizException("无管理员操作权限");
+        }
+        return adminMode;
+    }
+
     private void validateCreateRequest(ActivityCreateRequest request) {
         String title = trimToNull(request.getTitle());
         String activityType = trimToNull(request.getActivityType());
@@ -463,6 +498,6 @@ public class ActivityService {
         if (!StringUtils.hasText(value)) {
             return null;
         }
-        return value.trim().toLowerCase();
+        return InputValidator.likeKeyword(value, 50, "搜索关键词");
     }
 }

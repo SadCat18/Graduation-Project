@@ -20,8 +20,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             FROM tb_post p
             WHERE (:category IS NULL OR :category = '' OR p.category = :category)
               AND (:keyword IS NULL OR :keyword = ''
-                   OR p.title LIKE CONCAT('%', :keyword, '%')
-                   OR p.content LIKE CONCAT('%', :keyword, '%'))
+                   OR LOWER(p.title) LIKE :keyword ESCAPE '!'
+                   OR LOWER(p.content) LIKE :keyword ESCAPE '!')
             ORDER BY
               CASE WHEN :sort <> 'latest' THEN p.is_top ELSE '0' END DESC,
               CASE WHEN :sort = 'likes' THEN IFNULL(p.like_count, 0) ELSE 0 END DESC,
@@ -35,8 +35,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                     FROM tb_post p
                     WHERE (:category IS NULL OR :category = '' OR p.category = :category)
                       AND (:keyword IS NULL OR :keyword = ''
-                           OR p.title LIKE CONCAT('%', :keyword, '%')
-                           OR p.content LIKE CONCAT('%', :keyword, '%'))
+                           OR LOWER(p.title) LIKE :keyword ESCAPE '!'
+                           OR LOWER(p.content) LIKE :keyword ESCAPE '!')
                     """,
             nativeQuery = true)
     Page<Post> searchPublicPosts(@Param("keyword") String keyword,
@@ -53,9 +53,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                    OR (:top = 'top' AND p.is_top = '1')
                    OR (:top = 'normal' AND (p.is_top IS NULL OR p.is_top <> '1')))
               AND (:keyword IS NULL OR :keyword = ''
-                   OR p.title LIKE CONCAT('%', :keyword, '%')
-                   OR p.content LIKE CONCAT('%', :keyword, '%')
-                   OR u.username LIKE CONCAT('%', :keyword, '%'))
+                   OR LOWER(p.title) LIKE :keyword ESCAPE '!'
+                   OR LOWER(p.content) LIKE :keyword ESCAPE '!'
+                   OR LOWER(u.username) LIKE :keyword ESCAPE '!')
             ORDER BY
               CASE WHEN :sort = 'likes' THEN IFNULL(p.like_count, 0) ELSE 0 END DESC,
               CASE WHEN :sort = 'comments' THEN (SELECT COUNT(1) FROM tb_comment c WHERE c.post_id = p.post_id) ELSE 0 END DESC,
@@ -73,9 +73,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                            OR (:top = 'top' AND p.is_top = '1')
                            OR (:top = 'normal' AND (p.is_top IS NULL OR p.is_top <> '1')))
                       AND (:keyword IS NULL OR :keyword = ''
-                           OR p.title LIKE CONCAT('%', :keyword, '%')
-                           OR p.content LIKE CONCAT('%', :keyword, '%')
-                           OR u.username LIKE CONCAT('%', :keyword, '%'))
+                           OR LOWER(p.title) LIKE :keyword ESCAPE '!'
+                           OR LOWER(p.content) LIKE :keyword ESCAPE '!'
+                           OR LOWER(u.username) LIKE :keyword ESCAPE '!')
                     """,
             nativeQuery = true)
     Page<Post> searchAdminPosts(@Param("keyword") String keyword,

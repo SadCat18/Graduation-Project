@@ -2,9 +2,12 @@ package com.skatehub.controller;
 
 import com.skatehub.util.CaptchaConstants;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Validated
 public class CaptchaController {
 
     private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -27,7 +31,7 @@ public class CaptchaController {
     private final StringRedisTemplate stringRedisTemplate;
 
     @GetMapping(value = "/captcha", produces = MediaType.IMAGE_PNG_VALUE)
-    public void captcha(@RequestParam("captchaId") String captchaId, HttpServletResponse response) throws IOException {
+    public void captcha(@RequestParam("captchaId") @Size(max = 64) @Pattern(regexp = "^[A-Za-z0-9_\\-]+$", message = "验证码ID格式不合法") String captchaId, HttpServletResponse response) throws IOException {
         int width = 120;
         int height = 42;
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

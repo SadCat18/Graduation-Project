@@ -14,6 +14,9 @@ import com.skatehub.pojo.admin.NoticeSaveRequest;
 import com.skatehub.pojo.admin.PlaceSaveRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
+import com.skatehub.util.ActivityReviewStatus;
+import com.skatehub.util.ActivityStatus;
 import com.skatehub.util.NewsStatus;
 import com.skatehub.util.PageResult;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +37,21 @@ import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AdminService {
+
+    private static final Set<String> BINARY_VALUES = Set.of("0", "1");
+    private static final Set<String> NEWS_STATUSES = Set.of("0", "1", "2");
+    private static final Set<String> ACTIVITY_REVIEW_STATUSES = Set.of("0", "1", "2");
+    private static final Set<String> POST_TOP_FILTERS = Set.of("all", "top", "normal");
+    private static final Set<String> POST_SORTS = Set.of("latest", "likes", "comments", "collects");
+    private static final Set<String> COMMENT_TYPES = Set.of("all", "root", "reply");
+    private static final Set<String> COMMENT_SORTS = Set.of("latest", "oldest");
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
@@ -62,14 +74,18 @@ public class AdminService {
     }
 
     public User updateUserStatus(Long userId, String status) {
+        InputValidator.positiveId(userId, "用户ID");
+        String normalizedStatus = InputValidator.requiredAllowed(status, BINARY_VALUES, "用户状态");
         User user = userRepository.findById(userId).orElseThrow(() -> new BizException("用户不存在"));
-        user.setStatus("1".equals(status) ? "1" : "0");
+        user.setStatus(normalizedStatus);
         return userRepository.save(user);
     }
 
     public User updateUserBulletinPermission(Long userId, String permission) {
+        InputValidator.positiveId(userId, "用户ID");
+        String normalizedPermission = InputValidator.requiredAllowed(permission, BINARY_VALUES, "快讯权限");
         User user = userRepository.findById(userId).orElseThrow(() -> new BizException("用户不存在"));
-        user.setBulletinPermission("1".equals(permission) ? "1" : "0");
+        user.setBulletinPermission(normalizedPermission);
         return userRepository.save(user);
     }
 
@@ -84,7 +100,7 @@ public class AdminService {
                                                    String top,
                                                    String sort) {
         Page<Post> result = postRepository.searchAdminPosts(
-                trimToNull(keyword),
+                InputValidator.likeKeyword(keyword, 50, "搜索关键词"),
                 trimToNull(category),
                 normalizePostTop(top),
                 normalizePostSort(sort),
@@ -117,7 +133,7 @@ public class AdminService {
             return 0;
         }
         List<Post> posts = postRepository.findAllById(ids);
-        String value = "1".equals(top) ? "1" : "0";
+        String value = InputValidator.requiredAllowed(top, BINARY_VALUES, "置顶值");
         posts.forEach(post -> post.setIsTop(value));
         postRepository.saveAll(posts);
         return posts.size();
@@ -143,14 +159,15 @@ public class AdminService {
                                                          Long userId,
                                                          String type,
                                                          String sort) {
-        Sort.Direction direction = "oldest".equals(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String normalizedSort = InputValidator.optionalAllowed(sort, COMMENT_SORTS, "latest", "排序方式");
+        Sort.Direction direction = "oldest".equals(normalizedSort) ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageRequest = PageRequest.of(
                 normalizePage(page),
                 normalizeSize(size),
                 Sort.by(direction, "createTime").and(Sort.by(direction, "commentId"))
         );
         Page<Comment> result = commentRepository.searchAdminComments(
-                trimToNull(keyword),
+                InputValidator.likeKeyword(keyword, 50, "搜索关键词"),
                 postId,
                 userId,
                 normalizeCommentType(type),
@@ -205,9 +222,36 @@ public class AdminService {
         if (reviewStatus == null || reviewStatus.isBlank()) {
             result = activityRepository.findAll(pageRequest);
         } else {
-            result = activityRepository.findByReviewStatusOrderByCreateTimeDesc(reviewStatus.trim(), pageRequest);
+            String normalizedReviewStatus = InputValidator.requiredAllowed(reviewStatus, ACTIVITY_REVIEW_STATUSES, "审核状态");
+            if (ActivityReviewStatus.PENDING.equals(normalizedReviewStatus)) {
+                result = activityRepository.findByReviewStatusOrReviewStatusIsNullOrderByCreateTimeDesc(
+                        normalizedReviewStatus,
+                        pageRequest
+                );
+            } else {
+                result = activityRepository.findByReviewStatusOrderByCreateTimeDesc(
+                        normalizedReviewStatus,
+                        pageRequest
+                );
+            }
         }
+        result.getContent().forEach(this::normalizeActivityReviewFields);
         return new PageResult<>(result.getTotalElements(), result.getContent());
+    }
+
+    private void normalizeActivityReviewFields(Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        if (!StringUtils.hasText(activity.getReviewStatus())) {
+            activity.setReviewStatus(ActivityReviewStatus.PENDING);
+        }
+        if (!StringUtils.hasText(activity.getActivityStatus())) {
+            activity.setActivityStatus(ActivityStatus.PENDING_REVIEW);
+        }
+        if (!StringUtils.hasText(activity.getStatus())) {
+            activity.setStatus(ActivityStatus.PENDING_REVIEW);
+        }
     }
 
     public List<Notice> listNotices() {
@@ -219,7 +263,7 @@ public class AdminService {
         notice.setTitle(request.getTitle());
         notice.setContent(request.getContent());
         notice.setAdminId(currentUser.id());
-        notice.setStatus("1".equals(request.getStatus()) ? "1" : "0");
+        notice.setStatus(InputValidator.optionalAllowed(request.getStatus(), BINARY_VALUES, "0", "公告状态"));
         return noticeRepository.save(notice);
     }
 
@@ -227,7 +271,7 @@ public class AdminService {
         Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BizException("公告不存在"));
         notice.setTitle(request.getTitle());
         notice.setContent(request.getContent());
-        notice.setStatus("1".equals(request.getStatus()) ? "1" : "0");
+        notice.setStatus(InputValidator.optionalAllowed(request.getStatus(), BINARY_VALUES, "0", "公告状态"));
         return noticeRepository.save(notice);
     }
 
@@ -266,7 +310,7 @@ public class AdminService {
         News news = new News();
         fillNewsFields(news, request);
         news.setAdminId(currentUser.id());
-        news.setStatus(firstNonBlank(request.getStatus(), NewsStatus.APPROVED));
+        news.setStatus(InputValidator.optionalAllowed(request.getStatus(), NEWS_STATUSES, NewsStatus.APPROVED, "资讯状态"));
         news.setSyncTime(LocalDateTime.now());
         return newsRepository.save(news);
     }
@@ -274,8 +318,8 @@ public class AdminService {
     public News updateNews(Long newsId, NewsSaveRequest request) {
         News news = newsRepository.findById(newsId).orElseThrow(() -> new BizException("资讯不存在"));
         fillNewsFields(news, request);
-        if (StringUtils.hasText(request.getStatus()) && NewsStatus.isValid(request.getStatus().trim())) {
-            news.setStatus(request.getStatus().trim());
+        if (StringUtils.hasText(request.getStatus())) {
+            news.setStatus(InputValidator.requiredAllowed(request.getStatus(), NEWS_STATUSES, "资讯状态"));
         }
         return newsRepository.save(news);
     }
@@ -285,7 +329,7 @@ public class AdminService {
         if (!StringUtils.hasText(status) || !NewsStatus.isValid(status.trim())) {
             throw new BizException("资讯审核状态不合法");
         }
-        news.setStatus(status.trim());
+        news.setStatus(InputValidator.requiredAllowed(status, NEWS_STATUSES, "资讯审核状态"));
         return newsRepository.save(news);
     }
 
@@ -334,7 +378,7 @@ public class AdminService {
         banner.setLinkUrl(trimToNull(request.getLinkUrl()));
         banner.setSortNum(defaultSortNum(request.getSortNum()));
         banner.setIntervalSeconds(defaultIntervalSeconds(request.getIntervalSeconds()));
-        banner.setStatus("1".equals(request.getStatus()) ? "1" : "0");
+        banner.setStatus(InputValidator.optionalAllowed(request.getStatus(), BINARY_VALUES, "0", "轮播状态"));
         banner.setAdminId(currentUser.id());
         return bannerRepository.save(banner);
     }
@@ -346,7 +390,7 @@ public class AdminService {
         banner.setLinkUrl(trimToNull(request.getLinkUrl()));
         banner.setSortNum(defaultSortNum(request.getSortNum()));
         banner.setIntervalSeconds(defaultIntervalSeconds(request.getIntervalSeconds()));
-        banner.setStatus("1".equals(request.getStatus()) ? "1" : "0");
+        banner.setStatus(InputValidator.optionalAllowed(request.getStatus(), BINARY_VALUES, "0", "轮播状态"));
         return bannerRepository.save(banner);
     }
 
@@ -493,36 +537,15 @@ public class AdminService {
     }
 
     private String normalizeCommentType(String type) {
-        if (!StringUtils.hasText(type)) {
-            return "all";
-        }
-        String value = type.trim();
-        if ("root".equals(value) || "reply".equals(value)) {
-            return value;
-        }
-        return "all";
+        return InputValidator.optionalAllowed(type, COMMENT_TYPES, "all", "评论类型");
     }
 
     private String normalizePostTop(String top) {
-        if (!StringUtils.hasText(top)) {
-            return "all";
-        }
-        String value = top.trim();
-        if ("top".equals(value) || "normal".equals(value)) {
-            return value;
-        }
-        return "all";
+        return InputValidator.optionalAllowed(top, POST_TOP_FILTERS, "all", "置顶筛选值");
     }
 
     private String normalizePostSort(String sort) {
-        if (!StringUtils.hasText(sort)) {
-            return "latest";
-        }
-        String value = sort.trim();
-        if ("likes".equals(value) || "comments".equals(value) || "collects".equals(value)) {
-            return value;
-        }
-        return "latest";
+        return InputValidator.optionalAllowed(sort, POST_SORTS, "latest", "排序方式");
     }
 
     private List<Long> distinctIds(List<Long> ids) {
@@ -530,7 +553,7 @@ public class AdminService {
             return Collections.emptyList();
         }
         return ids.stream()
-                .filter(id -> id != null && id > 0)
+                .peek(id -> InputValidator.positiveId(id, "ID"))
                 .collect(Collectors.collectingAndThen(
                         Collectors.toCollection(LinkedHashSet::new),
                         ArrayList::new
@@ -546,17 +569,11 @@ public class AdminService {
     }
 
     private int normalizePage(Integer page) {
-        if (page == null || page < 1) {
-            return 0;
-        }
-        return page - 1;
+        return InputValidator.pageIndex(page);
     }
 
     private int normalizeSize(Integer size) {
-        if (size == null || size < 1) {
-            return 10;
-        }
-        return Math.min(size, 50);
+        return InputValidator.size(size);
     }
 
     private BigDecimal defaultScore(BigDecimal score) {
@@ -564,17 +581,23 @@ public class AdminService {
     }
 
     private int defaultSortNum(Integer sortNum) {
-        return sortNum == null ? 0 : sortNum;
+        if (sortNum == null) {
+            return 0;
+        }
+        if (sortNum < 0 || sortNum > 9999) {
+            throw new BizException("排序值不合法");
+        }
+        return sortNum;
     }
 
     private int defaultIntervalSeconds(Integer intervalSeconds) {
         if (intervalSeconds == null) {
             return 5;
         }
-        if (intervalSeconds < 2) {
-            return 2;
+        if (intervalSeconds < 2 || intervalSeconds > 60) {
+            throw new BizException("轮播间隔不合法");
         }
-        return Math.min(intervalSeconds, 60);
+        return intervalSeconds;
     }
 
     private String trimToNull(String value) {

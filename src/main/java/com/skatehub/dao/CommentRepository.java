@@ -26,14 +26,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                    OR (:type = 'root' AND (c.parentId IS NULL OR c.parentId = 0))
                    OR (:type = 'reply' AND c.parentId IS NOT NULL AND c.parentId <> 0))
               AND (:keyword IS NULL OR :keyword = ''
-                   OR LOWER(c.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                   OR LOWER(c.content) LIKE :keyword ESCAPE '!'
                    OR c.postId IN (
                         SELECT p.postId FROM Post p
-                        WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        WHERE LOWER(p.title) LIKE :keyword ESCAPE '!'
                    )
                    OR c.userId IN (
                         SELECT u.userId FROM User u
-                        WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        WHERE LOWER(u.username) LIKE :keyword ESCAPE '!'
                    ))
             """)
     Page<Comment> searchAdminComments(@Param("keyword") String keyword,

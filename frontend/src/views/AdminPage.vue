@@ -318,7 +318,7 @@ const newsBatchStatusText = computed(() => {
   if (canBatchReviewNews.value) return `已选择 ${selectedNewsItems.value.length} 条待审核资讯`
   return `已选择 ${selectedNewsItems.value.length} 条，其中 ${selectedNewsPendingCount.value} 条待审核`
 })
-const pendingActivityCount = computed(() => reviewActivities.value.filter(item => String(item?.status || '0') === '0').length)
+const pendingActivityCount = computed(() => reviewActivities.value.filter(item => normalizeReviewStatus(item?.reviewStatus) === '0').length)
 const pendingBulletinCount = computed(() => reviewBulletins.value.filter(item => String(item?.status || '0') === '0').length)
 const pendingReviewTotal = computed(() => {
   return pendingActivityCount.value + pendingBulletinCount.value + reports.value.length + placeReviews.value.length
@@ -574,6 +574,11 @@ function toTimestamp(value) {
   return Number.isFinite(t) ? t : 0
 }
 
+function normalizeReviewStatus(value) {
+  const status = String(value ?? '').trim()
+  return ['0', '1', '2'].includes(status) ? status : '0'
+}
+
 function keywordMatch(item, keyword) {
   const k = String(keyword || '').trim().toLowerCase()
   if (!k) return true
@@ -599,7 +604,7 @@ const reviewCards = computed(() => {
     id: `activity-${item.activityId}`,
     type: 'activity',
     typeLabel: '活动',
-    status: item.reviewStatus,
+    status: normalizeReviewStatus(item.reviewStatus),
     statusLabel: activityReviewLabel(item),
     title: item.title || `活动 #${item.activityId}`,
     actor: item.publisherName || item.username || '未知发布人',
@@ -610,7 +615,7 @@ const reviewCards = computed(() => {
     historyNote: item.rejectReason || '',
     searchText: `${item.reason || ''} ${item.publisherName || ''} ${item.username || ''}`,
     facts: [
-      { label: '活动时间', value: `${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}` },
+      { label: '活动时间', value: activityTimeText(item) },
       { label: '地点', value: item.address || '未填写' },
       { label: '报名人数', value: `${Number(item.signNum || 0)} / ${item.maxNum || '不限'}` },
       { label: '审核状态', value: activityReviewLabel(item) },
@@ -618,7 +623,7 @@ const reviewCards = computed(() => {
     ],
     detailFacts: [
       { label: '活动ID', value: String(item.activityId || '-') },
-      { label: '活动时间', value: `${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}` },
+      { label: '活动时间', value: activityTimeText(item) },
       { label: '地点', value: item.address || '未填写' },
       { label: '报名人数', value: `${Number(item.signNum || 0)} / ${item.maxNum || '不限'}` },
       { label: '审核状态', value: activityReviewLabel(item) },
@@ -1319,10 +1324,18 @@ async function loadActivities() {
 }
 
 function activityReviewLabel(item) {
-  if (item.reviewStatus === '0') return '待审核'
-  if (item.reviewStatus === '1') return '已通过'
-  if (item.reviewStatus === '2') return '已驳回'
+  const status = normalizeReviewStatus(item?.reviewStatus)
+  if (status === '0') return '待审核'
+  if (status === '1') return '已通过'
+  if (status === '2') return '已驳回'
   return '未知'
+}
+
+function activityTimeText(item) {
+  if (item?.startTime || item?.endTime) {
+    return `${fmtTime(item.startTime)} ~ ${fmtTime(item.endTime)}`
+  }
+  return fmtTime(item?.activityTime)
 }
 
 function activityStatusLabel(item) {
@@ -1384,7 +1397,7 @@ async function loadWorkbench() {
 
 async function loadReviewCenterData() {
   const [activityData, reportData, bulletinData, placeReviewData] = await Promise.all([
-    api.adminActivities({ page: 1, size: 200 }),
+    api.adminActivities({ page: 1, size: 50 }),
     api.adminReports(),
     api.adminBulletins({ type: null, status: null }),
     api.adminPlaceReviews()

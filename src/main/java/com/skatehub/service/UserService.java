@@ -15,6 +15,8 @@ import com.skatehub.pojo.user.PasswordUpdateRequest;
 import com.skatehub.pojo.user.UserProfileUpdateRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
+import com.skatehub.util.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class UserService {
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserGrowthService userGrowthService;
+    private final PasswordPolicy passwordPolicy;
 
     public User profile(CurrentUser currentUser) {
         User user = userRepository.findById(currentUser.id()).orElseThrow(() -> new BizException("用户不存在"));
@@ -76,7 +79,9 @@ public class UserService {
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new BizException("旧密码错误");
         }
+        passwordPolicy.validateUserPassword(request.getNewPassword(), user.getPhone());
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setTokenVersion(user.getTokenVersion() == null ? 1 : user.getTokenVersion() + 1);
         userRepository.save(user);
     }
 
@@ -103,6 +108,7 @@ public class UserService {
     }
 
     public void readMessage(CurrentUser currentUser, Long messageId) {
+        InputValidator.positiveId(messageId, "消息ID");
         Message message = messageRepository.findById(messageId).orElseThrow(() -> new BizException("消息不存在"));
         if (!message.getUserId().equals(currentUser.id())) {
             throw new BizException("无权操作该消息");

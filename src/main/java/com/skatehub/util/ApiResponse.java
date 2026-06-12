@@ -26,4 +26,8 @@ public class ApiResponse<T> {
     public static ApiResponse<Void> fail(String message) {
         return new ApiResponse<>(500, message, null);
     }
+
+    public static ApiResponse<Void> fail(Integer code, String message) {
+        return new ApiResponse<>(code, message, null);
+    }
 }

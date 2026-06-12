@@ -13,6 +13,9 @@ spring:
     name: skatehub
   messages:
     encoding: UTF-8
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   config:
     import: optional:classpath:application-local.yml
   datasource:
@@ -22,14 +25,16 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
+      repositories:
+        enabled: false
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: ${REDIS_TIMEOUT:3000ms}
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: 300MB
+      max-request-size: 300MB
   jpa:
     hibernate:
       ddl-auto: update

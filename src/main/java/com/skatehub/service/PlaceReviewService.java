@@ -9,6 +9,7 @@ import com.skatehub.pojo.User;
 import com.skatehub.pojo.place.PlaceReviewCreateRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,6 +30,7 @@ public class PlaceReviewService {
     private final UserRepository userRepository;
 
     public PlaceReview create(CurrentUser currentUser, PlaceReviewCreateRequest request) {
+        InputValidator.positiveId(request.getPlaceId(), "场地ID");
         Place place = placeRepository.findById(request.getPlaceId())
                 .orElseThrow(() -> new BizException("场地不存在或已下线"));
         Integer score = request.getScore();
@@ -48,12 +50,14 @@ public class PlaceReviewService {
     }
 
     public List<Map<String, Object>> listByPlace(Long placeId) {
+        InputValidator.positiveId(placeId, "场地ID");
         return placeReviewRepository.findByPlaceIdOrderByCreateTimeDesc(placeId).stream()
                 .map(this::toReviewVO)
                 .collect(Collectors.toList());
     }
 
     public Map<String, Object> latestReview(Long placeId) {
+        InputValidator.positiveId(placeId, "场地ID");
         return placeReviewRepository.findTop1ByPlaceIdOrderByCreateTimeDesc(placeId)
                 .map(this::toReviewVO)
                 .orElse(null);
@@ -73,6 +77,7 @@ public class PlaceReviewService {
     }
 
     public void adminDeleteReview(Long reviewId) {
+        InputValidator.positiveId(reviewId, "评价ID");
         PlaceReview review = placeReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BizException("评价不存在"));
         Long placeId = review.getPlaceId();
@@ -81,6 +86,7 @@ public class PlaceReviewService {
     }
 
     public void refreshPlaceScore(Long placeId) {
+        InputValidator.positiveId(placeId, "场地ID");
         Place place = placeRepository.findById(placeId).orElse(null);
         if (place == null) return;
         List<PlaceReview> reviews = placeReviewRepository.findByPlaceIdOrderByCreateTimeDesc(placeId);

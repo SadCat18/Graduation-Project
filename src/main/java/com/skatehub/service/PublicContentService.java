@@ -11,6 +11,7 @@ import com.skatehub.pojo.Notice;
 import com.skatehub.pojo.Place;
 import com.skatehub.pojo.Video;
 import com.skatehub.util.BizException;
+import com.skatehub.util.InputValidator;
 import com.skatehub.util.NewsStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,7 @@ public class PublicContentService {
     }
 
     public Map<String, Object> bulletinDetail(Long bulletinId) {
+        InputValidator.positiveId(bulletinId, "快讯ID");
         return communityBulletinService.publicDetail(bulletinId);
     }
 
@@ -52,6 +54,7 @@ public class PublicContentService {
     }
 
     public News newsDetail(Long newsId) {
+        InputValidator.positiveId(newsId, "资讯ID");
         return newsRepository.findByNewsIdAndStatus(newsId, NewsStatus.APPROVED)
                 .orElseThrow(() -> new BizException("资讯不存在或未审核通过"));
     }
@@ -61,6 +64,7 @@ public class PublicContentService {
     }
 
     public Map<String, Object> placeDetail(Long placeId) {
+        InputValidator.positiveId(placeId, "场地ID");
         Place place = placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
         Map<String, Object> map = new HashMap<>();
         map.put("placeId", place.getPlaceId());
@@ -75,6 +79,7 @@ public class PublicContentService {
     }
 
     public List<Map<String, Object>> placeReviews(Long placeId) {
+        InputValidator.positiveId(placeId, "场地ID");
         placeRepository.findById(placeId).orElseThrow(() -> new BizException("场地不存在"));
         return placeReviewService.listByPlace(placeId);
     }

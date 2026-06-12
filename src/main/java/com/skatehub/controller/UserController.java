@@ -16,7 +16,10 @@ import com.skatehub.util.CurrentUser;
 import com.skatehub.util.SecurityUtils;
 import com.skatehub.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -39,7 +43,7 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public ApiResponse<User> updateProfile(@RequestBody UserProfileUpdateRequest request) {
+    public ApiResponse<User> updateProfile(@RequestBody @Valid UserProfileUpdateRequest request) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(userService.updateProfile(currentUser, request));
     }
@@ -58,14 +62,14 @@ public class UserController {
     }
 
     @GetMapping("/notifications")
-    public ApiResponse<List<Map<String, Object>>> notifications(@RequestParam(required = false) String readStatus,
-                                                                 @RequestParam(required = false) String msgType) {
+    public ApiResponse<List<Map<String, Object>>> notifications(@RequestParam(required = false) @Pattern(regexp = "(?i)all|[01]", message = "消息状态不合法") String readStatus,
+                                                                 @RequestParam(required = false) @Pattern(regexp = "(?i)all|comment|like|activity|system", message = "消息类型不合法") String msgType) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(userService.myNotifications(currentUser, readStatus, msgType));
     }
 
     @PutMapping("/messages/{id}/read")
-    public ApiResponse<Void> readMessage(@PathVariable("id") Long messageId) {
+    public ApiResponse<Void> readMessage(@PathVariable("id") @Positive(message = "id必须为正数") Long messageId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         userService.readMessage(currentUser, messageId);
         return ApiResponse.success();

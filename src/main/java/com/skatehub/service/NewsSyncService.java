@@ -94,64 +94,64 @@ public class NewsSyncService {
         String sourceUrl = safeText(item == null ? null : item.getSourceUrl());
 
         if (!StringUtils.hasText(originTitle) || !StringUtils.hasText(originContent)) {
-            return baseItemResult(item, originTitle, sourceName, sourceUrl)
-                    .saved(false)
-                    .duplicated(false)
-                    .dryRun(dryRun)
-                    .aiStatus(NewsAiProcessStatus.SKIPPED)
-                    .message("标题或正文为空，已跳过")
-                    .build();
+            NewsSyncItemResult result = baseItemResult(item, originTitle, sourceName, sourceUrl);
+            result.setSaved(false);
+            result.setDuplicated(false);
+            result.setDryRun(dryRun);
+            result.setAiStatus(NewsAiProcessStatus.SKIPPED);
+            result.setMessage("标题或正文为空，已跳过");
+            return result;
         }
 
         Optional<News> duplicated = findDuplicate(originTitle, originContent, sourceUrl);
         if (duplicated.isPresent()) {
-            return baseItemResult(item, originTitle, sourceName, sourceUrl)
-                    .saved(false)
-                    .duplicated(true)
-                    .dryRun(dryRun)
-                    .newsId(duplicated.get().getNewsId())
-                    .duplicateType(StringUtils.hasText(sourceUrl) && sourceUrl.equals(safeText(duplicated.get().getSourceUrl()))
-                            ? "SOURCE_URL"
-                            : "TITLE_CONTENT")
-                    .aiStatus(defaultText(duplicated.get().getAiStatus()))
-                    .message("资讯已存在，跳过入库")
-                    .build();
+            NewsSyncItemResult result = baseItemResult(item, originTitle, sourceName, sourceUrl);
+            result.setSaved(false);
+            result.setDuplicated(true);
+            result.setDryRun(dryRun);
+            result.setNewsId(duplicated.get().getNewsId());
+            result.setDuplicateType(StringUtils.hasText(sourceUrl) && sourceUrl.equals(safeText(duplicated.get().getSourceUrl()))
+                    ? "SOURCE_URL"
+                    : "TITLE_CONTENT");
+            result.setAiStatus(defaultText(duplicated.get().getAiStatus()));
+            result.setMessage("资讯已存在，跳过入库");
+            return result;
         }
 
         Optional<News> suspectedDuplicate = findSuspectedDuplicate(originTitle, sourceUrl);
         try {
             ProcessedNews processedNews = buildProcessedNews(item, originTitle, originContent);
-            NewsSyncItemResult.NewsSyncItemResultBuilder builder = baseItemResult(item, originTitle, sourceName, sourceUrl)
-                    .dryRun(dryRun)
-                    .duplicated(false)
-                    .suspectedDuplicate(suspectedDuplicate.isPresent())
-                    .duplicateType(suspectedDuplicate.isPresent() ? "TITLE_ONLY" : "")
-                    .aiTitle(processedNews.news().getAiTitle())
-                    .aiSummary(processedNews.news().getAiSummary())
-                    .aiCategory(processedNews.news().getAiCategory())
-                    .aiTranslatedContent(processedNews.news().getAiTranslatedContent())
-                    .aiStatus(processedNews.news().getAiStatus());
+            NewsSyncItemResult result = baseItemResult(item, originTitle, sourceName, sourceUrl);
+            result.setDryRun(dryRun);
+            result.setDuplicated(false);
+            result.setSuspectedDuplicate(suspectedDuplicate.isPresent());
+            result.setDuplicateType(suspectedDuplicate.isPresent() ? "TITLE_ONLY" : "");
+            result.setAiTitle(processedNews.news().getAiTitle());
+            result.setAiSummary(processedNews.news().getAiSummary());
+            result.setAiCategory(processedNews.news().getAiCategory());
+            result.setAiTranslatedContent(processedNews.news().getAiTranslatedContent());
+            result.setAiStatus(processedNews.news().getAiStatus());
 
             if (dryRun) {
-                return builder.saved(false)
-                        .message("dryRun 检测完成，未入库")
-                        .build();
+                result.setSaved(false);
+                result.setMessage("dryRun 检测完成，未入库");
+                return result;
             }
 
             News savedNews = newsRepository.save(processedNews.news());
-            return builder.saved(true)
-                    .newsId(savedNews.getNewsId())
-                    .message(processedNews.message())
-                    .build();
+            result.setSaved(true);
+            result.setNewsId(savedNews.getNewsId());
+            result.setMessage(processedNews.message());
+            return result;
         } catch (Exception exception) {
             log.warn("news sync save failed, title={}", originTitle, exception);
-            return baseItemResult(item, originTitle, sourceName, sourceUrl)
-                    .saved(false)
-                    .duplicated(false)
-                    .dryRun(dryRun)
-                    .aiStatus(NewsAiProcessStatus.FAILED)
-                    .message("入库失败: " + exception.getMessage())
-                    .build();
+            NewsSyncItemResult result = baseItemResult(item, originTitle, sourceName, sourceUrl);
+            result.setSaved(false);
+            result.setDuplicated(false);
+            result.setDryRun(dryRun);
+            result.setAiStatus(NewsAiProcessStatus.FAILED);
+            result.setMessage("入库失败: " + exception.getMessage());
+            return result;
         }
     }
 
@@ -284,16 +284,17 @@ public class NewsSyncService {
         return StringUtils.hasText(fallback) ? fallback : "未分类";
     }
 
-    private NewsSyncItemResult.NewsSyncItemResultBuilder baseItemResult(
+    private NewsSyncItemResult baseItemResult(
             NewsSyncItem item,
             String originTitle,
             String sourceName,
             String sourceUrl) {
-        return NewsSyncItemResult.builder()
-                .originTitle(originTitle)
-                .sourceName(sourceName)
-                .sourceUrl(sourceUrl)
-                .aiSummary(safeText(item == null ? null : item.getSummary()));
+        NewsSyncItemResult result = new NewsSyncItemResult();
+        result.setOriginTitle(originTitle);
+        result.setSourceName(sourceName);
+        result.setSourceUrl(sourceUrl);
+        result.setAiSummary(safeText(item == null ? null : item.getSummary()));
+        return result;
     }
 
     private String firstNonBlank(String... values) {

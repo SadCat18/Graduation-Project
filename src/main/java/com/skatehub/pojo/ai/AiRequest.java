@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,8 +28,10 @@ public class AiRequest {
     private static final double DEFAULT_TEMPERATURE = 0.7D;
     private static final String DEFAULT_RESPONSE_FORMAT = "text";
 
+    @Size(max = 50, message = "provider 长度不能超过 50")
     private String provider;
 
+    @Size(max = 100, message = "model 长度不能超过 100")
     private String model;
 
     @Size(max = 100, message = "scene 长度不能超过 100")
@@ -41,7 +44,7 @@ public class AiRequest {
     private String userPrompt;
 
     @Valid
-    @Size(max = 100, message = "messages 数量不能超过 100")
+    @Size(max = 20, message = "messages 数量不能超过 20")
     private List<AiMessage> messages;
 
     @DecimalMin(value = "0.0", message = "temperature 不能小于 0")
@@ -49,6 +52,7 @@ public class AiRequest {
     private Double temperature;
 
     @Min(value = 1, message = "maxTokens 必须大于 0")
+    @Max(value = 4000, message = "maxTokens 不能超过 4000")
     private Integer maxTokens;
 
     @Size(max = 50, message = "responseFormat 长度不能超过 50")
@@ -65,6 +69,7 @@ public class AiRequest {
     private Boolean webSearchEnabled;
 
     @Min(value = 1, message = "webSearchMaxResults 必须大于 0")
+    @Max(value = 20, message = "webSearchMaxResults 不能超过 20")
     private Integer webSearchMaxResults;
 
     public Double getTemperature() {

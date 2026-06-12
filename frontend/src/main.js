@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'development') {
       (filename.includes('webapi.amap.com') && message.includes('script error'))
     if (isCrossScriptNoise) {
       event.preventDefault()
+      event.stopImmediatePropagation()
     }
   }, true)
 }

@@ -23,7 +23,10 @@ import com.skatehub.util.ApiResponse;
 import com.skatehub.util.BizException;
 import com.skatehub.util.SecurityUtils;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,6 +43,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
+@Validated
 public class AiController {
 
     private final AiActivityAssistantService aiActivityAssistantService;
@@ -52,26 +56,28 @@ public class AiController {
     @PostMapping("/activity-description")
     public ApiResponse<AiActivityDescriptionResponse> activityDescription(
             @Valid @RequestBody AiActivityDescriptionRequest request) {
-        SecurityUtils.currentUser();
+        aiGatewayService.checkRateLimit(SecurityUtils.currentUser());
         return ApiResponse.success(aiActivityAssistantService.generateDescription(request));
     }
 
     @PostMapping("/moderation-suggest")
     public ApiResponse<AiModerationSuggestResponse> moderationSuggest(
             @Valid @RequestBody AiModerationSuggestRequest request) {
-        ensureAdmin();
+        aiGatewayService.checkRateLimit(ensureAdmin());
         return ApiResponse.success(aiModerationAssistantService.suggest(request));
     }
 
     @PostMapping("/post-polish")
     public ApiResponse<AiPostPolishResponse> postPolish(@Valid @RequestBody AiPostPolishRequest request) {
-        SecurityUtils.currentUser();
+        aiGatewayService.checkRateLimit(SecurityUtils.currentUser());
         return ApiResponse.success(aiPostAssistantService.polish(request));
     }
 
     @PostMapping("/coach/chat")
     public ApiResponse<AiCoachChatResponse> coachChat(@Valid @RequestBody AiCoachChatRequest request) {
-        return ApiResponse.success(aiCoachAssistantService.chat(SecurityUtils.currentUser(), request));
+        var currentUser = SecurityUtils.currentUser();
+        aiGatewayService.checkRateLimit(currentUser);
+        return ApiResponse.success(aiCoachAssistantService.chat(currentUser, request));
     }
 
     @GetMapping("/coach/sessions")
@@ -80,36 +86,37 @@ public class AiController {
     }
 
     @DeleteMapping("/coach/sessions/{id}")
-    public ApiResponse<Void> coachDeleteSession(@PathVariable("id") String sessionId) {
+    public ApiResponse<Void> coachDeleteSession(@PathVariable("id") @Size(max = 100) @Pattern(regexp = "^[A-Za-z0-9_\\-]+$", message = "sessionId格式不合法") String sessionId) {
         aiCoachAssistantService.deleteSession(SecurityUtils.currentUser(), sessionId);
         return ApiResponse.success();
     }
 
 
     @GetMapping("/coach/sessions/{id}/messages")
-    public ApiResponse<AiCoachSessionMessagesResponse> coachSessionMessages(@PathVariable("id") String sessionId) {
+    public ApiResponse<AiCoachSessionMessagesResponse> coachSessionMessages(@PathVariable("id") @Size(max = 100) @Pattern(regexp = "^[A-Za-z0-9_\\-]+$", message = "sessionId格式不合法") String sessionId) {
         return ApiResponse.success(aiCoachAssistantService.getSessionMessages(SecurityUtils.currentUser(), sessionId));
     }
 
     @GetMapping("/coach/related-content")
     public ApiResponse<AiCoachContentRecommendResponse> coachRelatedContent(
-            @RequestParam("question") String question,
-            @RequestParam("reply") String reply) {
+            @RequestParam("question") @Size(max = 1000) String question,
+            @RequestParam("reply") @Size(max = 2000) String reply) {
        return ApiResponse.success(aiCoachAssistantService.getRelatedContent(question, reply));
    }
 
     @PostMapping("/chat")
     public ApiResponse<AiResponse> chat(@Valid @RequestBody AiRequest request) {
-        return ApiResponse.success(aiGatewayService.chat(request));
+        return ApiResponse.success(aiGatewayService.chatUserRequest(ensureAdmin(), request));
     }
 
     @PostMapping("/execute")
     public ApiResponse<AiResponse> execute(@Valid @RequestBody AiRequest request) {
-        return ApiResponse.success(aiSceneService.execute(request));
+        return ApiResponse.success(aiSceneService.execute(ensureAdmin(), request));
     }
 
     @GetMapping("/config")
     public ApiResponse<Map<String, Object>> config() {
+        ensureAdmin();
         var defaultConfig = aiGatewayService.config().resolveSceneConfig(null);
         var newsConfig = aiGatewayService.config().resolveSceneConfig("news_summary");
         Map<String, Object> result = new LinkedHashMap<>();
@@ -122,10 +129,11 @@ public class AiController {
         return ApiResponse.success(result);
     }
 
-    private void ensureAdmin() {
-        SecurityUtils.currentUser();
-        if (!SecurityUtils.isAdmin()) {
+    private com.skatehub.util.CurrentUser ensureAdmin() {
+        var currentUser = SecurityUtils.currentUser();
+        if (!"ADMIN".equalsIgnoreCase(currentUser.role())) {
             throw new BizException("仅管理员可调用 AI 审核辅助接口");
         }
+        return currentUser;
     }
 }

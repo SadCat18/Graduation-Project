@@ -10,6 +10,7 @@ import com.skatehub.pojo.admin.CommunityBulletinReviewRequest;
 import com.skatehub.pojo.community.CommunityBulletinCreateRequest;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
+import com.skatehub.util.InputValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ public class CommunityBulletinService {
             "活动通知", "赛事快讯", "同城动态", "场地通知", "路线推荐", "安全提醒", "官方公告", "经验分享"
     );
     private static final Set<String> ALLOWED_BULLETIN_TYPES = new HashSet<>(BULLETIN_TYPE_ORDER);
+    private static final Set<String> REVIEW_STATUSES = Set.of("0", "1", "2");
 
     private final CommunityBulletinRepository communityBulletinRepository;
     private final UserRepository userRepository;
@@ -52,7 +54,10 @@ public class CommunityBulletinService {
     }
 
     public List<Map<String, Object>> listPublicApproved(Integer limit) {
-        int actualLimit = (limit == null || limit < 1) ? 5 : Math.min(limit, 20);
+        int actualLimit = limit == null ? 5 : limit;
+        if (actualLimit < 1 || actualLimit > 20) {
+            throw new BizException("快讯数量限制不合法");
+        }
         return communityBulletinRepository.findByStatusOrderByCreateTimeDesc("1").stream()
                 .limit(actualLimit)
                 .map(this::toViewMap)
@@ -66,6 +71,7 @@ public class CommunityBulletinService {
     }
 
     public Map<String, Object> publicDetail(Long bulletinId) {
+        InputValidator.positiveId(bulletinId, "快讯ID");
         CommunityBulletin bulletin = communityBulletinRepository.findById(bulletinId)
                 .orElseThrow(() -> new BizException("社区快讯不存在"));
         if (!"1".equals(bulletin.getStatus())) {
@@ -76,7 +82,10 @@ public class CommunityBulletinService {
 
     public List<Map<String, Object>> adminList(String type, String status) {
         String normalizedType = trimToNull(type);
-        String normalizedStatus = trimToNull(status);
+        if (normalizedType != null && !ALLOWED_BULLETIN_TYPES.contains(normalizedType)) {
+            throw new BizException("快讯类型不合法");
+        }
+        String normalizedStatus = InputValidator.optionalAllowed(status, REVIEW_STATUSES, null, "快讯状态");
         return communityBulletinRepository.findAllByOrderByCreateTimeDesc().stream()
                 .filter(item -> normalizedType == null || normalizeForView(item.getBulletinType()).equals(normalizedType))
                 .filter(item -> normalizedStatus == null || normalizedStatus.equals(item.getStatus()))
@@ -102,9 +111,10 @@ public class CommunityBulletinService {
     }
 
     public CommunityBulletin review(Long bulletinId, CurrentUser adminUser, CommunityBulletinReviewRequest request) {
+        InputValidator.positiveId(bulletinId, "快讯ID");
         CommunityBulletin bulletin = communityBulletinRepository.findById(bulletinId)
                 .orElseThrow(() -> new BizException("社区快讯不存在"));
-        String status = "2".equals(request.getStatus()) ? "2" : "1";
+        String status = InputValidator.requiredAllowed(request.getStatus(), Set.of("1", "2"), "审核状态");
         bulletin.setStatus(status);
         bulletin.setReviewAdminId(adminUser.id());
         bulletin.setReviewTime(LocalDateTime.now());
@@ -113,6 +123,7 @@ public class CommunityBulletinService {
     }
 
     public void delete(Long bulletinId) {
+        InputValidator.positiveId(bulletinId, "快讯ID");
         communityBulletinRepository.deleteById(bulletinId);
     }
 
