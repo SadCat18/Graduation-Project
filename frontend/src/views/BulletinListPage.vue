@@ -1,6 +1,7 @@
 ﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { firstImage } from '../utils/url'
 import { BULLETIN_SORT_OPTIONS, BULLETIN_TYPES } from '../constants/bulletin'
@@ -103,7 +104,10 @@ onMounted(loadData)
       <button class="btn-primary publish-btn" @click="$router.push('/bulletins/publish')">发布快讯</button>
     </div>
 
-    <p v-if="loading" class="muted">加载中...</p>
+    <div v-if="loading" class="skate-loading-state">
+      <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+      <p>正在同步社区快讯...</p>
+    </div>
     <template v-else>
       <div class="toolbar">
         <div class="inline filter-row">
@@ -123,7 +127,7 @@ onMounted(loadData)
       </div>
       <p v-if="sortHint" class="muted sort-hint">{{ sortHint }}</p>
 
-      <div v-if="topItem" class="top-card" @click="goDetail(topItem.bulletinId)">
+      <div v-if="topItem" class="top-card motion-card" :style="{ '--motion-index': 0 }" @click="goDetail(topItem.bulletinId)">
         <img v-if="firstImage(topItem.imageUrls)" :src="firstImage(topItem.imageUrls)" alt="头条封面" class="top-image" fetchpriority="high" decoding="async" />
         <div v-else class="top-image placeholder">社区快讯</div>
         <div class="top-body">
@@ -139,11 +143,12 @@ onMounted(loadData)
       </div>
 
       <div class="content-layout">
-        <div class="news-grid">
+        <div class="news-grid motion-list">
           <div
-            v-for="item in gridItems"
+            v-for="(item, index) in gridItems"
             :key="item.bulletinId"
-            class="bulletin-card"
+            class="bulletin-card motion-card"
+            :style="{ '--motion-index': index + 1 }"
             @click="goDetail(item.bulletinId)"
           >
             <img v-if="firstImage(item.imageUrls)" :src="firstImage(item.imageUrls)" alt="快讯封面" class="hero-image" loading="lazy" decoding="async" />
@@ -163,16 +168,26 @@ onMounted(loadData)
 
         <aside class="side-card">
           <h4>最新发布</h4>
-          <div v-for="item in latestItems" :key="`latest-${item.bulletinId}`" class="latest-row" @click="goDetail(item.bulletinId)">
-            <p>{{ item.title }}</p>
-            <span>{{ relativeTime(item.createTime) }}</span>
+          <div class="motion-list latest-motion-list">
+            <div
+              v-for="(item, index) in latestItems"
+              :key="`latest-${item.bulletinId}`"
+              class="latest-row motion-card"
+              :style="{ '--motion-index': index }"
+              @click="goDetail(item.bulletinId)"
+            >
+              <p>{{ item.title }}</p>
+              <span>{{ relativeTime(item.createTime) }}</span>
+            </div>
           </div>
           <p v-if="!latestItems.length" class="muted">暂无数据</p>
         </aside>
       </div>
 
       <div v-if="!visibleList.length" class="empty">
-        <p class="muted">当前分类下还没有快讯，试试切换分类。</p>
+        <div class="empty-state">
+          <p>当前分类下还没有快讯，试试切换分类。</p>
+        </div>
       </div>
     </template>
   </div>

@@ -9,6 +9,7 @@ const router = useRouter()
 const form = reactive({ title: '', bulletinType: BULLETIN_TYPES[0], content: '', imageUrls: '' })
 const fileInputRef = ref(null)
 const uploading = ref(false)
+const submitting = ref(false)
 const error = ref('')
 
 function parseImages(raw) {
@@ -62,9 +63,14 @@ async function submit() {
     return
   }
   error.value = ''
-  await api.createBulletin(form)
-  alert('提交审核成功，待管理员审核通过后展示。')
-  router.push('/bulletins')
+  submitting.value = true
+  try {
+    await api.createBulletin(form)
+    alert('提交审核成功，待管理员审核通过后展示。')
+    router.push('/bulletins')
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -73,35 +79,50 @@ async function submit() {
     <h3>发布社区快讯</h3>
     <p class="muted">支持本地上传图片或填写图片 URL（多个地址用英文逗号分隔）。</p>
 
-    <label>标题</label>
-    <input v-model="form.title" placeholder="例如：周末街式赛报名开启" />
+    <div class="publish-step" :style="{ '--motion-index': 0 }">
+      <label>标题</label>
+      <input v-model="form.title" placeholder="例如：周末街式赛报名开启" />
+    </div>
 
-    <label>类型</label>
-    <select v-model="form.bulletinType">
-      <option v-for="item in BULLETIN_TYPES" :key="item" :value="item">{{ item }}</option>
-    </select>
+    <div class="publish-step" :style="{ '--motion-index': 1 }">
+      <label>类型</label>
+      <select v-model="form.bulletinType">
+        <option v-for="item in BULLETIN_TYPES" :key="item" :value="item">{{ item }}</option>
+      </select>
+    </div>
 
-    <label>内容</label>
-    <textarea v-model="form.content" rows="8" placeholder="请输入完整快讯内容" />
+    <div class="publish-step" :style="{ '--motion-index': 2 }">
+      <label>内容</label>
+      <textarea v-model="form.content" rows="8" placeholder="请输入完整快讯内容" />
+    </div>
 
-    <label>图片 URL</label>
-    <input v-model="form.imageUrls" placeholder="https://a.jpg,https://b.jpg" />
+    <div class="publish-step" :style="{ '--motion-index': 3 }">
+      <label>图片 URL</label>
+      <input v-model="form.imageUrls" placeholder="https://a.jpg,https://b.jpg" />
+    </div>
 
     <input ref="fileInputRef" type="file" class="hidden" accept="image/*" @change="uploadImage" />
-    <div class="inline action-row">
+    <div class="inline action-row publish-step" :style="{ '--motion-index': 4 }">
       <button class="btn-soft" type="button" :disabled="uploading" @click="triggerSelect">{{ uploading ? '上传中...' : '本地上传图片' }}</button>
       <span v-if="error" class="error">{{ error }}</span>
     </div>
 
-    <div v-if="imagePreviewList.length" class="preview-grid">
+    <div v-if="imagePreviewList.length" class="preview-grid publish-step" :style="{ '--motion-index': 5 }">
       <div v-for="(img, index) in imagePreviewList" :key="img" class="preview-item">
         <img :src="img" alt="预览图" />
         <button class="btn-danger mini-remove" type="button" @click="removeImage(index)">移除</button>
       </div>
     </div>
 
-    <div class="inline action-row">
-      <button class="btn-primary" @click="submit">提交审核</button>
+    <div class="inline action-row publish-step" :style="{ '--motion-index': 6 }">
+      <button
+        class="btn-primary submit-motion-btn"
+        :class="{ 'is-working': submitting }"
+        :disabled="submitting"
+        @click="submit"
+      >
+        {{ submitting ? '提交中...' : '提交审核' }}
+      </button>
       <button class="btn-soft" @click="$router.push('/bulletins')">返回列表</button>
     </div>
   </div>
@@ -110,6 +131,33 @@ async function submit() {
 <style scoped>
 .publish-wrap {
   padding: 20px;
+  display: grid;
+  gap: 14px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+}
+
+.publish-wrap h3,
+.publish-wrap p {
+  margin-top: 0;
+}
+
+.publish-step {
+  display: grid;
+  gap: 8px;
+}
+
+.publish-step input,
+.publish-step select,
+.publish-step textarea {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.publish-step textarea {
+  min-height: 150px;
 }
 
 .hidden {
@@ -129,7 +177,7 @@ async function submit() {
 
 .preview-item {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 6px;
   background: #fff;
 }
@@ -147,5 +195,26 @@ async function submit() {
   margin-top: 6px;
   width: 100%;
   min-height: 30px;
+}
+
+@media (max-width: 768px) {
+  .publish-wrap {
+    padding: 14px;
+  }
+
+  .action-row {
+    align-items: stretch;
+  }
+
+  .action-row button {
+    flex: 1 1 100%;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .preview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 </style>

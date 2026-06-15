@@ -192,14 +192,14 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="form-grid">
+      <div class="form-grid publish-step" :style="{ '--motion-index': 0 }">
         <input v-model="postForm.title" placeholder="帖子标题（如：新手 Ollie 训练心得）" />
         <input v-model="postForm.category" placeholder="分类（技巧交流/装备讨论/路线分享）" />
       </div>
 
-      <textarea v-model="postForm.content" placeholder="写下你的滑板内容..." />
+      <textarea class="publish-step" :style="{ '--motion-index': 1 }" v-model="postForm.content" placeholder="写下你的滑板内容..." />
 
-      <div v-if="aiResult" class="ai-panel">
+      <div v-if="aiResult" class="ai-panel publish-step" :style="{ '--motion-index': 2 }">
         <div class="ai-panel-head">
           <div>
             <span class="ai-badge">AI 润色结果</span>
@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="upload-block">
+      <div class="upload-block publish-step" :style="{ '--motion-index': 3 }">
         <div class="upload-header">
           <span class="upload-label">上传图片</span>
           <span class="muted">已选 {{ selectedImages.length }}/{{ maxImageCount }}</span>
@@ -286,14 +286,19 @@ onBeforeUnmount(() => {
         <p class="muted">仅支持本地上传，最多 9 张，单张不超过 10MB。</p>
       </div>
 
-      <div v-if="previewUrls.length" class="preview-grid">
+      <div v-if="previewUrls.length" class="preview-grid publish-step" :style="{ '--motion-index': 4 }">
         <div v-for="(url, index) in previewUrls" :key="url" class="preview-item">
           <img :src="url" alt="预览图" />
           <button class="remove-btn" @click="removeSelectedImage(index)">移除</button>
         </div>
       </div>
 
-      <button class="btn-primary publish-btn" :disabled="uploading" @click="publishPost">
+      <button
+        class="btn-primary publish-btn submit-motion-btn"
+        :class="{ 'is-working': uploading }"
+        :disabled="uploading"
+        @click="publishPost"
+      >
         {{ uploading ? '上传并发布中...' : '确认发布帖子' }}
       </button>
     </div>
@@ -308,7 +313,11 @@ onBeforeUnmount(() => {
 
 .publish-card {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
 }
 
 .head-actions {
@@ -321,6 +330,16 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.form-grid input,
+.publish-card textarea {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.publish-card textarea {
+  min-height: 150px;
 }
 
 .ai-panel {
@@ -428,8 +447,8 @@ onBeforeUnmount(() => {
 .upload-block {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 12px;
-  background: var(--surface-muted);
+  padding: 14px;
+  background: rgba(248, 250, 252, 0.86);
 }
 
 .upload-label {
@@ -456,7 +475,7 @@ onBeforeUnmount(() => {
 
 .preview-item {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 6px;
   background: #fff;
 }
@@ -476,6 +495,8 @@ onBeforeUnmount(() => {
 
 .publish-btn {
   justify-self: flex-start;
+  min-height: 46px;
+  min-width: 180px;
 }
 
 @media (max-width: 768px) {

@@ -2,6 +2,7 @@
 import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { normalizeMediaUrl, parseImages, firstImage } from '../utils/url'
@@ -25,6 +26,8 @@ const currentSlide = ref(0)
 let timerId = null
 let deferredHomeDataId = null
 let deferredHomeDataMode = ''
+let bannerPreloadId = 0
+const loadedBannerImages = new Set()
 
 const fallbackBanners = [
   {
@@ -125,13 +128,56 @@ function bannerLinkText(linkUrl) {
 function prevBanner() {
   const count = activeBanners.value.length
   if (!count) return
-  currentSlide.value = (currentSlide.value - 1 + count) % count
+  setCurrentSlide((currentSlide.value - 1 + count) % count)
 }
 
 function nextBanner() {
   const count = activeBanners.value.length
   if (!count) return
-  currentSlide.value = (currentSlide.value + 1) % count
+  setCurrentSlide((currentSlide.value + 1) % count)
+}
+
+function markBannerImageLoaded(url) {
+  if (!url) return
+  loadedBannerImages.add(url)
+}
+
+function preloadBannerImage(url) {
+  if (!url || loadedBannerImages.has(url)) {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.decoding = 'async'
+    img.onload = () => {
+      loadedBannerImages.add(url)
+      resolve()
+    }
+    img.onerror = resolve
+    img.src = url
+  })
+}
+
+function preloadNearbyBanner(index = currentSlide.value) {
+  const count = activeBanners.value.length
+  if (count <= 1) return
+  const nextIndex = (index + 1) % count
+  preloadBannerImage(activeBanners.value[nextIndex]?.imageUrl)
+}
+
+async function setCurrentSlide(index) {
+  const count = activeBanners.value.length
+  if (!count) return
+  const normalizedIndex = (index + count) % count
+  if (normalizedIndex === currentSlide.value) return
+  const requestId = ++bannerPreloadId
+  const nextImageUrl = activeBanners.value[normalizedIndex]?.imageUrl
+
+  await preloadBannerImage(nextImageUrl)
+  if (requestId !== bannerPreloadId) return
+  currentSlide.value = normalizedIndex
+  preloadNearbyBanner(normalizedIndex)
 }
 
 function startAutoplay() {
@@ -162,6 +208,7 @@ async function loadHomePrimaryData() {
     posts.value = postData?.list || []
     activities.value = activityData?.list || []
     currentSlide.value = 0
+    preloadNearbyBanner(0)
     startAutoplay()
   } finally {
     loading.value = false
@@ -250,9 +297,18 @@ onDeactivated(() => {
   <div class="home-wrap">
     <section class="hero-stage" @mouseenter="stopAutoplay" @mouseleave="startAutoplay">
       <div class="carousel-main" @click="goBannerTarget">
-        <transition name="carousel-fade" mode="out-in">
-          <img :key="currentSlide" :src="currentBanner.imageUrl" :alt="currentBanner.title" fetchpriority="high" decoding="async" />
-        </transition>
+        <div class="carousel-image-frame">
+          <transition name="carousel-fade">
+            <img
+              :key="currentSlide"
+              :src="currentBanner.imageUrl"
+              :alt="currentBanner.title"
+              fetchpriority="high"
+              decoding="async"
+              @load="markBannerImageLoaded(currentBanner.imageUrl); preloadNearbyBanner(currentSlide)"
+            />
+          </transition>
+        </div>
         <div class="hero-shade"></div>
         <button class="carousel-nav nav-prev" type="button" aria-label="上一张" @click.stop="prevBanner">
           <
@@ -261,20 +317,35 @@ onDeactivated(() => {
           >
         </button>
         <div class="hero-caption">
-          <span>今日推荐</span>
-          <strong>{{ currentBanner.title }}</strong>
-          <small v-if="currentBanner.linkUrl">{{ bannerLinkText(currentBanner.linkUrl) }}</small>
+          <transition name="hero-caption-copy" mode="out-in">
+            <div :key="currentSlide" class="hero-caption-copy">
+              <span>今日推荐</span>
+              <strong>{{ currentBanner.title }}</strong>
+              <small v-if="currentBanner.linkUrl">{{ bannerLinkText(currentBanner.linkUrl) }}</small>
+            </div>
+          </transition>
         </div>
         <aside class="event-panel">
-          <h3>滑板资讯</h3>
-          <div v-for="item in newsList.slice(0, 5)" :key="item.newsId" class="event-row">
+          <div class="event-panel-head">
+            <div>
+              <span>NEWS</span>
+              <h3>滑板资讯</h3>
+            </div>
+            <button type="button" class="event-more-btn" @click.stop="$router.push('/bulletins')">更多</button>
+          </div>
+          <div
+            v-for="item in newsList.slice(0, 4)"
+            :key="item.newsId"
+            class="event-row"
+            @click.stop="goNewsDetail(item.newsId)"
+          >
             <span class="event-badge">资讯</span>
             <div class="event-main">
-              <p class="event-title link" @click.stop="goNewsDetail(item.newsId)">{{ item.title }}</p>
+              <p class="event-title">{{ item.title }}</p>
               <p class="event-meta">{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</p>
             </div>
           </div>
-          <p v-if="!newsList.length" class="event-meta">暂无滑板资讯，稍后将同步最新赛事与冠军动态。</p>
+          <p v-if="!newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新赛事与冠军动态。</p>
         </aside>
         <div class="dots">
           <button
@@ -282,7 +353,7 @@ onDeactivated(() => {
             :key="banner.bannerId ?? index"
             type="button"
             :class="['dot', { active: index === currentSlide }]"
-            @click.stop="currentSlide = index"
+            @click.stop="setCurrentSlide(index)"
           />
         </div>
       </div>
@@ -384,7 +455,10 @@ onDeactivated(() => {
           <h3>社区精选帖子</h3>
           <button class="btn-soft" @click="$router.push('/community')">更多</button>
         </div>
-        <p v-if="loading" class="muted">加载中...</p>
+        <div v-if="loading" class="skate-loading-state">
+          <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+          <p>正在加载社区精选...</p>
+        </div>
         <div
           v-for="item in posts.slice(0, 4)"
           :key="item.postId"
@@ -405,7 +479,10 @@ onDeactivated(() => {
           <h3>同城约板活动</h3>
           <button class="btn-soft" @click="$router.push('/activities')">更多</button>
         </div>
-        <p v-if="loading" class="muted">加载中...</p>
+        <div v-if="loading" class="skate-loading-state">
+          <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+          <p>正在加载同城活动...</p>
+        </div>
         <div v-for="item in activities.slice(0, 5)" :key="item.activityId" class="activity-item">
           <h4>{{ item.title }}</h4>
           <p class="muted">{{ item.city || '未设置城市' }} {{ item.district || '' }} · {{ item.publisherName }}</p>
@@ -452,14 +529,33 @@ onDeactivated(() => {
   overflow: hidden;
   cursor: pointer;
   min-height: 520px;
+  background: #111827;
 }
 
-.carousel-main img {
+.carousel-image-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #111827;
+}
+
+.carousel-image-frame img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 520px;
   object-fit: cover;
   display: block;
   filter: saturate(1.02);
+  transform: scale(1);
+  transition: transform 5.8s ease, filter 0.45s ease;
+  will-change: transform;
+}
+
+.carousel-main:hover .carousel-image-frame img {
+  transform: scale(1.018);
+  filter: saturate(1.06);
 }
 
 .hero-shade {
@@ -477,9 +573,12 @@ onDeactivated(() => {
   z-index: 4;
   max-width: min(420px, calc(100% - 460px));
   color: #fff;
+  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.42);
+}
+
+.hero-caption-copy {
   display: grid;
   gap: 4px;
-  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.42);
 }
 
 .hero-caption span,
@@ -501,12 +600,35 @@ onDeactivated(() => {
 
 .carousel-fade-enter-active,
 .carousel-fade-leave-active {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.28s ease, transform 0.36s ease, filter 0.28s ease;
 }
 
-.carousel-fade-enter-from,
+.carousel-fade-enter-from {
+  opacity: 0;
+  transform: scale(1.01);
+  filter: saturate(0.98);
+}
+
 .carousel-fade-leave-to {
   opacity: 0;
+  transform: scale(1);
+}
+
+.hero-caption-copy-enter-active,
+.hero-caption-copy-leave-active {
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), filter 0.38s ease;
+}
+
+.hero-caption-copy-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(4px);
+}
+
+.hero-caption-copy-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  filter: blur(4px);
 }
 
 .carousel-nav {
@@ -518,6 +640,8 @@ onDeactivated(() => {
   border: none;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #fff;
   font-size: 20px;
   line-height: 1;
@@ -526,7 +650,7 @@ onDeactivated(() => {
   box-shadow: none;
   text-shadow: none;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease, background 0.25s ease, transform 0.25s ease;
   z-index: 3;
 }
 
@@ -536,6 +660,8 @@ onDeactivated(() => {
 
 .carousel-nav:hover {
   opacity: 0.7 !important;
+  background: rgba(15, 23, 42, 0.64);
+  transform: translateY(-50%) scale(1.04);
 }
 
 .nav-prev {
@@ -621,18 +747,20 @@ onDeactivated(() => {
 
 .event-panel {
   position: absolute;
-  right: 20px;
-  top: 78px;
-  width: min(360px, 27%);
-  max-height: calc(100% - 96px);
+  right: 24px;
+  top: 96px;
+  width: min(340px, 25%);
+  max-height: calc(100% - 126px);
   overflow: auto;
   z-index: 5;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  padding: 14px;
   color: var(--text);
-  border-radius: var(--radius-md);
-  backdrop-filter: blur(8px);
+  border-radius: 18px;
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
 .event-panel::-webkit-scrollbar {
@@ -644,10 +772,37 @@ onDeactivated(() => {
   border-radius: 999px;
 }
 
+.event-panel-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 4px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.52);
+}
+
+.event-panel-head span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
 .event-panel h3 {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 20px;
   color: var(--text);
+}
+
+.event-more-btn {
+  min-height: 30px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 12px;
+  box-shadow: none;
 }
 
 .event-row {
@@ -655,8 +810,19 @@ onDeactivated(() => {
   grid-template-columns: auto 1fr;
   gap: 10px;
   align-items: start;
-  padding: 9px 0;
-  border-top: 1px solid var(--line);
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.48);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.event-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.24);
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .event-badge {
@@ -665,16 +831,17 @@ onDeactivated(() => {
   align-items: center;
   justify-content: center;
   border-radius: 2px;
-  background: var(--primary);
+  background: rgba(17, 24, 39, 0.92);
   padding: 1px 7px;
   font-size: 11px;
   white-space: nowrap;
+  color: #fff;
 }
 
 .event-title {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.35;
+  font-size: 15px;
+  line-height: 1.42;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -686,6 +853,12 @@ onDeactivated(() => {
   margin: 4px 0 0;
   color: var(--text-soft);
   font-size: 12px;
+}
+
+.event-empty {
+  margin: 12px 4px 2px;
+  color: var(--text-soft);
+  font-size: 13px;
 }
 
 .dots {
@@ -882,7 +1055,7 @@ onDeactivated(() => {
 
 @media (max-width: 980px) {
   .carousel-main,
-  .carousel-main img,
+  .carousel-image-frame img,
   .hero-stage {
     min-height: 420px;
     height: 420px;
@@ -916,7 +1089,7 @@ onDeactivated(() => {
   }
 
   .carousel-main,
-  .carousel-main img,
+  .carousel-image-frame img,
   .hero-stage {
     min-height: 340px;
     height: 340px;
@@ -932,7 +1105,28 @@ onDeactivated(() => {
   }
 
   .entry-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .entry-card {
+    min-height: 116px;
+    padding: 12px;
+    gap: 9px;
+  }
+
+  .entry-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .entry-copy strong {
+    font-size: 15px;
+  }
+
+  .entry-copy small,
+  .entry-card em {
+    font-size: 12px;
   }
 }
 
@@ -942,10 +1136,10 @@ onDeactivated(() => {
   }
 
   .carousel-main,
-  .carousel-main img,
+  .carousel-image-frame img,
   .hero-stage {
-    min-height: 290px;
-    height: 290px;
+    min-height: 270px;
+    height: 270px;
   }
 
   .hero-caption {
@@ -955,12 +1149,66 @@ onDeactivated(() => {
     max-width: none;
   }
 
+  .hero-caption span,
+  .hero-caption small {
+    font-size: 11px;
+  }
+
+  .dots {
+    bottom: 12px;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
   .info-head h3 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .featured-text h4 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .featured-card img {
+    height: 190px;
+  }
+
+  .bulletin-title {
+    font-size: 22px;
+  }
+
+  .news-row,
+  .bulletin-row {
+    display: grid;
+    gap: 4px;
+  }
+
+  .news-row span,
+  .bulletin-row span {
+    white-space: normal;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-image-frame img,
+  .carousel-fade-enter-active,
+  .carousel-fade-leave-active,
+  .hero-caption-copy-enter-active,
+  .hero-caption-copy-leave-active {
+    transition-duration: 0.01ms;
+  }
+
+  .carousel-main:hover .carousel-image-frame img,
+  .carousel-fade-enter-from,
+  .carousel-fade-leave-to,
+  .hero-caption-copy-enter-from,
+  .hero-caption-copy-leave-to {
+    transform: none;
+    filter: none;
+  }
+}
+
 </style>

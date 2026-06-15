@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { setAuth } from '../utils/auth'
 
@@ -101,6 +102,11 @@ async function submitLogin() {
   }
 }
 
+function submitLoginByEnter() {
+  if (loginLoading.value) return
+  submitLogin()
+}
+
 async function submitRegister() {
   registerLoading.value = true
   registerMessage.value = ''
@@ -146,14 +152,30 @@ watch(
 </script>
 
 <template>
-  <div class="auth-shell">
+  <div class="auth-shell" :class="{ 'is-register-mode': authMode === 'register' }">
     <div class="auth-card card">
       <section class="brand-panel">
         <p class="brand-sub">{{ brandContent.sub }}</p>
-        <h1>{{ brandContent.title }}</h1>
-        <p class="brand-desc">{{ brandContent.desc }}</p>
-        <div class="brand-points">
+        <Transition name="brand-title" mode="out-in">
+          <h1 :key="brandContent.title">{{ brandContent.title }}</h1>
+        </Transition>
+        <Transition name="brand-desc" mode="out-in">
+          <p :key="brandContent.desc" class="brand-desc">{{ brandContent.desc }}</p>
+        </Transition>
+        <TransitionGroup name="brand-point" tag="div" class="brand-points">
           <span v-for="item in brandContent.points" :key="item">{{ item }}</span>
+        </TransitionGroup>
+
+        <div class="skate-lane" aria-hidden="true">
+          <div class="lane-label">
+            <span class="lane-login">登录</span>
+            <span class="lane-register">注册</span>
+          </div>
+          <div class="motion-streak"></div>
+          <div class="rail"></div>
+          <div class="skate-board">
+            <SkateboardSketch class="auth-skate-sketch" />
+          </div>
         </div>
 
         <div class="feature-card">
@@ -177,7 +199,7 @@ watch(
       <section class="form-panel" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd">
         <div class="form-viewport">
           <div class="form-track" :class="{ 'is-register': authMode === 'register' }">
-            <div class="form-scene">
+            <div class="form-scene login-scene">
               <div class="section-head">
                 <h2>登录</h2>
               </div>
@@ -191,10 +213,16 @@ watch(
               <input
                 v-model.trim="loginForm.account"
                 :placeholder="loginRole === 'ADMIN' ? '请输入管理员账号' : '请输入用户名或手机号'"
+                @keydown.enter.prevent="submitLoginByEnter"
               />
 
               <label class="field-label">密码</label>
-              <input v-model.trim="loginForm.password" type="password" placeholder="请输入密码" />
+              <input
+                v-model.trim="loginForm.password"
+                type="password"
+                placeholder="请输入密码"
+                @keydown.enter.prevent="submitLoginByEnter"
+              />
 
               <label class="field-label">验证码</label>
               <div class="captcha-row">
@@ -203,6 +231,7 @@ watch(
                   class="captcha-input"
                   placeholder="请输入验证码"
                   maxlength="4"
+                  @keydown.enter.prevent="submitLoginByEnter"
                 />
                 <img
                   class="captcha-image"
@@ -227,7 +256,7 @@ watch(
               </p>
             </div>
 
-            <div class="form-scene">
+            <div class="form-scene register-scene">
               <div class="section-head">
                 <h2>注册</h2>
               </div>
@@ -270,6 +299,7 @@ watch(
   display: grid;
   place-items: center;
   padding: 16px 0;
+  --auth-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-card {
@@ -279,6 +309,7 @@ watch(
   gap: 0;
   overflow: hidden;
   padding: 0;
+  position: relative;
 }
 
 .brand-panel {
@@ -303,6 +334,22 @@ watch(
   font-size: 36px;
 }
 
+.brand-title-enter-active,
+.brand-title-leave-active,
+.brand-desc-enter-active,
+.brand-desc-leave-active {
+  transition: opacity 0.34s var(--auth-ease), transform 0.34s var(--auth-ease), filter 0.34s var(--auth-ease);
+}
+
+.brand-title-enter-from,
+.brand-title-leave-to,
+.brand-desc-enter-from,
+.brand-desc-leave-to {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(8px);
+}
+
 .brand-desc {
   margin: 0;
   color: var(--text-soft);
@@ -321,6 +368,133 @@ watch(
   border-radius: 10px;
   padding: 9px 10px;
   background: #fff;
+  transition: opacity 0.38s var(--auth-ease), transform 0.38s var(--auth-ease), border-color 0.22s ease;
+}
+
+.brand-point-enter-from,
+.brand-point-leave-to {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.brand-point-move {
+  transition: transform 0.38s var(--auth-ease);
+}
+
+.skate-lane {
+  position: relative;
+  height: 108px;
+  margin-top: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.15);
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(17, 24, 39, 0.04)),
+    #fff;
+  overflow: hidden;
+}
+
+.lane-label {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lane-label span {
+  transition: opacity 0.28s ease, color 0.28s ease;
+}
+
+.lane-login,
+.is-register-mode .lane-register {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.lane-register,
+.is-register-mode .lane-login {
+  color: var(--text-muted);
+  opacity: 0.48;
+}
+
+.motion-streak {
+  position: absolute;
+  left: 54px;
+  right: 54px;
+  bottom: 46px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(15, 118, 110, 0.32), transparent);
+  opacity: 0.7;
+  transform: translateX(-22%);
+  transition: transform 0.78s var(--auth-ease);
+}
+
+.is-register-mode .motion-streak {
+  transform: translateX(22%);
+}
+
+.rail {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 30px;
+  height: 3px;
+  border-radius: 999px;
+  background: #d1d5db;
+}
+
+.rail::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 44%;
+  border-radius: inherit;
+  background: var(--accent);
+  transform-origin: left;
+  transition: transform 0.78s var(--auth-ease);
+}
+
+.is-register-mode .rail::before {
+  transform: translateX(128%);
+}
+
+.skate-board {
+  position: absolute;
+  left: 34px;
+  bottom: 28px;
+  width: 152px;
+  height: 66px;
+  filter: drop-shadow(0 15px 14px rgba(17, 24, 39, 0.18));
+  transform-origin: 50% 100%;
+  transition: transform 0.78s var(--auth-ease);
+  animation: idleRide var(--skate-motion-duration) ease-in-out infinite;
+}
+
+.is-register-mode .skate-board {
+  transform: translateX(218px) rotate(-3deg);
+}
+
+.auth-skate-sketch {
+  width: 100%;
+  height: auto;
+  --sketch-deck-fill: rgba(255, 255, 255, 0.98);
+  --sketch-line: rgba(31, 41, 55, 0.86);
+  --sketch-line-soft: rgba(31, 41, 55, 0.64);
+}
+
+@keyframes idleRide {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -3px;
+  }
 }
 
 .feature-card {
@@ -403,7 +577,7 @@ watch(
   width: 200%;
   display: flex;
   transform: translateX(0);
-  transition: transform 300ms ease-in-out;
+  transition: transform 0.7s var(--auth-ease);
   will-change: transform;
 }
 
@@ -417,6 +591,73 @@ watch(
   gap: 8px;
   align-content: center;
   padding: 2px;
+  opacity: 0.42;
+  filter: blur(5px);
+  transform: scale(0.965);
+  transition: opacity 0.42s ease, filter 0.42s ease, transform 0.7s var(--auth-ease);
+}
+
+.auth-shell:not(.is-register-mode) .login-scene,
+.is-register-mode .register-scene {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+
+.form-scene > * {
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 0.48s var(--auth-ease), transform 0.48s var(--auth-ease);
+}
+
+.auth-shell:not(.is-register-mode) .login-scene > *,
+.is-register-mode .register-scene > * {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.form-scene > *:nth-child(2) {
+  transition-delay: 0.04s;
+}
+
+.form-scene > *:nth-child(3) {
+  transition-delay: 0.08s;
+}
+
+.form-scene > *:nth-child(4) {
+  transition-delay: 0.12s;
+}
+
+.form-scene > *:nth-child(5) {
+  transition-delay: 0.16s;
+}
+
+.form-scene > *:nth-child(6) {
+  transition-delay: 0.2s;
+}
+
+.form-scene > *:nth-child(7) {
+  transition-delay: 0.24s;
+}
+
+.form-scene > *:nth-child(8) {
+  transition-delay: 0.28s;
+}
+
+.form-scene > *:nth-child(9) {
+  transition-delay: 0.32s;
+}
+
+.form-scene > *:nth-child(10) {
+  transition-delay: 0.36s;
+}
+
+.form-scene > *:nth-child(11) {
+  transition-delay: 0.4s;
+}
+
+.form-scene > *:nth-child(12) {
+  transition-delay: 0.44s;
 }
 
 .login-switch {
@@ -530,6 +771,50 @@ watch(
 
   .form-panel {
     padding: 24px 20px;
+  }
+
+  .is-register-mode .skate-board {
+    transform: translateX(178px) rotate(-3deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .skate-lane {
+    height: 96px;
+  }
+
+  .skate-board {
+    left: 24px;
+    width: 128px;
+  }
+
+  .is-register-mode .skate-board {
+    transform: translateX(132px) rotate(-3deg);
+  }
+
+  .captcha-row {
+    grid-template-columns: 1fr;
+  }
+
+  .captcha-image {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-title-enter-active,
+  .brand-title-leave-active,
+  .brand-desc-enter-active,
+  .brand-desc-leave-active,
+  .brand-points span,
+  .motion-streak,
+  .rail::before,
+  .skate-board,
+  .form-track,
+  .form-scene,
+  .form-scene > * {
+    animation: none;
+    transition-duration: 0.01ms;
   }
 }
 </style>

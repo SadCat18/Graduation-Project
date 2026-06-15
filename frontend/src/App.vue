@@ -110,10 +110,12 @@ onBeforeUnmount(() => {
     </header>
 
     <main class="main-container">
-      <RouterView v-slot="{ Component }">
-        <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
-          <component :is="Component" />
-        </KeepAlive>
+      <RouterView v-slot="{ Component, route: viewRoute }">
+        <Transition name="route-glide" mode="out-in">
+          <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
+            <component :is="Component" :key="viewRoute.path" />
+          </KeepAlive>
+        </Transition>
       </RouterView>
     </main>
   </div>
@@ -228,6 +230,23 @@ onBeforeUnmount(() => {
   color: #fff;
 }
 
+.route-glide-enter-active,
+.route-glide-leave-active {
+  transition: opacity 0.32s var(--motion-ease), transform 0.32s var(--motion-ease), filter 0.32s ease;
+}
+
+.route-glide-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.992);
+  filter: blur(4px);
+}
+
+.route-glide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.996);
+  filter: blur(4px);
+}
+
 @media (max-width: 980px) {
   .topbar {
     grid-template-columns: 1fr;
@@ -244,6 +263,13 @@ onBeforeUnmount(() => {
 
   .nav-right {
     justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-glide-enter-active,
+  .route-glide-leave-active {
+    transition-duration: 0.01ms;
   }
 }
 </style>

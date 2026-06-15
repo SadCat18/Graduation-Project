@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
 import { loadCachedPublic } from '../utils/requestCache'
@@ -207,6 +208,14 @@ async function loadComments(postId) {
   }
 }
 
+async function toggleComments(postId) {
+  if (commentMap[postId]) {
+    delete commentMap[postId]
+    return
+  }
+  await loadComments(postId)
+}
+
 async function sendComment(postId) {
   if (!getToken()) return goLogin()
   if (!commentInputs[postId]) return
@@ -300,75 +309,94 @@ onMounted(async () => {
           </div>
         </div>
 
-        <p v-if="loading" class="muted">加载中...</p>
+        <div v-if="loading" class="skate-loading-state">
+          <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+          <p>正在滑向最新帖子...</p>
+        </div>
         <p v-if="error" class="error">{{ error }}</p>
-        <p v-if="!loading && !posts.length" class="muted">暂无帖子</p>
+        <div v-if="!loading && !posts.length" class="empty-state">
+          <p>暂无帖子，换个筛选条件或发布第一条滑板动态。</p>
+        </div>
 
-        <div v-for="item in posts" :key="item.postId" :class="['post-item', 'post-card-item', { 'has-images': postImages(item).length }]">
-          <div v-if="postImages(item).length" class="post-cover-strip" @click="goPostDetail(item.postId)">
-            <img
-              v-for="img in postImages(item)"
-              :key="img"
-              :src="img"
-              alt="帖子图片"
-              class="clickable-image"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <div class="post-body">
-            <div class="post-header">
-              <div class="post-title-block">
-                <div class="post-tags">
-                  <span v-if="item.isTop === '1'" class="tag hot-tag">置顶</span>
-                  <span class="tag">{{ item.category || '未分类' }}</span>
+        <div v-if="!loading && posts.length" class="motion-list post-motion-list">
+          <div
+            v-for="(item, index) in posts"
+            :key="item.postId"
+            :class="['post-item', 'post-card-item', 'motion-card', { 'has-images': postImages(item).length }]"
+            :style="{ '--motion-index': index }"
+          >
+            <div v-if="postImages(item).length" class="post-cover-strip" @click="goPostDetail(item.postId)">
+              <img
+                v-for="img in postImages(item)"
+                :key="img"
+                :src="img"
+                alt="帖子图片"
+                class="clickable-image"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div class="post-main">
+              <div class="post-body">
+                <div class="post-header">
+                  <div class="post-title-block">
+                    <div class="post-tags">
+                      <span v-if="item.isTop === '1'" class="tag hot-tag">置顶</span>
+                      <span class="tag">{{ item.category || '未分类' }}</span>
+                    </div>
+                    <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
+                  </div>
+                  <button class="btn-soft detail-btn" @click="goPostDetail(item.postId)">查看详情</button>
                 </div>
-                <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
+                <p class="post-meta">
+                  {{ item.authorName || '匿名滑手' }} · Lv{{ item.authorLevel || 1 }} · {{ item.createTime?.replace('T', ' ') }}
+                </p>
+                <p class="post-content">{{ item.content }}</p>
               </div>
-              <button class="btn-soft detail-btn" @click="goPostDetail(item.postId)">查看详情</button>
+
+              <div class="post-engagement">
+                <div class="post-stats-row">
+                  <span>赞 {{ item.likeCount || 0 }}</span>
+                  <span>收藏 {{ item.collectCount || 0 }}</span>
+                  <span>评论 {{ item.commentCount || 0 }}</span>
+                </div>
+
+                <div class="inline actions-row">
+                  <button class="btn-soft" :class="{ 'success-action': postState(item.postId).liked }" @click="toggleLike(item.postId)">
+                    <AppIcon name="like" :size="14" />
+                    {{ postState(item.postId).liked ? '已赞' : '点赞' }}
+                  </button>
+                  <button class="btn-soft" :class="{ 'success-action': postState(item.postId).collected }" @click="toggleCollect(item.postId)">
+                    <AppIcon name="collect" :size="14" />
+                    {{ postState(item.postId).collected ? '已收藏' : '收藏' }}
+                  </button>
+                  <button class="btn-soft" :class="{ 'success-action': postState(item.postId).watchedLater }" @click="toggleWatchLater(item.postId)">
+                    {{ postState(item.postId).watchedLater ? '已稍后看' : '稍后再看' }}
+                  </button>
+                  <button class="btn-soft" @click="toggleComments(item.postId)">
+                    <AppIcon name="comment" :size="14" />
+                    {{ commentMap[item.postId] ? '收起评论' : '评论' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="commentMap[item.postId]" class="comment-panel">
+                <div class="comment-block">
+                  <div v-if="!commentMap[item.postId].length" class="comment-empty">还没有评论，来抢第一条。</div>
+                  <div v-for="c in commentMap[item.postId]" :key="c.commentId" class="comment-item">
+                    <strong>{{ c.username }}：</strong>{{ c.content }}
+                  </div>
+                </div>
+
+                <div v-if="isLoggedIn" class="inline comment-input-row">
+                  <input v-model="commentInputs[item.postId]" placeholder="写评论..." />
+                  <button class="btn-primary" @click="sendComment(item.postId)">发送</button>
+                </div>
+                <div v-else class="login-comment-row">
+                  <button @click="$router.push('/login')">登录后评论</button>
+                </div>
+              </div>
             </div>
-            <p class="post-meta">
-              {{ item.authorName || '匿名滑手' }} · Lv{{ item.authorLevel || 1 }} · {{ item.createTime?.replace('T', ' ') }}
-            </p>
-            <p class="post-content">{{ item.content }}</p>
-          </div>
-
-          <div class="post-stats-row">
-            <span>赞 {{ item.likeCount || 0 }}</span>
-            <span>收藏 {{ item.collectCount || 0 }}</span>
-            <span>评论 {{ item.commentCount || 0 }}</span>
-          </div>
-
-          <div class="inline actions-row">
-            <button class="btn-soft" @click="toggleLike(item.postId)">
-              <AppIcon name="like" :size="14" />
-              {{ postState(item.postId).liked ? '已赞' : '点赞' }}
-            </button>
-            <button class="btn-soft" @click="toggleCollect(item.postId)">
-              <AppIcon name="collect" :size="14" />
-              {{ postState(item.postId).collected ? '已收藏' : '收藏' }}
-            </button>
-            <button class="btn-soft" @click="toggleWatchLater(item.postId)">
-              {{ postState(item.postId).watchedLater ? '已加入稍后再看' : '稍后再看' }}
-            </button>
-            <button class="btn-soft" @click="loadComments(item.postId)">
-              <AppIcon name="comment" :size="14" />
-              看评论
-            </button>
-          </div>
-
-          <div v-if="commentMap[item.postId]" class="comment-block">
-            <div v-for="c in commentMap[item.postId]" :key="c.commentId" class="comment-item">
-              <strong>{{ c.username }}：</strong>{{ c.content }}
-            </div>
-          </div>
-
-          <div v-if="isLoggedIn" class="inline comment-input-row">
-            <input v-model="commentInputs[item.postId]" placeholder="写评论..." />
-            <button class="btn-primary" @click="sendComment(item.postId)">发送</button>
-          </div>
-          <div v-else class="inline">
-            <button @click="$router.push('/login')">登录后评论</button>
           </div>
         </div>
 
@@ -383,21 +411,31 @@ onMounted(async () => {
     <aside>
       <div class="card">
         <div class="section-head"><h3>平台公告</h3></div>
-        <div v-for="n in notices.slice(0, 6)" :key="n.noticeId" class="list-item">
-          <strong>{{ n.title }}</strong>
-          <p class="muted">{{ n.content }}</p>
+        <div class="motion-list side-motion-list">
+          <div
+            v-for="(n, index) in notices.slice(0, 6)"
+            :key="n.noticeId"
+            class="list-item motion-card"
+            :style="{ '--motion-index': index }"
+          >
+            <strong>{{ n.title }}</strong>
+            <p class="muted">{{ n.content }}</p>
+          </div>
         </div>
       </div>
       <div class="card">
         <div class="section-head"><h3>滑板资讯</h3></div>
-        <div
-          v-for="n in newsList.slice(0, 8)"
-          :key="n.newsId"
-          class="list-item clickable-news-item"
-          @click="goNewsDetail(n.newsId)"
-        >
-          <strong>{{ n.title }}</strong>
-          <p class="muted">{{ n.category || '未分类' }}</p>
+        <div class="motion-list side-motion-list">
+          <div
+            v-for="(n, index) in newsList.slice(0, 8)"
+            :key="n.newsId"
+            class="list-item clickable-news-item motion-card"
+            :style="{ '--motion-index': index }"
+            @click="goNewsDetail(n.newsId)"
+          >
+            <strong>{{ n.title }}</strong>
+            <p class="muted">{{ n.category || '未分类' }}</p>
+          </div>
         </div>
       </div>
     </aside>
@@ -431,43 +469,53 @@ onMounted(async () => {
 .post-card-item {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 16px;
   align-items: start;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 16px;
   background: #fff;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .post-card-item.has-images {
-  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+}
+
+.post-main {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  align-self: stretch;
 }
 
 .post-cover-strip {
+  align-self: start;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
 }
 
 .post-cover-strip img {
   width: 100%;
-  height: 112px;
+  height: 88px;
   object-fit: cover;
   border-radius: 10px;
   border: 1px solid var(--line);
+  background: var(--surface-muted);
 }
 
 .post-cover-strip img:first-child {
   grid-column: 1 / -1;
-  height: 150px;
+  height: 190px;
 }
 
 .post-body {
   min-width: 0;
   display: grid;
-  gap: 8px;
+  gap: 9px;
 }
 
 .post-header {
@@ -502,8 +550,12 @@ onMounted(async () => {
 .clickable-title {
   cursor: pointer;
   font-size: 20px;
-  line-height: 1.35;
+  line-height: 1.32;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .clickable-title:hover {
@@ -524,7 +576,7 @@ onMounted(async () => {
   color: #1f2937;
   line-height: 1.65;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -539,15 +591,19 @@ onMounted(async () => {
   cursor: pointer;
 }
 
+.post-engagement {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
 .post-stats-row {
-  grid-column: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.post-card-item.has-images .post-stats-row {
-  grid-column: 2;
 }
 
 .post-stats-row span {
@@ -560,12 +616,28 @@ onMounted(async () => {
 }
 
 .actions-row {
-  grid-column: 1;
-  margin-top: 2px;
+  gap: 8px;
+  margin-left: auto;
 }
 
-.post-card-item.has-images .actions-row {
-  grid-column: 2;
+.actions-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+}
+
+.detail-btn {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding-inline: 14px;
+}
+
+.comment-panel {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 .comment-block {
@@ -573,6 +645,11 @@ onMounted(async () => {
   background: var(--surface-muted);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+}
+
+.comment-empty {
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
 .comment-item {
@@ -588,10 +665,16 @@ onMounted(async () => {
 
 .comment-input-row {
   align-items: stretch;
+  flex-wrap: nowrap;
 }
 
 .comment-input-row input {
   flex: 1;
+}
+
+.login-comment-row {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .pagination-bar {
@@ -650,6 +733,18 @@ onMounted(async () => {
   .community-hero {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .community-hero h2 {
+    font-size: 24px;
+    line-height: 1.18;
+  }
+
+  .community-hero .btn-primary {
+    width: 100%;
+    min-height: 42px;
   }
 
   .pagination-bar {
@@ -662,25 +757,67 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
-  .post-card-item {
-    grid-template-columns: 1fr;
+  .feed-toolbar {
+    padding: 10px;
+    gap: 9px;
+    border-radius: 14px;
   }
 
-  .post-stats-row,
-  .actions-row {
-    grid-column: 1;
+  .chip-row,
+  .sort-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .chip-row::-webkit-scrollbar,
+  .sort-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-chip,
+  .sort-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .post-card-item,
+  .post-card-item.has-images {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .post-cover-strip img:first-child {
+    height: 190px;
+  }
+
+  .post-engagement {
+    align-items: flex-start;
   }
 
   .post-header {
     flex-wrap: wrap;
+    gap: 10px;
   }
 
   .clickable-title {
+    font-size: 18px;
     word-break: break-word;
+  }
+
+  .post-content {
+    -webkit-line-clamp: 3;
+  }
+
+  .detail-btn {
+    width: 100%;
   }
 
   .actions-row {
     flex-wrap: wrap;
+    margin-left: 0;
   }
 
   .search-line input,
@@ -705,7 +842,35 @@ onMounted(async () => {
 
   .post-cover-strip img,
   .post-cover-strip img:first-child {
-    height: 120px;
+    height: 112px;
+  }
+
+  .post-card-item,
+  .post-card-item.has-images {
+    padding: 10px;
+  }
+
+  .post-tags {
+    gap: 5px;
+  }
+
+  .post-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .post-stats-row span {
+    text-align: center;
+  }
+
+  .comment-input-row {
+    flex-wrap: wrap;
+  }
+
+  .comment-input-row input,
+  .comment-input-row button {
+    flex: 1 1 100%;
   }
 
   .actions-row > * {

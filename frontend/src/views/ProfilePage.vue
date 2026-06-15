@@ -894,6 +894,9 @@ onBeforeUnmount(() => {
   gap: 16px;
   align-items: center;
   margin-bottom: 12px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(20, 184, 166, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
 }
 
 .identity-avatar {
@@ -930,7 +933,7 @@ onBeforeUnmount(() => {
   padding: 9px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .identity-metrics span {
@@ -945,6 +948,14 @@ onBeforeUnmount(() => {
 
 .main-tabs-wrap {
   margin-bottom: 12px;
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(14px);
 }
 
 .main-tabs {
@@ -956,11 +967,18 @@ onBeforeUnmount(() => {
 .main-tabs button {
   border: 1px solid var(--line);
   background: #fff;
+  min-height: 38px;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.main-tabs button:hover {
+  transform: translateY(-1px);
 }
 
 .main-tabs button.active {
-  background: var(--surface-muted);
-  border-color: var(--text-soft);
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
 }
 
 .tab-panel {
@@ -1042,11 +1060,13 @@ onBeforeUnmount(() => {
 .tabs button {
   border: 1px solid var(--line);
   background: #fff;
+  min-height: 38px;
 }
 
 .tabs button.active {
-  background: var(--surface-muted);
-  border-color: var(--text-soft);
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
 }
 
 .unread-badge {
@@ -1072,11 +1092,13 @@ onBeforeUnmount(() => {
 .activity-center-filters button {
   border: 1px solid var(--line);
   background: #fff;
+  min-height: 36px;
 }
 
 .activity-center-filters button.active {
-  background: var(--surface-muted);
-  border-color: var(--text-soft);
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
 }
 
 .my-content-item {
@@ -1085,6 +1107,7 @@ onBeforeUnmount(() => {
   padding: 10px 12px;
   margin-bottom: 10px;
   min-width: 0;
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .manage-box {
@@ -1152,7 +1175,9 @@ onBeforeUnmount(() => {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 12px;
-  background: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(15, 23, 42, 0.05), transparent 38%),
+    #fff;
 }
 
 .overview-stat-card span {
@@ -1177,6 +1202,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   padding: 10px;
   margin-top: 8px;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .empty-tip {
@@ -1191,7 +1217,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   padding: 12px;
   margin-top: 10px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .signed-top {
@@ -1238,18 +1264,27 @@ onBeforeUnmount(() => {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
   }
 
   .activity-center-filters {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
   }
 
   .main-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .main-tabs::-webkit-scrollbar,
+  .tabs::-webkit-scrollbar,
+  .activity-center-filters::-webkit-scrollbar {
+    display: none;
   }
 
   .notify-toolbar {

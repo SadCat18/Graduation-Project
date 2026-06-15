@@ -14,6 +14,7 @@ const amapWebKey = (process.env.VUE_APP_AMAP_KEY || '').trim()
 
 const searchingPoi = ref(false)
 const generatingCopy = ref(false)
+const submitting = ref(false)
 const mapReady = ref(false)
 const mapError = ref('')
 const searchResults = ref([])
@@ -451,9 +452,14 @@ async function publishActivity() {
     activityTime: form.activityTime,
     maxNum
   }
-  await api.createActivity(payload)
-  alert('发布成功，活动已进入待审核')
-  router.push('/activities')
+  submitting.value = true
+  try {
+    await api.createActivity(payload)
+    alert('发布成功，活动已进入待审核')
+    router.push('/activities')
+  } finally {
+    submitting.value = false
+  }
 }
 
 watch(() => form.city, (city) => {
@@ -511,17 +517,17 @@ onBeforeUnmount(() => {
 
       <div class="publish-grid">
         <section class="left-form">
-          <div class="form-grid two-col">
+          <div class="form-grid two-col publish-step" :style="{ '--motion-index': 0 }">
             <input v-model="form.title" placeholder="活动标题" />
             <input v-model="form.activityTime" type="datetime-local" />
           </div>
 
-          <div class="form-grid two-col">
+          <div class="form-grid two-col publish-step" :style="{ '--motion-index': 1 }">
             <input v-model="form.activityType" placeholder="活动类型（如：街式 / 碗池 / 刷街）" />
             <input v-model.number="form.maxNum" type="number" min="2" max="6" placeholder="人数上限（2-6）" />
           </div>
 
-          <div class="form-grid three-col">
+          <div class="form-grid three-col publish-step" :style="{ '--motion-index': 2 }">
             <select v-model="form.province" @change="onProvinceChange">
               <option value="">选择省份</option>
               <option v-for="item in provinceOptions" :key="item" :value="item">{{ item }}</option>
@@ -536,7 +542,7 @@ onBeforeUnmount(() => {
             </select>
           </div>
 
-          <div class="form-grid search-grid">
+          <div class="form-grid search-grid publish-step" :style="{ '--motion-index': 3 }">
             <input v-model="locationKeyword" placeholder="搜索场地关键词（如：滑板公园）" />
             <button :disabled="searchingPoi" class="btn-soft" @click="searchPoi">
               <AppIcon name="search" :size="15" />
@@ -544,10 +550,10 @@ onBeforeUnmount(() => {
             </button>
           </div>
 
-          <textarea v-model="form.content" placeholder="活动说明（难度、集合规则、费用等）" />
-          <textarea v-model="form.activityDesc" placeholder="活动说明（必填，至少10字）" />
+          <textarea class="publish-step" :style="{ '--motion-index': 4 }" v-model="form.content" placeholder="活动说明（难度、集合规则、费用等）" />
+          <textarea class="publish-step" :style="{ '--motion-index': 5 }" v-model="form.activityDesc" placeholder="活动说明（必填，至少10字）" />
 
-          <div v-if="aiResult" class="ai-panel">
+          <div v-if="aiResult" class="ai-panel publish-step" :style="{ '--motion-index': 6 }">
             <div class="ai-panel-head">
               <div>
                 <span class="ai-badge">AI 生成文案结果</span>
@@ -604,7 +610,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div v-if="searchResults.length" class="poi-list">
+          <div v-if="searchResults.length" class="poi-list publish-step" :style="{ '--motion-index': 7 }">
             <div v-for="poi in searchResults" :key="poi.id" class="poi-item">
               <div>
                 <strong>{{ poi.name }}</strong>
@@ -614,22 +620,29 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="form-grid two-col">
+          <div class="form-grid two-col publish-step" :style="{ '--motion-index': 8 }">
             <input v-model="form.place" placeholder="地点名（必填）" />
             <input v-model="form.address" placeholder="详细地址" />
           </div>
 
-          <div class="form-grid three-col">
+          <div class="form-grid three-col publish-step" :style="{ '--motion-index': 9 }">
             <input v-model.number="form.longitude" type="number" step="0.000001" placeholder="经度" />
             <input v-model.number="form.latitude" type="number" step="0.000001" placeholder="纬度" />
             <input v-model="form.activityDesc" placeholder="活动说明摘要（可选）" />
           </div>
 
-          <button class="btn-primary" @click="publishActivity">确认发布活动</button>
+          <button
+            class="btn-primary submit-motion-btn"
+            :class="{ 'is-working': submitting }"
+            :disabled="submitting"
+            @click="publishActivity"
+          >
+            {{ submitting ? '发布中...' : '确认发布活动' }}
+          </button>
         </section>
 
         <aside>
-          <div class="side-card">
+          <div class="side-card publish-step" :style="{ '--motion-index': 3 }">
             <h3>地图选点</h3>
             <p class="muted">高德 Web API（{{ amapKeyMask }}）</p>
             <p v-if="!mapReady && !mapError" class="muted">地图加载中...</p>
@@ -638,7 +651,7 @@ onBeforeUnmount(() => {
             <p class="muted">可直接点击地图自动回填省市区、地址和经纬度。</p>
           </div>
 
-          <div class="side-card">
+          <div class="side-card publish-step" :style="{ '--motion-index': 4 }">
             <h3>推荐场地快捷填入</h3>
             <div v-for="item in places.slice(0, 6)" :key="item.placeId" class="recommend-item">
               <div>
@@ -661,7 +674,11 @@ onBeforeUnmount(() => {
 
 .publish-card {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
 }
 
 .top-head {
@@ -682,12 +699,23 @@ onBeforeUnmount(() => {
 
 .left-form {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .form-grid {
   display: grid;
   gap: 10px;
+}
+
+.form-grid :deep(input),
+.form-grid :deep(select),
+.left-form textarea {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.left-form textarea {
+  min-height: 132px;
 }
 
 .two-col {
@@ -813,8 +841,8 @@ onBeforeUnmount(() => {
 .side-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: var(--surface-muted);
-  padding: 12px;
+  background: rgba(248, 250, 252, 0.86);
+  padding: 14px;
   margin-bottom: 10px;
 }
 
@@ -838,6 +866,12 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.left-form > .btn-primary {
+  min-height: 46px;
+  justify-self: flex-start;
+  min-width: 180px;
 }
 
 .recommend-item:last-child {
@@ -896,7 +930,8 @@ onBeforeUnmount(() => {
   .poi-item button,
   .recommend-item button,
   .head-actions button,
-  .ai-apply-all {
+  .ai-apply-all,
+  .left-form > .btn-primary {
     width: 100%;
   }
 }

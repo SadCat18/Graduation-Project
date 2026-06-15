@@ -201,13 +201,127 @@ onMounted(loadPostDetail)
 </template>
 
 <style scoped>
-.detail-wrap { display: grid; gap: 14px; max-width: 960px; margin: 0 auto; }
-.post-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.post-head h2 { margin: 0; }
-.post-content { white-space: pre-wrap; }
-.post-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-.post-images img { width: 100%; height: 110px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
-.action-row { margin-top: 8px; }
-.comment-row { margin-top: 10px; align-items: stretch; }
-.comment-row input { flex: 1; }
+.detail-wrap {
+  display: grid;
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.detail-wrap > .card {
+  overflow: hidden;
+}
+
+.post-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.post-head h2 {
+  margin: 0;
+  line-height: 1.28;
+}
+
+.post-head + .muted {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-content {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+.post-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.post-images a {
+  display: block;
+  min-width: 0;
+}
+
+.post-images img {
+  width: 100%;
+  height: 136px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.action-row {
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.action-row .btn-soft {
+  min-height: 38px;
+}
+
+.action-row .muted {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.list-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.list-item:last-of-type {
+  border-bottom: 0;
+}
+
+.list-item p {
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.comment-row {
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+.comment-row input {
+  flex: 1;
+}
+
+.comment-row .btn-primary {
+  min-width: 104px;
+}
+
+@media (max-width: 640px) {
+  .post-head,
+  .action-row,
+  .comment-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .post-images {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .post-images img {
+    height: 118px;
+  }
+
+  .action-row .muted {
+    margin-left: 0;
+  }
+
+  .action-row .btn-soft,
+  .comment-row .btn-primary {
+    width: 100%;
+  }
+}
 </style>

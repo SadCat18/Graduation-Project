@@ -2,6 +2,7 @@
 import { computed, nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { getToken } from '../utils/auth'
@@ -31,6 +32,8 @@ const mapError = ref('')
 const selectedActivityId = ref(null)
 const mobilePanel = ref('list')
 const isCompact = ref(false)
+const activityActionMessage = ref('')
+const activityActionId = ref(null)
 
 const mapRef = ref(null)
 const provinceOptions = ref([])
@@ -47,11 +50,17 @@ const filter = reactive({
 const isLoggedIn = computed(() => !!getToken())
 const amapKeyMask = computed(() => amapKeyTail())
 const recommendedPlaces = computed(() => buildActivityPlaceRecommendations(places.value, list.value, 8))
+const placeRecommendationSummary = computed(() => {
+  const activeCount = recommendedPlaces.value.filter(item => item.hasActivityLink).length
+  if (activeCount) return `${activeCount} 个场地有关联活动`
+  return recommendedPlaces.value.length ? '按评分与评价热度推荐' : '等待更多场地数据'
+})
 const PLACE_CACHE_TTL = 5 * 60 * 1000
 
 let mapInstance = null
 let citySearchInstance = null
 let activityMarkers = []
+let actionMessageTimer = null
 
 function onResize() {
   isCompact.value = window.innerWidth <= 768
@@ -84,6 +93,17 @@ function goPlaceDetail(placeId) {
 function goActivityDetail(activityId) {
   if (!activityId) return
   router.push(`/activities/${activityId}`)
+}
+
+function placeScore(place) {
+  const score = Number(place?.score || 0)
+  return Number.isFinite(score) ? score.toFixed(1) : '0.0'
+}
+
+function placeScorePercent(place) {
+  const score = Number(place?.score || 0)
+  if (!Number.isFinite(score)) return '0%'
+  return `${Math.max(0, Math.min(score, 5)) * 20}%`
 }
 
 async function filterByPlace(place) {
@@ -149,6 +169,13 @@ async function sign(item) {
     return
   }
   await api.signActivity(item.activityId)
+  activityActionId.value = item.activityId
+  activityActionMessage.value = `已报名「${item.title}」`
+  window.clearTimeout(actionMessageTimer)
+  actionMessageTimer = window.setTimeout(() => {
+    activityActionMessage.value = ''
+    activityActionId.value = null
+  }, 2200)
   await loadData()
 }
 
@@ -158,6 +185,13 @@ async function cancelSign(item) {
     return
   }
   await api.cancelSignActivity(item.activityId)
+  activityActionId.value = item.activityId
+  activityActionMessage.value = `已退出「${item.title}」报名`
+  window.clearTimeout(actionMessageTimer)
+  actionMessageTimer = window.setTimeout(() => {
+    activityActionMessage.value = ''
+    activityActionId.value = null
+  }, 2200)
   await loadData()
 }
 
@@ -367,6 +401,7 @@ onDeactivated(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
+  window.clearTimeout(actionMessageTimer)
   activityMarkers.forEach(marker => marker.setMap(null))
   activityMarkers = []
   if (mapInstance) {
@@ -420,47 +455,64 @@ onBeforeUnmount(() => {
           <button @click="clearFilter">重置</button>
         </div>
 
-        <p class="muted" v-if="loading">正在加载活动...</p>
+        <div v-if="loading" class="skate-loading-state">
+          <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+          <p>正在加载同城约板活动...</p>
+        </div>
         <p v-if="loadError" class="error">{{ loadError }}</p>
+        <p v-if="activityActionMessage" class="success action-feedback">{{ activityActionMessage }}</p>
 
         <div v-if="!loading && !loadError && !list.length" class="empty-state">
           <p>当前筛选条件下暂无活动，试试更换地区或关键词。</p>
           <button class="btn-primary" @click="goPublish">发布第一个活动</button>
         </div>
 
-        <div
-          v-for="item in list"
-          :key="item.activityId"
-          class="activity-item"
-          :class="{ active: selectedActivityId === item.activityId }"
-          @click="goActivityDetail(item.activityId)"
-        >
-          <div class="item-top">
-            <h4>{{ item.title }}</h4>
-            <span
-              class="status-tag"
-              :class="`status-${activityStatusClass(item)}`"
-            >
-              {{ displayActivityStatus(item) }}
-            </span>
-          </div>
-          <div class="meta-grid">
-            <span><AppIcon name="notice" :size="13" /> {{ formatTime(item) }}</span>
-            <span><AppIcon name="location" :size="13" /> {{ displayAddress(item) }}</span>
-            <span><AppIcon name="user" :size="13" /> {{ item.signNum }}/{{ item.maxNum || '不限' }} 人 · {{ item.publisherName }}</span>
-          </div>
-          <p class="content">{{ item.content || '暂无说明' }}</p>
-          <div class="inline">
-            <button v-if="canSign(item)" @click.stop="sign(item)">
-              报名
-            </button>
-            <button v-else class="btn-soft" :disabled="!canCancelSign(item)" @click.stop="cancelSign(item)">
-              退出报名
-            </button>
-            <button v-if="item.longitude && item.latitude" class="btn-soft" @click.stop="locateOnMap(item)">
-              <AppIcon name="location" :size="14" />
-              {{ mapReady ? '地图定位' : '加载地图定位' }}
-            </button>
+        <div v-if="!loading && !loadError && list.length" class="motion-list activity-motion-list">
+          <div
+            v-for="(item, index) in list"
+            :key="item.activityId"
+            class="activity-item motion-card"
+            :class="{ active: selectedActivityId === item.activityId }"
+            :style="{ '--motion-index': index }"
+            @click="goActivityDetail(item.activityId)"
+          >
+            <div class="item-top">
+              <h4>{{ item.title }}</h4>
+              <span
+                class="status-tag"
+                :class="`status-${activityStatusClass(item)}`"
+              >
+                {{ displayActivityStatus(item) }}
+              </span>
+            </div>
+            <div class="meta-grid">
+              <span><AppIcon name="notice" :size="13" /> {{ formatTime(item) }}</span>
+              <span><AppIcon name="location" :size="13" /> {{ displayAddress(item) }}</span>
+              <span><AppIcon name="user" :size="13" /> {{ item.signNum }}/{{ item.maxNum || '不限' }} 人 · {{ item.publisherName }}</span>
+            </div>
+            <p class="content">{{ item.content || '暂无说明' }}</p>
+            <div class="inline">
+              <button
+                v-if="canSign(item)"
+                :class="{ 'success-action': activityActionId === item.activityId }"
+                @click.stop="sign(item)"
+              >
+                报名
+              </button>
+              <button
+                v-else
+                class="btn-soft"
+                :class="{ 'success-action': activityActionId === item.activityId }"
+                :disabled="!canCancelSign(item)"
+                @click.stop="cancelSign(item)"
+              >
+                退出报名
+              </button>
+              <button v-if="item.longitude && item.latitude" class="btn-soft" @click.stop="locateOnMap(item)">
+                <AppIcon name="location" :size="14" />
+                {{ mapReady ? '地图定位' : '加载地图定位' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -476,25 +528,54 @@ onBeforeUnmount(() => {
           <p>先浏览活动列表；需要定位场地或选择省市区时再加载地图资源。</p>
           <button class="btn-primary" @click="requestMap">加载地图与地区筛选</button>
         </div>
-        <p v-if="mapRequested && mapLoading && !mapReady && !mapError" class="muted">地图加载中...</p>
+        <div v-if="mapRequested && mapLoading && !mapReady && !mapError" class="skate-loading-state map-loading-state">
+          <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
+          <p>地图加载中...</p>
+        </div>
         <p v-if="mapError" class="error">{{ mapError }}</p>
         <div v-if="mapRequested" ref="mapRef" class="amap-container"></div>
       </div>
 
       <div class="card place-card">
-        <div class="section-head"><h3>推荐场地</h3></div>
+        <div class="section-head place-head">
+          <div>
+            <h3>推荐场地</h3>
+            <p class="muted">按活动、评分和评价热度自动排序</p>
+          </div>
+          <span class="place-summary">{{ placeRecommendationSummary }}</span>
+        </div>
         <p v-if="!recommendedPlaces.length" class="muted place-empty">当前暂无推荐场地，稍后再来看看。</p>
-        <div v-for="p in recommendedPlaces" :key="p.placeId" class="list-item place-recommend-item">
-          <strong>{{ p.name }}</strong>
-          <p class="muted">{{ p.address }}</p>
-          <p class="muted">评分：{{ p.score }} · {{ p.reviewCount || 0 }} 条评价</p>
-          <p v-if="p.hasActivityLink" class="muted place-link">
-            关联 {{ p.relatedCount }} 个当前活动
-            <template v-if="p.latestActivity"> · 最近：{{ p.latestActivity.title }}</template>
-          </p>
-          <div class="inline place-actions">
-            <button v-if="p.hasActivityLink" class="btn-soft" @click="filterByPlace(p)">筛选活动</button>
-            <button v-if="p.placeId" class="btn-soft" @click="goPlaceDetail(p.placeId)">查看评价</button>
+        <div class="motion-list place-motion-list">
+          <div
+            v-for="(p, index) in recommendedPlaces"
+            :key="p.placeId"
+            class="place-recommend-item motion-card"
+            :style="{ '--motion-index': index }"
+          >
+            <span class="place-reason">{{ p.recommendReason }}</span>
+            <div class="place-title-row">
+              <strong>{{ p.name }}</strong>
+              <span class="place-score">{{ placeScore(p) }}</span>
+            </div>
+            <p class="muted place-address">
+              <AppIcon name="location" :size="13" />
+              {{ p.address || '暂无地址' }}
+            </p>
+            <div class="place-score-row" aria-hidden="true">
+              <span class="score-track"><i :style="{ width: placeScorePercent(p) }"></i></span>
+              <span>{{ p.reviewCount || 0 }} 条评价</span>
+            </div>
+            <div class="place-tags">
+              <span v-for="tag in p.placeTags" :key="`${p.placeId}-${tag}`">{{ tag }}</span>
+            </div>
+            <p v-if="p.hasActivityLink" class="place-link">
+              关联 {{ p.relatedCount }} 个当前活动
+              <template v-if="p.latestActivity"> · 最近：{{ p.latestActivity.title }}</template>
+            </p>
+            <div class="inline place-actions">
+              <button v-if="p.hasActivityLink" class="btn-soft" @click="filterByPlace(p)">筛选活动</button>
+              <button v-if="p.placeId" class="btn-soft" @click="goPlaceDetail(p.placeId)">查看场地</button>
+            </div>
           </div>
         </div>
       </div>
@@ -738,8 +819,34 @@ onBeforeUnmount(() => {
   margin-top: 14px;
   position: relative;
   z-index: 1;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(20, 184, 166, 0.1), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.place-head {
+  align-items: flex-start;
+}
+
+.place-head .muted {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.place-summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .place-empty {
@@ -751,16 +858,121 @@ onBeforeUnmount(() => {
 }
 
 .place-recommend-item {
+  position: relative;
   display: grid;
+  gap: 8px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.place-recommend-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #0f766e, #38bdf8);
+  opacity: 0.72;
+}
+
+.place-reason {
+  width: fit-content;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.place-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.place-title-row strong {
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.place-score {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 34px;
+  border-radius: 12px;
+  background: #111827;
+  color: #fff;
+  font-weight: 900;
+}
+
+.place-address {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.place-score-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.score-track {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.score-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #38bdf8);
+}
+
+.place-tags {
+  display: flex;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.place-tags span {
+  padding: 3px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.82);
+  color: #475569;
+  font-size: 12px;
 }
 
 .place-link {
+  margin: 0;
   color: #334155;
+  line-height: 1.5;
 }
 
 .place-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 2px;
+}
+
+.place-actions :deep(button) {
+  justify-content: center;
+  min-height: 36px;
 }
 
 .inline :deep(button) {
@@ -783,6 +995,12 @@ onBeforeUnmount(() => {
 
   .list-toolbar {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .list-toolbar .btn-primary {
+    width: 100%;
+    min-height: 42px;
   }
 
   .map-card {
@@ -795,8 +1013,59 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
+  .list-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .place-head,
+  .place-title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .place-summary,
+  .place-score {
+    width: fit-content;
+  }
+
+  .place-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .list-toolbar h2 {
+    font-size: 24px;
+  }
+
   .filter-row {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .activity-item {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .item-top {
+    align-items: flex-start;
+  }
+
+  .item-top h4 {
+    font-size: 17px;
+  }
+
+  .status-tag {
+    flex: 0 0 auto;
+  }
+
+  .meta-grid {
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .content {
+    -webkit-line-clamp: 3;
   }
 
   .inline {
@@ -805,6 +1074,7 @@ onBeforeUnmount(() => {
 
   .inline :deep(button) {
     flex: 1 1 calc(50% - 6px);
+    min-height: 42px;
   }
 
   .sign-row {
@@ -816,6 +1086,24 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .mobile-switch {
     display: flex;
+    position: sticky;
+    top: 8px;
+    z-index: 6;
+    padding: 6px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@media (max-width: 420px) {
+  .inline :deep(button) {
+    flex: 1 1 100%;
+  }
+
+  .item-top {
+    display: grid;
   }
 }
 </style>

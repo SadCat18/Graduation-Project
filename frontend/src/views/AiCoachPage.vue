@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { normalizeMediaUrl } from '../utils/url'
 
@@ -35,19 +36,138 @@ const quickQuestionPool = [
   '豚跳收脚总是不够高怎么办',
   '练滑板一天练多久才合理',
   '滑板桥的松紧怎么调',
-  '刚学会滑行下一步练什么'
+  '刚学会滑行下一步练什么',
+  '滑板尺寸 7.75 和 8.0 怎么选',
+  '双翘滑板和长板有什么区别',
+  '轮子硬度 99A 和 101A 有什么区别',
+  '砂纸磨脚怎么办',
+  '滑板轮子变黄还能用吗',
+  '板面裂了还能继续玩吗',
+  'Regular 和 Goofy 怎么判断',
+  '怎么练习蹬地更稳定',
+  '滑行时身体重心怎么放',
+  'T 刹怎么练比较安全',
+  '脚刹总是不稳怎么办',
+  '滑行速度一快就害怕怎么办',
+  '怎么练习下小坡',
+  'Ollie 起跳脚应该怎么发力',
+  'Ollie 前脚带不起来怎么办',
+  'Ollie 总是板头先落地怎么办',
+  'Ollie 能跳起来但不稳怎么练',
+  'Manual 怎么入门',
+  'Shuvit 怎么开始练',
+  'Pop Shuvit 和 Shuvit 区别是什么',
+  'Kickflip 前应该先会哪些动作',
+  '台阶和道具动作怎么循序渐进',
+  '刷街前怎么热身',
+  '摔倒时怎么保护手腕',
+  '膝盖摔伤后怎么处理',
+  '扭到脚踝还能继续练吗',
+  '怎么判断今天不适合练高强度',
+  '夏天练滑板怎么防中暑',
+  '夜滑需要注意什么',
+  '雨后路面能不能滑',
+  '一个人练滑板怎么安排计划',
+  '每周练几次比较合理',
+  '30 分钟训练怎么安排',
+  '卡在一个动作很久怎么办',
+  '怎么克服摔倒恐惧',
+  '怎么记录自己的练习进步',
+  '同城约板要注意哪些礼貌',
+  '第一次去滑板场怎么融入',
+  '滑板场新手应该避开什么区域',
+  '街式、公园、碗池分别适合谁',
+  '怎么找适合练 Ollie 的地方',
+  '练习路线怎么规划更安全',
+  '滑板视频怎么拍更容易看动作',
+  '别人帮我看动作时该拍哪个角度',
+  '怎么判断动作问题在前脚还是后脚',
+  '滑板鞋磨损太快怎么办',
+  '鞋底太滑适合练滑板吗',
+  '换新板后为什么感觉不稳定',
+  '轮子太吵是什么原因',
+  '滑板异响怎么排查',
+  '滑板螺丝松了怎么处理'
 ]
 
 const quickQuestions = ref([])
+const quickQuestionBatchKey = ref(0)
+const quickRefreshing = ref(false)
+let quickQuestionQueue = []
+let quickRefreshTimer = null
+
+const quickQuestionCategories = [
+  { label: '入门', match: ['新手', '选板', '平衡', '蹬地', 'Regular', 'Goofy', '尺寸', '双翘'] },
+  { label: '动作', match: ['Ollie', '豚跳', 'Manual', 'Shuvit', 'Kickflip', '台阶', '道具'] },
+  { label: '安全', match: ['安全', '摔', '护具', '热身', '膝盖', '手腕', '强度', '夜滑', '雨后', '防中暑'] },
+  { label: '装备', match: ['轴承', '轮子', '硬度', '桥', '砂纸', '板面', '螺丝', '异响', '鞋'] },
+  { label: '计划', match: ['计划', '多久', '每周', '30 分钟', '进步', '恐惧', '卡在'] },
+  { label: '场地', match: ['活动', '同城', '滑板场', '街式', '公园', '碗池', '路线', '路面'] },
+  { label: '拍摄', match: ['视频', '拍', '角度', '前脚', '后脚'] }
+]
+
+function quickQuestionLabel(question) {
+  const category = quickQuestionCategories.find(item =>
+    item.match.some(keyword => String(question).includes(keyword))
+  )
+  return category?.label || '提问'
+}
+
+function formatCoachContent(content) {
+  const normalized = String(content || '').replace(/\r\n/g, '\n').trim()
+  if (!normalized) return []
+  let stepIndex = 0
+  return normalized
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const numbered = line.match(/^(\d+)[.、]\s*(.+)$/)
+      const bullet = line.match(/^[-•]\s*(.+)$/)
+      const text = numbered?.[2] || bullet?.[1] || line
+      const isSafety = /注意|安全|护具|摔|疼|受伤|休息|停止|热身|风险/.test(text)
+      const looksLikeStep = !!numbered || !!bullet || /^(先|再|然后|最后|第一|第二|第三|第四)/.test(text)
+      if (isSafety) return { type: 'tip', text, index: '!' }
+      if (looksLikeStep) {
+        stepIndex += 1
+        return { type: 'step', text, index: numbered?.[1] || stepIndex }
+      }
+      return { type: 'text', text, index: '' }
+    })
+}
+
+function shuffleQuestions(list) {
+  return [...list].sort(() => Math.random() - 0.5)
+}
+
+function refillQuickQuestionQueue(excludedQuestions = []) {
+  const excludedSet = new Set(excludedQuestions)
+  const preferredPool = quickQuestionPool.filter(item => !excludedSet.has(item))
+  quickQuestionQueue = shuffleQuestions(preferredPool.length ? preferredPool : quickQuestionPool)
+}
 
 function pickQuickQuestions() {
-  const shuffled = [...quickQuestionPool].sort(() => Math.random() - 0.5)
-  quickQuestions.value = shuffled.slice(0, 4)
+  const nextQuestions = []
+  while (nextQuestions.length < 4 && quickQuestionPool.length) {
+    if (!quickQuestionQueue.length) {
+      refillQuickQuestionQueue([...quickQuestions.value, ...nextQuestions])
+    }
+    const nextQuestion = quickQuestionQueue.shift()
+    if (!nextQuestion || nextQuestions.includes(nextQuestion)) continue
+    nextQuestions.push(nextQuestion)
+  }
+  quickQuestions.value = nextQuestions
+  quickQuestionBatchKey.value += 1
 }
 
 function refreshQuickQuestions() {
-  if (sending.value || messagesLoading.value) return
+  if (sending.value || messagesLoading.value || quickRefreshing.value || document.hidden) return
+  quickRefreshing.value = true
   pickQuickQuestions()
+  window.clearTimeout(quickRefreshTimer)
+  quickRefreshTimer = window.setTimeout(() => {
+    quickRefreshing.value = false
+  }, 360)
 }
 
 const welcomeMessage = () => ({
@@ -373,6 +493,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', syncViewport)
   stopTypingStateMotion()
+  window.clearTimeout(quickRefreshTimer)
 })
 </script>
 
@@ -499,7 +620,17 @@ onBeforeUnmount(() => {
                     <div class="message-role">{{ item.role === 'assistant' ? 'AI 滑板老师' : '我' }}</div>
                     <span v-if="item.createTime" class="message-time">{{ formatSessionTime(item.createTime) }}</span>
                   </div>
-                  <p class="message-content">{{ item.content }}</p>
+                  <p v-if="item.role === 'user'" class="message-content">{{ item.content }}</p>
+                  <div v-else class="message-content coach-answer">
+                    <p
+                      v-for="(block, index) in formatCoachContent(item.content)"
+                      :key="`${item.id}-answer-${index}`"
+                      :class="['coach-answer-line', `is-${block.type}`]"
+                    >
+                      <span v-if="block.type !== 'text'" class="answer-index">{{ block.index }}</span>
+                      <span>{{ block.text }}</span>
+                    </p>
+                  </div>
                   <div v-if="item.role === 'assistant' && item.suggestions?.length" class="suggestion-wrap">
                     <span class="suggestion-title">后续练习建议</span>
                     <div class="suggestion-list">
@@ -523,6 +654,12 @@ onBeforeUnmount(() => {
                   <AppIcon name="skateboard" :size="16" />
                 </div>
                 <div class="message-card typing-card">
+                  <div class="coach-skate-loader" aria-hidden="true">
+                    <span class="coach-loader-track"></span>
+                    <span class="coach-loader-board">
+                      <SkateboardSketch class="coach-loader-sketch" />
+                    </span>
+                  </div>
                   <span class="typing-label">正在组织回答</span>
                   <p class="typing-copy">{{ currentTypingState }}</p>
                   <div class="typing-track" aria-hidden="true">
@@ -540,27 +677,34 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="composer">
-            <div class="quick-strip">
+            <TransitionGroup
+              name="quick-suggestion"
+              tag="div"
+              class="quick-strip"
+              :class="{ 'is-refreshing': quickRefreshing }"
+            >
               <button
                 v-for="question in quickQuestions"
-                :key="question"
+                :key="`${quickQuestionBatchKey}-${question}`"
                 type="button"
                 class="btn-soft quick-pill"
                 :disabled="sending || messagesLoading"
                 @click="sendQuickQuestion(question)"
               >
-                {{ question }}
+                <small class="quick-pill-tag">{{ quickQuestionLabel(question) }}</small>
+                <span>{{ question }}</span>
               </button>
               <button
+                key="refresh-action"
                 type="button"
-                class="btn-soft refresh-pill"
-                :disabled="sending || messagesLoading"
+                :class="['btn-soft', 'refresh-pill', { 'is-refreshing': quickRefreshing }]"
+                :disabled="sending || messagesLoading || quickRefreshing"
                 @click="refreshQuickQuestions"
               >
                 <AppIcon name="refresh" :size="13" />
                 换一批
               </button>
-            </div>
+            </TransitionGroup>
 
             <textarea
               v-model="inputValue"
@@ -879,7 +1023,8 @@ onBeforeUnmount(() => {
   min-height: 420px;
   max-height: 68vh;
   overflow: auto;
-  padding-right: 6px;
+  padding: 4px 8px 4px 0;
+  scroll-behavior: smooth;
 }
 
 .message-row {
@@ -928,6 +1073,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 250, 251, 0.96));
   padding: 14px 15px;
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+  animation: messageRise 0.34s var(--motion-ease) both;
 }
 
 .message-meta {
@@ -955,6 +1101,46 @@ onBeforeUnmount(() => {
   word-break: break-word;
   line-height: 1.72;
   color: var(--text);
+}
+
+.coach-answer {
+  display: grid;
+  gap: 8px;
+  white-space: normal;
+}
+
+.coach-answer-line {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.coach-answer-line.is-step,
+.coach-answer-line.is-tip {
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.coach-answer-line.is-tip {
+  border-color: rgba(14, 165, 233, 0.22);
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.answer-index {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .suggestion-wrap {
@@ -985,6 +1171,57 @@ onBeforeUnmount(() => {
   background:
     radial-gradient(circle at top right, rgba(14, 165, 233, 0.1), transparent 42%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.96));
+}
+
+.coach-skate-loader {
+  position: relative;
+  height: 42px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(45, 212, 191, 0.18), transparent 34%),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08));
+}
+
+.coach-loader-track {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.coach-loader-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 46%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(20, 184, 166, 0), rgba(20, 184, 166, 0.9), rgba(14, 165, 233, 0));
+  animation: coachTrackSweep var(--skate-motion-duration) infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.coach-loader-board {
+  position: absolute;
+  left: 14px;
+  bottom: 0;
+  width: 92px;
+  height: 40px;
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 10px 10px rgba(15, 23, 42, 0.16));
+  animation: coachBoardRide var(--skate-motion-duration) infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.coach-loader-sketch {
+  width: 100%;
+  height: auto;
+  --sketch-deck-fill: rgba(255, 255, 255, 0.98);
+  --sketch-line: rgba(31, 41, 55, 0.84);
+  --sketch-line-soft: rgba(31, 41, 55, 0.62);
 }
 
 .typing-label {
@@ -1054,23 +1291,89 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 10px;
   margin-top: auto;
-  padding-top: 12px;
+  padding: 12px;
   border-top: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(15, 118, 110, 0.08), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
 }
 
 .quick-strip {
+  position: relative;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  min-height: 42px;
+  padding-right: 112px;
+  align-items: flex-start;
+}
+
+.quick-strip.is-refreshing .quick-pill {
+  pointer-events: none;
 }
 
 .quick-pill {
-  min-height: 36px;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-height: 42px;
+  max-width: 270px;
+  padding-block: 7px;
+  text-align: left;
+}
+
+.quick-pill span {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-pill-tag {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.refresh-pill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 96px;
+  min-height: 42px;
+  z-index: 2;
+}
+
+.refresh-pill.is-refreshing :deep(svg) {
+  animation: refreshSpin 0.36s ease;
+}
+
+.quick-suggestion-enter-active,
+.quick-suggestion-leave-active {
+  transition: opacity 0.26s var(--motion-ease), transform 0.26s var(--motion-ease), filter 0.26s ease;
+}
+
+.quick-suggestion-enter-from,
+.quick-suggestion-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  filter: blur(4px);
+}
+
+.quick-suggestion-move {
+  transition: transform 0.26s var(--motion-ease);
 }
 
 .composer textarea {
   min-height: 132px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border-radius: 14px;
 }
 
 .composer-bar {
@@ -1160,6 +1463,62 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes messageRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes refreshSpin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes coachTrackSweep {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+
+  18%,
+  72% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(245%);
+    opacity: 0;
+  }
+}
+
+@keyframes coachBoardRide {
+  0% {
+    transform: translateX(0) rotate(-5deg);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  60% {
+    transform: translateX(148px) rotate(4deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(224px) rotate(-3deg);
+    opacity: 0;
+  }
+}
+
 @media (max-width: 1080px) {
   .coach-hero {
     grid-template-columns: 1fr;
@@ -1199,6 +1558,42 @@ onBeforeUnmount(() => {
     align-items: stretch;
   }
 
+  .composer {
+    margin-inline: -2px;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .quick-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-right: 0;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+  }
+
+  .quick-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-pill,
+  .refresh-pill {
+    flex: 0 0 auto;
+    max-width: 240px;
+  }
+
+  .refresh-pill {
+    position: sticky;
+    right: 0;
+    top: 0;
+    min-width: 100px;
+    box-shadow: -12px 0 18px rgba(248, 250, 252, 0.92);
+  }
+
+  .composer textarea {
+    min-height: 108px;
+  }
+
   .composer-actions {
     width: 100%;
     flex-direction: column;
@@ -1212,6 +1607,7 @@ onBeforeUnmount(() => {
   .message-row,
   .message-user {
     grid-template-columns: 34px minmax(0, 1fr);
+    gap: 9px;
   }
 
   .message-user .avatar-chip,
@@ -1229,6 +1625,28 @@ onBeforeUnmount(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+
+  .message-card {
+    padding: 12px;
+    border-radius: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-loader-track::before,
+  .coach-loader-board,
+  .typing-track span,
+  .typing-dots span {
+    animation: none;
+  }
+
+  .message-card {
+    animation: none;
+  }
+
+  .refresh-pill.is-refreshing :deep(svg) {
+    animation: none;
   }
 }
 </style>
