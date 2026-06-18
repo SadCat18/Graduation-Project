@@ -50,7 +50,6 @@ public class CheckinService {
                 .orElse(1);
         int bonusExp = streakDays % 7 == 0 ? STREAK_BONUS_EXP : 0;
         int award = BASE_EXP + bonusExp;
-        int totalExp = expOf(user) + award;
 
         DailyCheckin dailyCheckin = new DailyCheckin();
         dailyCheckin.setUserId(userId);
@@ -62,7 +61,8 @@ public class CheckinService {
         dailyCheckinRepository.save(dailyCheckin);
 
         Long targetId = Long.valueOf(today.format(TARGET_DATE_FORMAT));
-        userGrowthService.grantExp(userId, "DAILY_CHECKIN", "DATE", targetId, award);
+        int totalExp = userGrowthService.grantExp(
+                userId, "DAILY_CHECKIN", "DATE", targetId, award);
 
         return response(dailyCheckin, false, dailyCheckinRepository.countByUserId(userId), totalExp);
     }

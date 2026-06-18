@@ -68,6 +68,8 @@ class CheckinServiceTest {
         when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
                 .thenReturn(Optional.empty());
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(1L);
+        when(userGrowthService.grantExp(USER_ID, "DAILY_CHECKIN", "DATE", 20260618L, 5))
+                .thenReturn(45);
 
         CheckinResponse response = service.checkin(USER_ID);
 
@@ -119,6 +121,8 @@ class CheckinServiceTest {
         when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
                 .thenReturn(Optional.of(checkin(today.minusDays(2), 9, 5, 0)));
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(10L);
+        when(userGrowthService.grantExp(USER_ID, "DAILY_CHECKIN", "DATE", 20260618L, 5))
+                .thenReturn(45);
 
         CheckinResponse response = service.checkin(USER_ID);
 
@@ -226,6 +230,8 @@ class CheckinServiceTest {
         when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
                 .thenReturn(Optional.of(checkin(today.minusDays(1), previousStreak, 5, 0)));
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn((long) expectedStreak);
+        when(userGrowthService.grantExp(USER_ID, "DAILY_CHECKIN", "DATE", 20260618L, 25))
+                .thenReturn(65);
 
         CheckinResponse response = service.checkin(USER_ID);
 

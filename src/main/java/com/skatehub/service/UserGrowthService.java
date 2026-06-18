@@ -16,18 +16,19 @@ public class UserGrowthService {
     private final UserGrowthLogRepository userGrowthLogRepository;
 
     @Transactional
-    public void grantExp(Long userId, String actionType, String targetType, Long targetId, int expGain) {
-        if (userId == null || expGain <= 0) return;
+    public int grantExp(Long userId, String actionType, String targetType, Long targetId, int expGain) {
+        if (userId == null || expGain <= 0) return 0;
+        User user = userRepository.findByIdForUpdate(userId).orElse(null);
+        if (user == null) return 0;
+
         String normalizedTargetType = targetType == null ? "NONE" : targetType;
         Long normalizedTargetId = targetId == null ? 0L : targetId;
 
         boolean exists = userGrowthLogRepository
                 .findByUserIdAndActionTypeAndTargetTypeAndTargetId(userId, actionType, normalizedTargetType, normalizedTargetId)
                 .isPresent();
-        if (exists) return;
-
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return;
+        int current = user.getExp() == null ? 0 : user.getExp();
+        if (exists) return current;
 
         UserGrowthLog log = new UserGrowthLog();
         log.setUserId(userId);
@@ -37,9 +38,10 @@ public class UserGrowthService {
         log.setExpGain(expGain);
         userGrowthLogRepository.save(log);
 
-        int current = user.getExp() == null ? 0 : user.getExp();
-        user.setExp(current + expGain);
+        int totalExp = current + expGain;
+        user.setExp(totalExp);
         userRepository.save(user);
+        return totalExp;
     }
 
     public void fillGrowthInfo(User user) {
