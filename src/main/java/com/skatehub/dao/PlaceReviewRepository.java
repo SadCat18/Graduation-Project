@@ -10,4 +10,5 @@ public interface PlaceReviewRepository extends JpaRepository<PlaceReview, Long> 
     List<PlaceReview> findByPlaceIdOrderByCreateTimeDesc(Long placeId);
     Optional<PlaceReview> findTop1ByPlaceIdOrderByCreateTimeDesc(Long placeId);
     long countByPlaceId(Long placeId);
+    long countByUserId(Long userId);
 }

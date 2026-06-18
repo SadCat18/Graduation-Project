@@ -19,6 +19,8 @@ public interface ActivitySignRepository extends JpaRepository<ActivitySign, Long
 
     long countByActivityIdAndSignStatus(Long activityId, String signStatus);
 
+    long countByUserIdAndIsCheckin(Long userId, String isCheckin);
+
     Optional<ActivitySign> findBySignIdAndActivityId(Long signId, Long activityId);
 
     long countBySignTimeBetween(LocalDateTime start, LocalDateTime end);
