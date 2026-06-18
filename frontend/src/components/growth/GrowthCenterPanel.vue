@@ -55,7 +55,7 @@ const calendarCells = computed(() => {
 
 const remain = computed(() => Number(props.profile.remain ?? props.profile.remainToNextLevel ?? 0))
 const nextLevelNeedExp = computed(() => Number(props.profile.nextLevelNeedExp || 0))
-const isMaxLevel = computed(() => nextLevelNeedExp.value <= 0)
+const isMaxLevel = computed(() => Number(props.profile.level) >= 10 || nextLevelNeedExp.value <= 0)
 const levelProgress = computed(() => {
   if (isMaxLevel.value) return 100
   const gained = Math.max(0, nextLevelNeedExp.value - remain.value)

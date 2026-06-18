@@ -141,8 +141,8 @@ async function loadProfile() {
   profile.bio = user?.bio || ''
   profile.exp = Number(user?.exp || 0)
   profile.level = Number(user?.level || 1)
-  profile.nextLevelNeedExp = Number(user?.nextLevelNeedExp || 100)
-  profile.remainToNextLevel = Number(user?.remainToNextLevel || 100)
+  profile.nextLevelNeedExp = Number(user?.nextLevelNeedExp ?? 100)
+  profile.remainToNextLevel = Number(user?.remainToNextLevel ?? 100)
 }
 
 async function loadOthers() {
