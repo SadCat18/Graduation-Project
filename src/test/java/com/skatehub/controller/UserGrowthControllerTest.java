@@ -84,6 +84,42 @@ class UserGrowthControllerTest {
     }
 
     @Test
+    void anonymousCheckinStatusIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/user/checkin/status"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+
+        verifyNoInteractions(checkinService);
+    }
+
+    @Test
+    void anonymousCheckinCalendarIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/user/checkin/calendar").param("month", "2026-06"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+
+        verifyNoInteractions(checkinService);
+    }
+
+    @Test
+    void anonymousLeaderboardIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/user/leaderboard").param("type", "total"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+
+        verifyNoInteractions(leaderboardService);
+    }
+
+    @Test
+    void anonymousBadgesAreUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/user/badges"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+
+        verifyNoInteractions(badgeService);
+    }
+
+    @Test
     void checkinUsesAuthenticatedUserAndSerializesResponse() throws Exception {
         CheckinResponse response = new CheckinResponse(
                 false, LocalDate.of(2026, 6, 18), 4, 12, 5, 20, 125);
@@ -110,6 +146,8 @@ class UserGrowthControllerTest {
 
         mockMvc.perform(get("/api/user/checkin/status").with(currentUser()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.checkedInToday").value(true))
                 .andExpect(jsonPath("$.data.streakDays").value(8))
                 .andExpect(jsonPath("$.data.totalDays").value(31))
@@ -128,6 +166,8 @@ class UserGrowthControllerTest {
                         .param("month", "2026-06")
                         .with(currentUser()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.month").value("2026-06"))
                 .andExpect(jsonPath("$.data.checkedDates[0]").value("2026-06-01"))
                 .andExpect(jsonPath("$.data.checkedDates[1]").value("2026-06-18"));
@@ -165,6 +205,8 @@ class UserGrowthControllerTest {
                         .param("size", "5")
                         .with(currentUser()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data.total").value(21))
                 .andExpect(jsonPath("$.data.list[0].rankNo").value(1))
                 .andExpect(jsonPath("$.data.list[0].username").value("leader"))
@@ -229,6 +271,8 @@ class UserGrowthControllerTest {
 
         mockMvc.perform(get("/api/user/badges").with(currentUser()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.data[0].code").value("FIRST_CHECKIN"))
                 .andExpect(jsonPath("$.data[0].unlocked").value(true))
                 .andExpect(jsonPath("$.data[0].unlockTime").value("2026-06-18T09:30:00"))
