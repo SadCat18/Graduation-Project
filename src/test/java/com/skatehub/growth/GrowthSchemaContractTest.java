@@ -1,19 +1,32 @@
 package com.skatehub.growth;
 
+import com.skatehub.pojo.Badge;
+import jakarta.persistence.Table;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GrowthSchemaContractTest {
 
     private static final Path MIGRATION = Path.of("database", "add-growth-achievement-system.sql");
     private static final Path INIT = Path.of("database", "init.sql");
+    private static final Pattern GROWTH_TABLE_BLOCK = Pattern.compile(
+            "CREATE TABLE IF NOT EXISTS tb_(?:daily_checkin|badge|user_badge) \\(.*?;",
+            Pattern.DOTALL);
+    private static final Pattern BADGE_INSERT_BLOCK = Pattern.compile(
+            "INSERT INTO tb_badge \\(.*?;",
+            Pattern.DOTALL);
 
     private static final List<String> REQUIRED_SCHEMA_FRAGMENTS = List.of(
             "streak_days INT NOT NULL DEFAULT 1",
@@ -61,6 +74,38 @@ class GrowthSchemaContractTest {
 
         assertEquals(8, countOccurrences(migrationSql, "INSERT INTO tb_badge"));
         assertEquals(8, countOccurrences(initSql, "INSERT INTO tb_badge"));
+    }
+
+    @Test
+    void migrationAndInitKeepGrowthDefinitionsInSync() throws IOException {
+        String migrationSql = Files.readString(MIGRATION);
+        String initSql = Files.readString(INIT);
+
+        assertEquals(extractNormalizedBlocks(migrationSql, GROWTH_TABLE_BLOCK),
+                extractNormalizedBlocks(initSql, GROWTH_TABLE_BLOCK));
+        assertEquals(extractNormalizedBlocks(migrationSql, BADGE_INSERT_BLOCK),
+                extractNormalizedBlocks(initSql, BADGE_INSERT_BLOCK));
+        assertEquals(3, extractNormalizedBlocks(migrationSql, GROWTH_TABLE_BLOCK).size());
+        assertEquals(8, extractNormalizedBlocks(migrationSql, BADGE_INSERT_BLOCK).size());
+    }
+
+    @Test
+    void badgeEntityUsesNamedCodeUniqueConstraint() {
+        Table table = Badge.class.getAnnotation(Table.class);
+
+        assertNotNull(table);
+        assertTrue(Arrays.stream(table.uniqueConstraints()).anyMatch(constraint ->
+                constraint.name().equals("uk_badge_code")
+                        && Arrays.equals(constraint.columnNames(), new String[]{"code"})));
+    }
+
+    private List<String> extractNormalizedBlocks(String sql, Pattern pattern) {
+        Matcher matcher = pattern.matcher(sql);
+        List<String> blocks = new ArrayList<>();
+        while (matcher.find()) {
+            blocks.add(matcher.group().replaceAll("\\s+", " ").trim());
+        }
+        return blocks;
     }
 
     private int countOccurrences(String text, String token) {
