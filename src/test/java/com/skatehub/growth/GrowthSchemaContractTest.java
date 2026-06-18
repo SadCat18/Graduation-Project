@@ -28,6 +28,7 @@ class GrowthSchemaContractTest {
             "unlock_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "UNIQUE KEY uk_daily_checkin_user_date (user_id, checkin_date)",
             "KEY idx_daily_checkin_user_date (user_id, checkin_date DESC)",
+            "UNIQUE KEY uk_badge_code (code)",
             "UNIQUE KEY uk_user_badge_user_badge (user_id, badge_id)",
             "KEY idx_user_badge_user_unlock_time (user_id, unlock_time DESC)"
     );
