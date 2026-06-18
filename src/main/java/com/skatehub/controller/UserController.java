@@ -9,6 +9,14 @@ import com.skatehub.pojo.ReportRecord;
 import com.skatehub.pojo.report.ReportCreateRequest;
 import com.skatehub.pojo.place.PlaceReviewCreateRequest;
 import com.skatehub.pojo.PlaceReview;
+import com.skatehub.pojo.growth.BadgeView;
+import com.skatehub.pojo.growth.CheckinCalendarResponse;
+import com.skatehub.pojo.growth.CheckinResponse;
+import com.skatehub.pojo.growth.CheckinStatusResponse;
+import com.skatehub.pojo.growth.LeaderboardResponse;
+import com.skatehub.service.BadgeService;
+import com.skatehub.service.CheckinService;
+import com.skatehub.service.LeaderboardService;
 import com.skatehub.service.PlaceReviewService;
 import com.skatehub.service.RecommendationService;
 import com.skatehub.service.ReportService;
@@ -22,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +44,9 @@ public class UserController {
     private final ReportService reportService;
     private final PlaceReviewService placeReviewService;
     private final RecommendationService recommendationService;
+    private final CheckinService checkinService;
+    private final LeaderboardService leaderboardService;
+    private final BadgeService badgeService;
 
     @GetMapping("/profile")
     public ApiResponse<User> profile() {
@@ -110,5 +122,39 @@ public class UserController {
     public ApiResponse<Map<String, Object>> recommendations() {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(recommendationService.recommendForUser(currentUser.id()));
+    }
+
+    @PostMapping("/checkin")
+    public ApiResponse<CheckinResponse> checkin() {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(checkinService.checkin(currentUser.id()));
+    }
+
+    @GetMapping("/checkin/status")
+    public ApiResponse<CheckinStatusResponse> checkinStatus() {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(checkinService.status(currentUser.id()));
+    }
+
+    @GetMapping("/checkin/calendar")
+    public ApiResponse<CheckinCalendarResponse> checkinCalendar(
+            @RequestParam @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$") String month) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(checkinService.calendar(currentUser.id(), YearMonth.parse(month)));
+    }
+
+    @GetMapping("/leaderboard")
+    public ApiResponse<LeaderboardResponse> leaderboard(
+            @RequestParam @Pattern(regexp = "^(total|weekly)$") String type,
+            @RequestParam(defaultValue = "1") @Positive Integer page,
+            @RequestParam(defaultValue = "20") @Positive Integer size) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(leaderboardService.list(type, page, size, currentUser.id()));
+    }
+
+    @GetMapping("/badges")
+    public ApiResponse<List<BadgeView>> badges() {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(badgeService.evaluateAndList(currentUser.id()));
     }
 }
