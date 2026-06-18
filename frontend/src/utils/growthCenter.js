@@ -27,3 +27,14 @@ export function createLatestRequestGate() {
     }
   }
 }
+
+export function findNewlyUnlocked(before, after) {
+  const seenCodes = new Set(
+    (Array.isArray(before) ? before : []).filter(item => item?.unlocked).map(item => item.code)
+  )
+  return (Array.isArray(after) ? after : []).filter(item => {
+    if (!item?.unlocked || seenCodes.has(item.code)) return false
+    seenCodes.add(item.code)
+    return true
+  })
+}

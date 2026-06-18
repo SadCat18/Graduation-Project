@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../../api'
-import { calculateLevelProgress, createLatestRequestGate } from '../../utils/growthCenter'
+import { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked } from '../../utils/growthCenter'
 import { normalizeMediaUrl } from '../../utils/url'
+import AchievementBadge from './AchievementBadge.vue'
+import BadgeUnlockModal from './BadgeUnlockModal.vue'
 
 const props = defineProps({
   profile: { type: Object, required: true }
@@ -19,6 +21,7 @@ const checkinMessage = ref('')
 const status = ref({ checkedInToday: false, streakDays: 0, totalDays: 0 })
 const calendar = ref({ month: '', checkedDates: [] })
 const badgeList = ref([])
+const unlockQueue = ref([])
 const leaderboard = ref({ total: 0, list: [], currentUser: null })
 const boardType = ref('total')
 const page = ref(1)
@@ -67,6 +70,7 @@ const levelProgress = computed(() => calculateLevelProgress({
 }))
 
 const currentLeaderboardUser = computed(() => leaderboard.value?.currentUser || null)
+const currentUnlock = computed(() => unlockQueue.value[0] || null)
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(leaderboard.value?.total || 0) / size)))
 const scoreLabel = computed(() => boardType.value === 'weekly' ? '本周经验' : '总经验')
 
@@ -101,6 +105,7 @@ async function loadSummary() {
     status.value = statusData || status.value
     calendar.value = calendarData || { month: requestedMonth, checkedDates: [] }
     badgeList.value = Array.isArray(badgesData) ? badgesData : []
+    return { status: statusData, calendar: calendarData, badges: badgeList.value }
   } catch (error) {
     if (summaryGate.isCurrent(requestToken)) {
       summaryError.value = errorMessage(error, '成长记录加载失败，请重试。')
@@ -139,6 +144,7 @@ async function checkin() {
   checkinError.value = ''
   checkinMessage.value = ''
   summaryGate.invalidate()
+  const badgesBeforeCheckin = badgeList.value
   try {
     const result = await api.dailyCheckin()
     if (disposed) return
@@ -149,13 +155,19 @@ async function checkin() {
       emit('experience-changed')
     }
     status.value.checkedInToday = true
-    await Promise.all([loadSummary(), loadLeaderboard()])
+    const [summaryData] = await Promise.all([loadSummary(), loadLeaderboard()])
+    const newlyUnlocked = findNewlyUnlocked(badgesBeforeCheckin, summaryData?.badges)
+    if (newlyUnlocked.length) unlockQueue.value.push(...newlyUnlocked)
   } catch (error) {
     checkinError.value = errorMessage(error, '签到失败，请稍后重试。')
     await loadSummary()
   } finally {
     checkinPending.value = false
   }
+}
+
+function closeCurrentUnlock() {
+  unlockQueue.value.shift()
 }
 
 function switchBoard(type) {
@@ -267,16 +279,16 @@ onBeforeUnmount(() => {
           <span>{{ badgeList.filter(item => item.unlocked).length }}/{{ badgeList.length }} 已解锁</span>
         </div>
         <div v-if="!badgeList.length" class="empty-state">暂无徽章，保持滑行，第一枚很快就来。</div>
-        <div v-else class="badge-grid">
-          <article v-for="badge in badgeList" :key="badge.code" class="badge" :class="{ locked: !badge.unlocked }">
-            <div class="badge-mark" aria-hidden="true">{{ badge.unlocked ? '✓' : '—' }}</div>
+        <ul v-else class="badge-grid">
+          <li v-for="badge in badgeList" :key="badge.code" class="badge" :class="{ locked: !badge.unlocked }">
+            <AchievementBadge :badge="badge" :size="58" compact />
             <div>
               <div class="badge-title"><strong>{{ badge.name }}</strong><span>{{ rarityLabel(badge.rarity) }}</span></div>
               <p>{{ badge.description }}</p>
               <small>{{ badge.current || 0 }} / {{ badge.target || 0 }} · {{ badge.unlocked ? '已解锁' : '未解锁' }}</small>
             </div>
-          </article>
-        </div>
+          </li>
+        </ul>
       </article>
     </div>
 
@@ -315,6 +327,7 @@ onBeforeUnmount(() => {
         <button :disabled="page >= totalPages" @click="changePage(page + 1)">下一页</button>
       </div>
     </article>
+    <BadgeUnlockModal v-if="currentUnlock" :badge="currentUnlock" @close="closeCurrentUnlock" />
   </section>
 </template>
 
@@ -386,10 +399,9 @@ onBeforeUnmount(() => {
 .calendar-day.checked { color: #fff; background: var(--ink); box-shadow: inset 0 -3px var(--cyan); }
 .calendar-day.today { outline: 2px solid var(--yellow); outline-offset: 1px; }
 .calendar-day.blank { background: transparent; }
-.badge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
-.badge { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 9px; padding: 10px; border: 1px solid rgba(22,26,29,.2); border-radius: 8px; background: rgba(255,255,255,.52); }
-.badge.locked { opacity: .55; filter: grayscale(1); }
-.badge-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: 50%; background: var(--yellow); font-weight: 900; }
+.badge-grid { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; padding: 0; }
+.badge { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 10px; padding: 10px; border: 1px solid rgba(22,26,29,.2); border-radius: 8px; background: rgba(255,255,255,.52); }
+.badge.locked { opacity: .72; }
 .badge-title { display: flex; justify-content: space-between; gap: 5px; }
 .badge-title span { color: var(--muted); font-size: 10px; }
 .badge p { margin: 4px 0; color: var(--muted); font-size: 12px; }

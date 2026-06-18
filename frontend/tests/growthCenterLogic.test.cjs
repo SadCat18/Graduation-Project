@@ -6,8 +6,8 @@ const sourcePath = path.resolve(__dirname, '../src/utils/growthCenter.js')
 assert.ok(fs.existsSync(sourcePath), 'growth center logic module exists')
 
 const source = fs.readFileSync(sourcePath, 'utf8').replace(/export function /g, 'function ')
-const { calculateLevelProgress, createLatestRequestGate } = new Function(
-  `${source}; return { calculateLevelProgress, createLatestRequestGate };`
+const { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked } = new Function(
+  `${source}; return { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked };`
 )()
 
 assert.strictEqual(
@@ -26,5 +26,37 @@ assert.strictEqual(gate.isCurrent(oldToken), false, 'an older request token is r
 assert.strictEqual(gate.isCurrent(latestToken), true, 'the latest request token is accepted')
 gate.invalidate()
 assert.strictEqual(gate.isCurrent(latestToken), false, 'invalidation rejects an outstanding request')
+
+const before = [
+  { code: 'FIRST_CHECKIN', unlocked: true },
+  { code: 'STREAK_7', unlocked: false }
+]
+const after = [
+  { code: 'FIRST_CHECKIN', unlocked: true },
+  { code: 'STREAK_7', unlocked: true },
+  { code: 'CHECKIN_30', unlocked: true },
+  { code: 'POST_10', unlocked: false }
+]
+assert.deepStrictEqual(
+  findNewlyUnlocked(before, after).map(item => item.code),
+  ['STREAK_7', 'CHECKIN_30'],
+  'new unlocks preserve the catalog order from the refreshed response'
+)
+assert.deepStrictEqual(findNewlyUnlocked(after, after), [], 'already unlocked badges are not duplicated')
+assert.deepStrictEqual(
+  findNewlyUnlocked([], [
+    { code: 'FIRST_POST', unlocked: true },
+    { code: 'FIRST_POST', unlocked: true },
+    { code: 'POST_10', unlocked: true }
+  ]).map(item => item.code),
+  ['FIRST_POST', 'POST_10'],
+  'duplicate refreshed entries enqueue each badge only once'
+)
+assert.deepStrictEqual(findNewlyUnlocked(null, null), [], 'null badge arrays are tolerated')
+assert.deepStrictEqual(
+  findNewlyUnlocked(null, [{ code: 'FIRST_POST', unlocked: true }, null, { code: 'POST_10', unlocked: false }]).map(item => item.code),
+  ['FIRST_POST'],
+  'only unlocked entries from the refreshed catalog are returned'
+)
 
 console.log('growth center executable logic tests passed')
