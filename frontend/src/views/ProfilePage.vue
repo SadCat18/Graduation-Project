@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import GrowthCenterPanel from '../components/growth/GrowthCenterPanel.vue'
 import { api } from '../api'
 import { ACTIVITY_STATUS, ACTIVITY_STATUS_LABEL, SIGN_STATUS_LABEL, normalizeActivityStatus } from '../constants/activity'
 import { getRole } from '../utils/auth'
@@ -510,6 +511,7 @@ onBeforeUnmount(() => {
           <button :class="{ active: profileTab === 'overview' }" @click="profileTab = 'overview'">概览</button>
           <button :class="{ active: profileTab === 'content' }" @click="profileTab = 'content'">我的内容</button>
           <button :class="{ active: profileTab === 'activities' }" @click="profileTab = 'activities'">活动中心</button>
+          <button :class="{ active: profileTab === 'growth' }" @click="profileTab = 'growth'">成长中心</button>
           <button :class="{ active: profileTab === 'notifications' }" @click="profileTab = 'notifications'">通知中心</button>
           <button :class="{ active: profileTab === 'creation' }" @click="profileTab = 'creation'">创作中心</button>
           <button :class="{ active: profileTab === 'settings' }" @click="profileTab = 'settings'">账号设置</button>
@@ -705,6 +707,12 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
+
+      <GrowthCenterPanel
+        v-if="profileTab === 'growth'"
+        :profile="profile"
+        @experience-changed="loadProfile"
+      />
 
       <div v-if="profileTab === 'notifications'" class="tab-panel">
         <div class="card">

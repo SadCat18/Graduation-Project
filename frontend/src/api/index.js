@@ -64,6 +64,11 @@ export const api = {
   createVideo: (data) => http.post('/api/videos', data),
 
   profile: () => http.get('/api/user/profile'),
+  dailyCheckin: () => http.post('/api/user/checkin'),
+  checkinStatus: () => http.get('/api/user/checkin/status'),
+  checkinCalendar: (month) => http.get('/api/user/checkin/calendar', { params: { month } }),
+  growthLeaderboard: (params) => http.get('/api/user/leaderboard', { params }),
+  badges: () => http.get('/api/user/badges'),
   updateProfile: (data) => http.put('/api/user/profile', data),
   updatePassword: (data) => http.put('/api/user/password', data),
   dashboard: () => http.get('/api/user/dashboard'),
