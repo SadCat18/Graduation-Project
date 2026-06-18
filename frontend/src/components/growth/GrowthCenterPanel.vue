@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../../api'
+import { calculateLevelProgress, createLatestRequestGate } from '../../utils/growthCenter'
 import { normalizeMediaUrl } from '../../utils/url'
 
 const props = defineProps({
@@ -22,6 +23,9 @@ const leaderboard = ref({ total: 0, list: [], currentUser: null })
 const boardType = ref('total')
 const page = ref(1)
 const size = 20
+const summaryGate = createLatestRequestGate()
+const leaderboardGate = createLatestRequestGate()
+let disposed = false
 
 function shanghaiParts() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -56,11 +60,11 @@ const calendarCells = computed(() => {
 const remain = computed(() => Number(props.profile.remain ?? props.profile.remainToNextLevel ?? 0))
 const nextLevelNeedExp = computed(() => Number(props.profile.nextLevelNeedExp || 0))
 const isMaxLevel = computed(() => Number(props.profile.level) >= 10 || nextLevelNeedExp.value <= 0)
-const levelProgress = computed(() => {
-  if (isMaxLevel.value) return 100
-  const gained = Math.max(0, nextLevelNeedExp.value - remain.value)
-  return Math.min(100, Math.round((gained / nextLevelNeedExp.value) * 100))
-})
+const levelProgress = computed(() => calculateLevelProgress({
+  level: props.profile.level,
+  exp: props.profile.exp,
+  nextLevelNeedExp: props.profile.nextLevelNeedExp
+}))
 
 const currentLeaderboardUser = computed(() => leaderboard.value?.currentUser || null)
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(leaderboard.value?.total || 0) / size)))
@@ -84,33 +88,48 @@ function rarityLabel(rarity) {
 }
 
 async function loadSummary() {
+  if (disposed) return
+  const requestToken = summaryGate.begin()
+  const requestedMonth = currentMonth.value
   summaryLoading.value = true
   summaryError.value = ''
   try {
     const [statusData, calendarData, badgesData] = await Promise.all([
-      api.checkinStatus(), api.checkinCalendar(currentMonth.value), api.badges()
+      api.checkinStatus(), api.checkinCalendar(requestedMonth), api.badges()
     ])
+    if (!summaryGate.isCurrent(requestToken)) return
     status.value = statusData || status.value
-    calendar.value = calendarData || { month: currentMonth.value, checkedDates: [] }
+    calendar.value = calendarData || { month: requestedMonth, checkedDates: [] }
     badgeList.value = Array.isArray(badgesData) ? badgesData : []
   } catch (error) {
-    summaryError.value = errorMessage(error, '成长记录加载失败，请重试。')
+    if (summaryGate.isCurrent(requestToken)) {
+      summaryError.value = errorMessage(error, '成长记录加载失败，请重试。')
+    }
   } finally {
-    summaryLoading.value = false
+    if (summaryGate.isCurrent(requestToken)) summaryLoading.value = false
   }
 }
 
 async function loadLeaderboard() {
+  if (disposed) return
+  const requestToken = leaderboardGate.begin()
+  const requestedType = boardType.value
+  const requestedPage = page.value
   leaderboardLoading.value = true
   leaderboardError.value = ''
+  leaderboard.value = { total: 0, list: [], currentUser: null }
   try {
-    leaderboard.value = await api.growthLeaderboard({ type: boardType.value, page: page.value, size: size }) || {
+    const data = await api.growthLeaderboard({ type: requestedType, page: requestedPage, size: size })
+    if (!leaderboardGate.isCurrent(requestToken)) return
+    leaderboard.value = data || {
       total: 0, list: [], currentUser: null
     }
   } catch (error) {
-    leaderboardError.value = errorMessage(error, '排行榜暂时掉线，请重试。')
+    if (leaderboardGate.isCurrent(requestToken)) {
+      leaderboardError.value = errorMessage(error, '排行榜暂时掉线，请重试。')
+    }
   } finally {
-    leaderboardLoading.value = false
+    if (leaderboardGate.isCurrent(requestToken)) leaderboardLoading.value = false
   }
 }
 
@@ -119,8 +138,10 @@ async function checkin() {
   checkinPending.value = true
   checkinError.value = ''
   checkinMessage.value = ''
+  summaryGate.invalidate()
   try {
     const result = await api.dailyCheckin()
+    if (disposed) return
     if (result?.alreadyCheckedIn) {
       checkinMessage.value = '今天已经签到，明天再来续上连签。'
     } else {
@@ -152,6 +173,12 @@ function changePage(nextPage) {
 onMounted(() => {
   loadSummary()
   loadLeaderboard()
+})
+
+onBeforeUnmount(() => {
+  disposed = true
+  summaryGate.invalidate()
+  leaderboardGate.invalidate()
 })
 </script>
 
@@ -257,8 +284,8 @@ onMounted(() => {
       <div class="leaderboard-head">
         <div><p class="panel-kicker">SPOT RANKING</p><h3>成长排行榜</h3></div>
         <div class="board-switch" aria-label="排行榜类型">
-          <button :class="{ active: boardType === 'total' }" @click="switchBoard('total')">总榜</button>
-          <button :class="{ active: boardType === 'weekly' }" @click="switchBoard('weekly')">周榜</button>
+          <button :class="{ active: boardType === 'total' }" :aria-pressed="boardType === 'total'" @click="switchBoard('total')">总榜</button>
+          <button :class="{ active: boardType === 'weekly' }" :aria-pressed="boardType === 'weekly'" @click="switchBoard('weekly')">周榜</button>
         </div>
       </div>
 
