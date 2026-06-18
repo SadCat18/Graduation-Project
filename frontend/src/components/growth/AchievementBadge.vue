@@ -12,7 +12,7 @@ const rarityMeta = {
   COMMON: { label: '普通', color: '#cbd5e1' },
   RARE: { label: '稀有', color: '#60a5fa' },
   EPIC: { label: '史诗', color: '#c084fc' },
-  LEGENDARY: { label: '传奇', color: '#fbbf24' }
+  LEGENDARY: { label: '传说', color: '#fbbf24' }
 }
 const rarity = computed(() => rarityMeta[props.badge?.rarity] || rarityMeta.COMMON)
 const paths = computed(() => badgeIconPaths[props.badge?.iconCode] || fallbackBadgeIconPaths)

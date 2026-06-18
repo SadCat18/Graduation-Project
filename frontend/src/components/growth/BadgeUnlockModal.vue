@@ -2,7 +2,10 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AchievementBadge from './AchievementBadge.vue'
 
-defineProps({ badge: { type: Object, required: true } })
+const props = defineProps({
+  badge: { type: Object, required: true },
+  returnFocusTo: { type: Object, default: null }
+})
 const emit = defineEmits(['close'])
 const dialog = ref(null)
 const closeButton = ref(null)
@@ -49,7 +52,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = previousOverflow
-  if (previouslyFocused?.isConnected) previouslyFocused.focus()
+  const focusTarget = props.returnFocusTo?.isConnected ? props.returnFocusTo : previouslyFocused
+  if (focusTarget?.isConnected) focusTarget.focus()
 })
 </script>
 

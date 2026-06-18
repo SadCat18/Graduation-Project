@@ -49,5 +49,6 @@ assert.match(growth, /暂无[^<]*(排行|徽章)/, 'stable empty state is render
 assert.match(growth, /baseExp|baseExperience/, 'check-in success reports base experience')
 assert.match(growth, /bonusExp|bonusExperience/, 'check-in success reports bonus experience')
 assert.match(growth, /emit\(['"]experience-changed['"]\)/, 'successful check-in refreshes profile experience')
+assert.match(growth, /LEGENDARY:\s*['"]传说['"]/, 'legendary rarity uses the approved label')
 
 console.log('growth center source contracts passed')

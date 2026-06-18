@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../../api'
 import { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked } from '../../utils/growthCenter'
 import { normalizeMediaUrl } from '../../utils/url'
@@ -22,6 +22,7 @@ const status = ref({ checkedInToday: false, streakDays: 0, totalDays: 0 })
 const calendar = ref({ month: '', checkedDates: [] })
 const badgeList = ref([])
 const unlockQueue = ref([])
+const checkinTrigger = ref(null)
 const leaderboard = ref({ total: 0, list: [], currentUser: null })
 const boardType = ref('total')
 const page = ref(1)
@@ -88,7 +89,7 @@ function isCurrentUser(entry) {
 }
 
 function rarityLabel(rarity) {
-  return ({ COMMON: '普通', RARE: '稀有', EPIC: '史诗', LEGENDARY: '传奇' })[rarity] || rarity || '普通'
+  return ({ COMMON: '普通', RARE: '稀有', EPIC: '史诗', LEGENDARY: '传说' })[rarity] || rarity || '普通'
 }
 
 async function loadSummary() {
@@ -138,8 +139,9 @@ async function loadLeaderboard() {
   }
 }
 
-async function checkin() {
+async function checkin(event) {
   if (checkinPending.value || status.value.checkedInToday) return
+  checkinTrigger.value = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null
   checkinPending.value = true
   checkinError.value = ''
   checkinMessage.value = ''
@@ -163,11 +165,15 @@ async function checkin() {
     await loadSummary()
   } finally {
     checkinPending.value = false
+    if (!unlockQueue.value.length) checkinTrigger.value = null
   }
 }
 
 function closeCurrentUnlock() {
   unlockQueue.value.shift()
+  if (!unlockQueue.value.length) {
+    nextTick(() => { checkinTrigger.value = null })
+  }
 }
 
 function switchBoard(type) {
@@ -189,6 +195,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposed = true
+  checkinTrigger.value = null
   summaryGate.invalidate()
   leaderboardGate.invalidate()
 })
@@ -327,7 +334,13 @@ onBeforeUnmount(() => {
         <button :disabled="page >= totalPages" @click="changePage(page + 1)">下一页</button>
       </div>
     </article>
-    <BadgeUnlockModal v-if="currentUnlock" :badge="currentUnlock" @close="closeCurrentUnlock" />
+    <BadgeUnlockModal
+      v-if="currentUnlock"
+      :key="currentUnlock.code"
+      :badge="currentUnlock"
+      :return-focus-to="checkinTrigger"
+      @close="closeCurrentUnlock"
+    />
   </section>
 </template>
 
