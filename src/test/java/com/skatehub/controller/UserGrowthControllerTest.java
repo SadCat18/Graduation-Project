@@ -120,6 +120,55 @@ class UserGrowthControllerTest {
     }
 
     @Test
+    void adminCheckinIsForbidden() throws Exception {
+        mockMvc.perform(post("/api/user/checkin").with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(checkinService);
+    }
+
+    @Test
+    void adminCheckinStatusIsForbidden() throws Exception {
+        mockMvc.perform(get("/api/user/checkin/status").with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(checkinService);
+    }
+
+    @Test
+    void adminCheckinCalendarIsForbidden() throws Exception {
+        mockMvc.perform(get("/api/user/checkin/calendar")
+                        .param("month", "2026-06")
+                        .with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(checkinService);
+    }
+
+    @Test
+    void adminLeaderboardIsForbidden() throws Exception {
+        mockMvc.perform(get("/api/user/leaderboard")
+                        .param("type", "total")
+                        .with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(leaderboardService);
+    }
+
+    @Test
+    void adminBadgesAreForbidden() throws Exception {
+        mockMvc.perform(get("/api/user/badges").with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(badgeService);
+    }
+
+    @Test
     void checkinUsesAuthenticatedUserAndSerializesResponse() throws Exception {
         CheckinResponse response = new CheckinResponse(
                 false, LocalDate.of(2026, 6, 18), 4, 12, 5, 20, 125);
@@ -263,6 +312,25 @@ class UserGrowthControllerTest {
     }
 
     @Test
+    void oversizedLeaderboardPaginationIsRejectedBeforeServiceCall() throws Exception {
+        mockMvc.perform(get("/api/user/leaderboard")
+                        .param("type", "total")
+                        .param("page", "10001")
+                        .with(currentUser()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        mockMvc.perform(get("/api/user/leaderboard")
+                        .param("type", "total")
+                        .param("size", "51")
+                        .with(currentUser()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+
+        verifyNoInteractions(leaderboardService);
+    }
+
+    @Test
     void badgesUseAuthenticatedUserAndSerializeList() throws Exception {
         BadgeView badge = new BadgeView(
                 "FIRST_CHECKIN", "First Check-in", "Check in once", "COMMON", "calendar",
@@ -286,5 +354,11 @@ class UserGrowthControllerTest {
         CurrentUser principal = new CurrentUser(USER_ID, "USER", "alice", 3);
         return authentication(new UsernamePasswordAuthenticationToken(
                 principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+    }
+
+    private RequestPostProcessor adminUser() {
+        CurrentUser principal = new CurrentUser(1L, "ADMIN", "admin", 0);
+        return authentication(new UsernamePasswordAuthenticationToken(
+                principal, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
     }
 }

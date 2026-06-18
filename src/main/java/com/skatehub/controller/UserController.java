@@ -24,9 +24,11 @@ import com.skatehub.util.CurrentUser;
 import com.skatehub.util.SecurityUtils;
 import com.skatehub.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -125,18 +127,21 @@ public class UserController {
     }
 
     @PostMapping("/checkin")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse<CheckinResponse> checkin() {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(checkinService.checkin(currentUser.id()));
     }
 
     @GetMapping("/checkin/status")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse<CheckinStatusResponse> checkinStatus() {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(checkinService.status(currentUser.id()));
     }
 
     @GetMapping("/checkin/calendar")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse<CheckinCalendarResponse> checkinCalendar(
             @RequestParam @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$") String month) {
         CurrentUser currentUser = SecurityUtils.currentUser();
@@ -144,15 +149,17 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse<LeaderboardResponse> leaderboard(
             @RequestParam @Pattern(regexp = "^(total|weekly)$") String type,
-            @RequestParam(defaultValue = "1") @Positive Integer page,
-            @RequestParam(defaultValue = "20") @Positive Integer size) {
+            @RequestParam(defaultValue = "1") @Positive @Max(10000) Integer page,
+            @RequestParam(defaultValue = "20") @Positive @Max(50) Integer size) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(leaderboardService.list(type, page, size, currentUser.id()));
     }
 
     @GetMapping("/badges")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse<List<BadgeView>> badges() {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(badgeService.evaluateAndList(currentUser.id()));
