@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -46,6 +47,8 @@ class CheckinServiceTest {
     private UserRepository userRepository;
     @Mock
     private UserGrowthService userGrowthService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private Clock clock;
     private CheckinService service;
@@ -54,7 +57,7 @@ class CheckinServiceTest {
     @BeforeEach
     void setUp() {
         clock = Clock.fixed(NOW, SHANGHAI);
-        service = new CheckinService(dailyCheckinRepository, userRepository, userGrowthService, clock);
+        service = new CheckinService(dailyCheckinRepository, userRepository, userGrowthService, clock, eventPublisher);
         user = new User();
         user.setUserId(USER_ID);
         user.setExp(40);
@@ -134,7 +137,7 @@ class CheckinServiceTest {
     @Test
     void usesShanghaiDateAtUtcDayBoundary() {
         Clock boundaryClock = Clock.fixed(Instant.parse("2026-06-17T16:30:00Z"), SHANGHAI);
-        service = new CheckinService(dailyCheckinRepository, userRepository, userGrowthService, boundaryClock);
+        service = new CheckinService(dailyCheckinRepository, userRepository, userGrowthService, boundaryClock, eventPublisher);
         stubLockedUser();
         LocalDate shanghaiToday = LocalDate.of(2026, 6, 18);
         when(dailyCheckinRepository.findByUserIdAndCheckinDate(USER_ID, shanghaiToday))

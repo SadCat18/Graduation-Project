@@ -36,7 +36,8 @@ class InjectionRiskTest {
                 mock(UserRepository.class),
                 mock(InteractionRepository.class),
                 mock(MessageNotifyService.class),
-                mock(UserGrowthService.class)
+                mock(UserGrowthService.class),
+                mock(org.springframework.context.ApplicationEventPublisher.class)
         );
 
         assertThatThrownBy(() -> postService.list("' OR 1=1 --", null, "latest", 1, 10))

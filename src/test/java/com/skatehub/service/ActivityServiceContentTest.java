@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +29,7 @@ class ActivityServiceContentTest {
     @Mock private UserRepository userRepository;
     @Mock private MessageNotifyService messageNotifyService;
     @Mock private UserGrowthService userGrowthService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ActivityService activityService;

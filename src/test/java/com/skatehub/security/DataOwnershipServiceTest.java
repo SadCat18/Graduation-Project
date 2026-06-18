@@ -40,6 +40,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,7 +79,8 @@ class DataOwnershipServiceTest {
                 userRepository,
                 interactionRepository,
                 messageNotifyService,
-                userGrowthService
+                userGrowthService,
+                mock(org.springframework.context.ApplicationEventPublisher.class)
         );
         userService = new UserService(
                 userRepository,
@@ -97,7 +99,8 @@ class DataOwnershipServiceTest {
                 activitySignRepository,
                 userRepository,
                 messageNotifyService,
-                userGrowthService
+                userGrowthService,
+                mock(org.springframework.context.ApplicationEventPublisher.class)
         );
         aiCoachAssistantService = new AiCoachAssistantService(
                 aiGatewayService,

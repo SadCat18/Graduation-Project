@@ -3,6 +3,7 @@ package com.skatehub.service;
 import com.skatehub.dao.ActivityRepository;
 import com.skatehub.dao.ActivitySignRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.event.GrowthActionCompletedEvent;
 import com.skatehub.pojo.Activity;
 import com.skatehub.pojo.ActivitySign;
 import com.skatehub.pojo.User;
@@ -16,10 +17,12 @@ import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -38,6 +41,7 @@ public class ActivityService {
     private final UserRepository userRepository;
     private final MessageNotifyService messageNotifyService;
     private final UserGrowthService userGrowthService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PageResult<Map<String, Object>> list(Integer page, Integer size, Long userId, String city, String district, String keyword, Boolean expired) {
         int currentPage = InputValidator.page(page);
@@ -166,6 +170,7 @@ public class ActivityService {
         return result;
     }
 
+    @Transactional
     public void checkin(CurrentUser currentUser, Long activityId) {
         Long currentUserId = requireCurrentUserId(currentUser);
         InputValidator.positiveId(activityId, "活动ID");
@@ -180,6 +185,7 @@ public class ActivityService {
         sign.setIsCheckin("1");
         activitySignRepository.save(sign);
         userGrowthService.grantExp(currentUserId, "ACTIVITY_CHECKIN", "ACTIVITY", activityId, 15);
+        eventPublisher.publishEvent(new GrowthActionCompletedEvent(currentUserId, "ACTIVITY_CHECKIN"));
     }
 
     public List<ActivitySign> signs(CurrentUser currentUser, Long activityId) {

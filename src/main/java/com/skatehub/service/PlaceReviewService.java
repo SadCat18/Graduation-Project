@@ -3,6 +3,7 @@ package com.skatehub.service;
 import com.skatehub.dao.PlaceRepository;
 import com.skatehub.dao.PlaceReviewRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.event.GrowthActionCompletedEvent;
 import com.skatehub.pojo.Place;
 import com.skatehub.pojo.PlaceReview;
 import com.skatehub.pojo.User;
@@ -11,7 +12,9 @@ import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.InputValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -28,7 +31,9 @@ public class PlaceReviewService {
     private final PlaceRepository placeRepository;
     private final PlaceReviewRepository placeReviewRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
+    @Transactional
     public PlaceReview create(CurrentUser currentUser, PlaceReviewCreateRequest request) {
         InputValidator.positiveId(request.getPlaceId(), "场地ID");
         Place place = placeRepository.findById(request.getPlaceId())
@@ -46,6 +51,7 @@ public class PlaceReviewService {
         review.setImages(trimToNull(request.getImages()));
         PlaceReview saved = placeReviewRepository.save(review);
         refreshPlaceScore(place.getPlaceId());
+        eventPublisher.publishEvent(new GrowthActionCompletedEvent(currentUser.id(), "PLACE_REVIEW_CREATE"));
         return saved;
     }
 

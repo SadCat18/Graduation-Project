@@ -4,6 +4,7 @@ import com.skatehub.dao.CommentRepository;
 import com.skatehub.dao.InteractionRepository;
 import com.skatehub.dao.PostRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.event.GrowthActionCompletedEvent;
 import com.skatehub.pojo.Comment;
 import com.skatehub.pojo.Interaction;
 import com.skatehub.pojo.Post;
@@ -16,9 +17,11 @@ import com.skatehub.util.CurrentUser;
 import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +40,7 @@ public class PostService {
     private final InteractionRepository interactionRepository;
     private final MessageNotifyService messageNotifyService;
     private final UserGrowthService userGrowthService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
         int currentPage = InputValidator.page(page);
@@ -61,6 +65,7 @@ public class PostService {
         return toPostVO(post);
     }
 
+    @Transactional
     public Post create(CurrentUser currentUser, PostCreateRequest request) {
         Long currentUserId = requireCurrentUserId(currentUser);
         Post post = new Post();
@@ -71,6 +76,7 @@ public class PostService {
         post.setCategory(request.getCategory());
         Post saved = postRepository.save(post);
         userGrowthService.grantExp(currentUserId, "POST_CREATE", "POST", saved.getPostId(), 20);
+        eventPublisher.publishEvent(new GrowthActionCompletedEvent(currentUserId, "POST_CREATE"));
         return saved;
     }
 

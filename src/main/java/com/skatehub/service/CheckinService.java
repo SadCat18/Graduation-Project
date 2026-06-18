@@ -2,6 +2,7 @@ package com.skatehub.service;
 
 import com.skatehub.dao.DailyCheckinRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.event.GrowthActionCompletedEvent;
 import com.skatehub.pojo.DailyCheckin;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.growth.CheckinCalendarResponse;
@@ -9,6 +10,7 @@ import com.skatehub.pojo.growth.CheckinResponse;
 import com.skatehub.pojo.growth.CheckinStatusResponse;
 import com.skatehub.util.BizException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class CheckinService {
     private final UserRepository userRepository;
     private final UserGrowthService userGrowthService;
     private final Clock clock;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CheckinResponse checkin(Long userId) {
@@ -63,6 +66,7 @@ public class CheckinService {
         Long targetId = Long.valueOf(today.format(TARGET_DATE_FORMAT));
         int totalExp = userGrowthService.grantExp(
                 userId, "DAILY_CHECKIN", "DATE", targetId, award);
+        eventPublisher.publishEvent(new GrowthActionCompletedEvent(userId, "DAILY_CHECKIN"));
 
         return response(dailyCheckin, false, dailyCheckinRepository.countByUserId(userId), totalExp);
     }
