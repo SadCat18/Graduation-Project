@@ -31,7 +31,10 @@ for (const state of ['summaryLoading', 'summaryError', 'leaderboardLoading', 'le
   assert.match(growth, new RegExp(`const\\s+${state}\\s*=\\s*ref\\(`), `${state} has an independent ref`)
 }
 assert.match(growth, /if\s*\(checkinPending\.value/, 'check-in has a pending guard')
-assert.match(growth, /:disabled="[^\"]*checkinPending/, 'check-in control disables while pending')
+assert.match(growth, /if\s*\(checkinPending\.value\s*\|\|\s*status\.value\.checkedInToday\)\s*return/, 'checked-in guard prevents duplicate API calls')
+assert.match(growth, /:disabled="checkinPending"/, 'check-in control is natively disabled only while pending')
+assert.match(growth, /:aria-disabled="status\.checkedInToday/, 'checked-in control remains focusable with aria-disabled')
+assert.match(growth, /ref="primaryCheckinButton"/, 'check-in control exposes a stable focus ref')
 assert.match(compactGrowth, /Promise\.all\(\[api\.checkinStatus\(\),api\.checkinCalendar\(requestedMonth\),api\.badges\(\)\]\)/, 'summary resources load together for a captured month')
 assert.match(compactGrowth, /api\.growthLeaderboard\(\{type:requestedType,page:requestedPage,size:size\}\)/, 'leaderboard sends captured type, page and size')
 assert.match(growth, /new\s+Date\([^)]*year[^)]*month[^)]*1[^)]*\)\.getDay\(\)/, 'calendar computes Sunday-start offset')

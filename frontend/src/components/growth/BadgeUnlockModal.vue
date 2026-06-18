@@ -4,7 +4,8 @@ import AchievementBadge from './AchievementBadge.vue'
 
 const props = defineProps({
   badge: { type: Object, required: true },
-  returnFocusTo: { type: Object, default: null }
+  returnFocusTo: { type: Object, default: null },
+  fallbackFocusTo: { type: Object, default: null }
 })
 const emit = defineEmits(['close'])
 const dialog = ref(null)
@@ -13,6 +14,9 @@ let previouslyFocused = null
 let previousOverflow = ''
 
 function close() { emit('close') }
+function canReceiveFocus(element) {
+  return Boolean(element?.isConnected && typeof element.focus === 'function' && !element.disabled)
+}
 function focusableElements() {
   return [...(dialog.value?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') || [])]
     .filter(element => !element.disabled && element.getAttribute('aria-hidden') !== 'true')
@@ -52,8 +56,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = previousOverflow
-  const focusTarget = props.returnFocusTo?.isConnected ? props.returnFocusTo : previouslyFocused
-  if (focusTarget?.isConnected) focusTarget.focus()
+  const focusTarget = [props.returnFocusTo, props.fallbackFocusTo, previouslyFocused].find(canReceiveFocus)
+  focusTarget?.focus()
 })
 </script>
 

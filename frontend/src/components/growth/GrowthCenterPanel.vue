@@ -23,6 +23,7 @@ const calendar = ref({ month: '', checkedDates: [] })
 const badgeList = ref([])
 const unlockQueue = ref([])
 const checkinTrigger = ref(null)
+const primaryCheckinButton = ref(null)
 const leaderboard = ref({ total: 0, list: [], currentUser: null })
 const boardType = ref('total')
 const page = ref(1)
@@ -242,8 +243,10 @@ onBeforeUnmount(() => {
         </div>
         <p>累计签到 {{ status.totalDays || 0 }} 天</p>
         <button
+          ref="primaryCheckinButton"
           class="checkin-button"
-          :disabled="checkinPending || status.checkedInToday"
+          :disabled="checkinPending"
+          :aria-disabled="status.checkedInToday ? 'true' : undefined"
           @click="checkin"
         >
           {{ checkinPending ? '签到中…' : status.checkedInToday ? '今日已签到' : '踩下今日一板' }}
@@ -339,6 +342,7 @@ onBeforeUnmount(() => {
       :key="currentUnlock.code"
       :badge="currentUnlock"
       :return-focus-to="checkinTrigger"
+      :fallback-focus-to="primaryCheckinButton"
       @close="closeCurrentUnlock"
     />
   </section>
@@ -399,8 +403,8 @@ onBeforeUnmount(() => {
 .streak { padding: 5px 9px; border-radius: 999px; background: var(--cyan); font-size: 12px; font-weight: 800; }
 .checkin-card > p { color: var(--muted); }
 .checkin-button { width: 100%; min-height: 46px; border: 2px solid var(--ink); border-radius: 6px; background: var(--yellow); color: var(--ink); font-weight: 900; box-shadow: 3px 3px 0 var(--ink); }
-.checkin-button:not(:disabled):hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
-.checkin-button:disabled { opacity: .55; cursor: not-allowed; }
+.checkin-button:not(:disabled):not([aria-disabled="true"]):hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.checkin-button:disabled, .checkin-button[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
 .inline-message, .state-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 0; font-size: 13px; }
 .state-box { margin: 0; }
 .success { color: #176c4d; }
