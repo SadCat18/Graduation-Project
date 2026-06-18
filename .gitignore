@@ -9,6 +9,9 @@ deploy/docker/.env
 # root node
 node_modules/
 
+# isolated feature worktrees
+.worktrees/
+
 # IDE
 .idea/
 .vscode/
