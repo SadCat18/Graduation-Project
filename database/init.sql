@@ -80,6 +80,18 @@ CREATE TABLE IF NOT EXISTS tb_user (
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS tb_user_growth_log (
+  log_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  action_type VARCHAR(30) NOT NULL,
+  target_type VARCHAR(30),
+  target_id BIGINT,
+  exp_gain INT NOT NULL,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_growth_user_time (user_id, create_time),
+  KEY idx_growth_time_user_exp (create_time, user_id, exp_gain)
+);
+
 CREATE TABLE IF NOT EXISTS tb_admin (
   admin_id BIGINT PRIMARY KEY AUTO_INCREMENT,
   account VARCHAR(20) NOT NULL UNIQUE,
