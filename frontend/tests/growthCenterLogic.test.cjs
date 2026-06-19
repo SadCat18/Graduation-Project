@@ -6,9 +6,14 @@ const sourcePath = path.resolve(__dirname, '../src/utils/growthCenter.js')
 assert.ok(fs.existsSync(sourcePath), 'growth center logic module exists')
 
 const source = fs.readFileSync(sourcePath, 'utf8').replace(/export function /g, 'function ')
-const { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked } = new Function(
-  `${source}; return { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked };`
+const { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked, shanghaiDateKey, millisecondsUntilNextShanghaiMidnight } = new Function(
+  `${source}; return { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked, shanghaiDateKey, millisecondsUntilNextShanghaiMidnight };`
 )()
+
+assert.strictEqual(shanghaiDateKey(new Date('2026-06-18T15:59:59.999Z')), '2026-06-18', 'Shanghai date stays on the old day before midnight')
+assert.strictEqual(shanghaiDateKey(new Date('2026-06-18T16:00:00.000Z')), '2026-06-19', 'Shanghai date advances at midnight')
+assert.strictEqual(millisecondsUntilNextShanghaiMidnight(new Date('2026-06-18T15:59:59.500Z')), 500, 'midnight delay reaches the exact next boundary')
+assert.strictEqual(millisecondsUntilNextShanghaiMidnight(new Date('2026-06-18T16:00:00.000Z')), 86400000, 'midnight schedules the following day')
 
 assert.strictEqual(
   calculateLevelProgress({ level: 2, exp: 150, nextLevelNeedExp: 200 }),

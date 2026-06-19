@@ -8,12 +8,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class UserGrowthService {
 
     private final UserRepository userRepository;
     private final UserGrowthLogRepository userGrowthLogRepository;
+    private final Clock clock;
 
     @Transactional
     public int grantExp(Long userId, String actionType, String targetType, Long targetId, int expGain) {
@@ -36,6 +40,7 @@ public class UserGrowthService {
         log.setTargetType(normalizedTargetType);
         log.setTargetId(normalizedTargetId);
         log.setExpGain(expGain);
+        log.setCreateTime(LocalDateTime.now(clock));
         userGrowthLogRepository.save(log);
 
         int totalExp = current + expGain;

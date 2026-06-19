@@ -8,7 +8,6 @@ import com.skatehub.dao.PostRepository;
 import com.skatehub.dao.UserBadgeRepository;
 import com.skatehub.dao.UserRepository;
 import com.skatehub.pojo.Badge;
-import com.skatehub.pojo.DailyCheckin;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.UserBadge;
 import com.skatehub.pojo.growth.BadgeView;
@@ -98,22 +97,32 @@ class BadgeServiceTest {
     }
 
     @Test
-    void streakUsesLatestRecordWhileThirtyCheckinsUsesCumulativeCount() {
+    void streakUsesHistoricalMaximumWhileThirtyCheckinsUsesCumulativeCount() {
         Badge streak = badge(1L, "STREAK_7", 1);
         Badge cumulative = badge(2L, "CHECKIN_30", 2);
         stubCatalog(List.of(streak, cumulative), List.of());
-        DailyCheckin latest = new DailyCheckin();
-        latest.setStreakDays(6);
-        when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
-                .thenReturn(Optional.of(latest));
+        when(dailyCheckinRepository.findMaximumStreakDaysByUserId(USER_ID)).thenReturn(7L);
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(30L);
 
         List<BadgeView> views = service.evaluateAndList(USER_ID);
 
-        assertFalse(views.get(0).unlocked());
-        assertEquals(6L, views.get(0).current());
+        assertTrue(views.get(0).unlocked());
+        assertEquals(7L, views.get(0).current());
         assertTrue(views.get(1).unlocked());
         assertEquals(30L, views.get(1).current());
+    }
+
+    @Test
+    void historicalSevenDayStreakReconcilesAfterLatestStreakReset() {
+        stubCatalog(List.of(badge(1L, "STREAK_7", 1)), List.of());
+        when(dailyCheckinRepository.findMaximumStreakDaysByUserId(USER_ID)).thenReturn(7L);
+
+        BadgeView view = service.evaluateAndList(USER_ID).get(0);
+
+        assertTrue(view.unlocked());
+        assertEquals(7L, view.current());
+        verify(dailyCheckinRepository, never()).findTopByUserIdOrderByCheckinDateDesc(USER_ID);
+        verify(userBadgeRepository).save(any(UserBadge.class));
     }
 
     @Test
@@ -195,8 +204,7 @@ class BadgeServiceTest {
                 badge(7L, "ACTIVITY_CHECKIN_3", 7), badge(8L, "PLACE_REVIEW_3", 8));
         stubCatalog(badges, List.of());
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(0L);
-        when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
-                .thenReturn(Optional.empty());
+        when(dailyCheckinRepository.findMaximumStreakDaysByUserId(USER_ID)).thenReturn(0L);
         when(postRepository.countByUserId(USER_ID)).thenReturn(0L);
         when(activitySignRepository.countByUserIdAndIsCheckin(USER_ID, "1")).thenReturn(0L);
         when(placeReviewRepository.countByUserId(USER_ID)).thenReturn(0L);
@@ -204,7 +212,7 @@ class BadgeServiceTest {
         service.evaluateAndList(USER_ID);
 
         verify(dailyCheckinRepository, times(1)).countByUserId(USER_ID);
-        verify(dailyCheckinRepository, times(1)).findTopByUserIdOrderByCheckinDateDesc(USER_ID);
+        verify(dailyCheckinRepository, times(1)).findMaximumStreakDaysByUserId(USER_ID);
         verify(postRepository, times(1)).countByUserId(USER_ID);
         verify(activitySignRepository, times(1)).countByUserIdAndIsCheckin(USER_ID, "1");
         verify(placeReviewRepository, times(1)).countByUserId(USER_ID);
@@ -244,10 +252,7 @@ class BadgeServiceTest {
         switch (metric) {
             case DAILY_COUNT -> when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(value);
             case STREAK -> {
-                DailyCheckin latest = new DailyCheckin();
-                latest.setStreakDays((int) value);
-                when(dailyCheckinRepository.findTopByUserIdOrderByCheckinDateDesc(USER_ID))
-                        .thenReturn(Optional.of(latest));
+                when(dailyCheckinRepository.findMaximumStreakDaysByUserId(USER_ID)).thenReturn(value);
             }
             case POST_COUNT -> when(postRepository.countByUserId(USER_ID)).thenReturn(value);
             case ACTIVITY_COUNT -> when(activitySignRepository.countByUserIdAndIsCheckin(USER_ID, "1"))

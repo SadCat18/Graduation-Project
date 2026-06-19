@@ -79,7 +79,7 @@ public class BadgeService {
     private Progress progressFor(String code, ProgressMetrics metrics) {
         return switch (code) {
             case "FIRST_CHECKIN" -> new Progress(metrics.dailyCount(), 1, true);
-            case "STREAK_7" -> new Progress(metrics.latestStreak(), 7, true);
+            case "STREAK_7" -> new Progress(metrics.maximumStreak(), 7, true);
             case "CHECKIN_30" -> new Progress(metrics.dailyCount(), 30, true);
             case "FIRST_POST" -> new Progress(metrics.postCount(), 1, true);
             case "POST_10" -> new Progress(metrics.postCount(), 10, true);
@@ -96,7 +96,7 @@ public class BadgeService {
     private final class ProgressMetrics {
         private final Long userId;
         private Long dailyCount;
-        private Long latestStreak;
+        private Long maximumStreak;
         private Long postCount;
         private Long activityCheckinCount;
         private Long reviewCount;
@@ -110,12 +110,10 @@ public class BadgeService {
             return dailyCount;
         }
 
-        private long latestStreak() {
-            latestStreak = cached(latestStreak, () -> dailyCheckinRepository
-                    .findTopByUserIdOrderByCheckinDateDesc(userId)
-                    .map(checkin -> (long) checkin.getStreakDays())
-                    .orElse(0L));
-            return latestStreak;
+        private long maximumStreak() {
+            maximumStreak = cached(maximumStreak,
+                    () -> dailyCheckinRepository.findMaximumStreakDaysByUserId(userId));
+            return maximumStreak;
         }
 
         private long postCount() {

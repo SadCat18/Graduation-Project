@@ -12,6 +12,20 @@ export function calculateLevelProgress({ level, exp, nextLevelNeedExp, maxLevel 
   return Math.round(Math.min(100, Math.max(0, progress)))
 }
 
+export function shanghaiDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+export function millisecondsUntilNextShanghaiMidnight(date = new Date()) {
+  const [year, month, day] = shanghaiDateKey(date).split('-').map(Number)
+  const nextMidnight = Date.UTC(year, month - 1, day + 1) - (8 * 60 * 60 * 1000)
+  return nextMidnight - date.getTime()
+}
+
 export function createLatestRequestGate() {
   let latestToken = 0
   return {

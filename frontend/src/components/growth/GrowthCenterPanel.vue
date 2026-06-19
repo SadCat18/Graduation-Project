@@ -1,7 +1,13 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '../../api'
-import { calculateLevelProgress, createLatestRequestGate, findNewlyUnlocked } from '../../utils/growthCenter'
+import {
+  calculateLevelProgress,
+  createLatestRequestGate,
+  findNewlyUnlocked,
+  millisecondsUntilNextShanghaiMidnight,
+  shanghaiDateKey
+} from '../../utils/growthCenter'
 import { normalizeMediaUrl } from '../../utils/url'
 import AchievementBadge from './AchievementBadge.vue'
 import BadgeUnlockModal from './BadgeUnlockModal.vue'
@@ -32,17 +38,10 @@ const size = 20
 const summaryGate = createLatestRequestGate()
 const leaderboardGate = createLatestRequestGate()
 let disposed = false
+let midnightTimer = null
 
-function shanghaiParts() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(new Date())
-  return Object.fromEntries(parts.map(part => [part.type, part.value]))
-}
-
-const shanghaiToday = shanghaiParts()
-const currentMonth = ref(`${shanghaiToday.year}-${shanghaiToday.month}`)
-const todayKey = `${currentMonth.value}-${shanghaiToday.day}`
+const todayKey = ref(shanghaiDateKey())
+const currentMonth = ref(todayKey.value.slice(0, 7))
 const weekdayLabels = ['日', '一', '二', '三', '四', '五', '六']
 
 const calendarTitle = computed(() => {
@@ -58,7 +57,7 @@ const calendarCells = computed(() => {
   const cells = Array.from({ length: leading }, (_, index) => ({ key: `blank-${index}`, blank: true }))
   for (let day = 1; day <= days; day += 1) {
     const date = `${currentMonth.value}-${String(day).padStart(2, '0')}`
-    cells.push({ key: date, day, checked: checkedDates.has(date), today: date === todayKey })
+    cells.push({ key: date, day, checked: checkedDates.has(date), today: date === todayKey.value })
   }
   return cells
 })
@@ -142,8 +141,29 @@ async function loadLeaderboard() {
   }
 }
 
+async function refreshForShanghaiDay(freshToday) {
+  if (freshToday === todayKey.value) return true
+  todayKey.value = freshToday
+  currentMonth.value = freshToday.slice(0, 7)
+  summaryGate.invalidate()
+  badgeBaselineReady.value = false
+  return Boolean(await loadSummary())
+}
+
+function scheduleShanghaiMidnightRefresh() {
+  clearTimeout(midnightTimer)
+  midnightTimer = setTimeout(async () => {
+    if (disposed) return
+    await refreshForShanghaiDay(shanghaiDateKey())
+    scheduleShanghaiMidnightRefresh()
+  }, millisecondsUntilNextShanghaiMidnight())
+}
+
 async function checkin(event) {
-  if (!badgeBaselineReady.value || checkinPending.value || status.value.checkedInToday) return
+  if (checkinPending.value) return
+  const freshToday = shanghaiDateKey()
+  if (freshToday !== todayKey.value && !await refreshForShanghaiDay(freshToday)) return
+  if (!badgeBaselineReady.value || status.value.checkedInToday) return
   checkinTrigger.value = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null
   checkinPending.value = true
   checkinError.value = ''
@@ -194,10 +214,12 @@ function changePage(nextPage) {
 onMounted(() => {
   loadSummary()
   loadLeaderboard()
+  scheduleShanghaiMidnightRefresh()
 })
 
 onBeforeUnmount(() => {
   disposed = true
+  clearTimeout(midnightTimer)
   checkinTrigger.value = null
   summaryGate.invalidate()
   leaderboardGate.invalidate()

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_growth_time_user_exp", columnList = "create_time,user_id,exp_gain")
 })
 public class UserGrowthLog {
+
+    private static final ZoneId SHANGHAI = ZoneId.of("Asia/Shanghai");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +41,7 @@ public class UserGrowthLog {
     @PrePersist
     public void prePersist() {
         if (createTime == null) {
-            createTime = LocalDateTime.now();
+            createTime = LocalDateTime.now(SHANGHAI);
         }
     }
 }
