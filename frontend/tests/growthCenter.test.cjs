@@ -30,10 +30,12 @@ assert.ok(compact(profile).includes('profile.remainToNextLevel=Number(user?.rema
 for (const state of ['summaryLoading', 'summaryError', 'leaderboardLoading', 'leaderboardError', 'checkinPending', 'checkinError']) {
   assert.match(growth, new RegExp(`const\\s+${state}\\s*=\\s*ref\\(`), `${state} has an independent ref`)
 }
-assert.match(growth, /if\s*\(checkinPending\.value/, 'check-in has a pending guard')
-assert.match(growth, /if\s*\(checkinPending\.value\s*\|\|\s*status\.value\.checkedInToday\)\s*return/, 'checked-in guard prevents duplicate API calls')
+assert.match(growth, /if\s*\([^)]*checkinPending\.value[^)]*\)\s*return/, 'check-in has a pending guard')
+assert.match(growth, /const\s+badgeBaselineReady\s*=\s*ref\(false\)/, 'badge baseline readiness starts false')
+assert.match(growth, /if\s*\([^)]*!badgeBaselineReady\.value[^)]*\)\s*return/, 'check-in is guarded until its badge baseline is ready')
+assert.match(growth, /badgeBaselineReady\.value\s*=\s*true/, 'a successful summary load establishes the badge baseline')
 assert.match(growth, /:disabled="checkinPending"/, 'check-in control is natively disabled only while pending')
-assert.match(growth, /:aria-disabled="status\.checkedInToday/, 'checked-in control remains focusable with aria-disabled')
+assert.match(growth, /:aria-disabled="[^\"]*!badgeBaselineReady[^\"]*status\.checkedInToday|:aria-disabled="[^\"]*status\.checkedInToday[^\"]*!badgeBaselineReady/, 'check-in communicates baseline loading and checked-in states with aria-disabled')
 assert.match(growth, /ref="primaryCheckinButton"/, 'check-in control exposes a stable focus ref')
 assert.match(compactGrowth, /Promise\.all\(\[api\.checkinStatus\(\),api\.checkinCalendar\(requestedMonth\),api\.badges\(\)\]\)/, 'summary resources load together for a captured month')
 assert.match(compactGrowth, /api\.growthLeaderboard\(\{type:requestedType,page:requestedPage,size:size\}\)/, 'leaderboard sends captured type, page and size')

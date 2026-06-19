@@ -21,6 +21,7 @@ const checkinMessage = ref('')
 const status = ref({ checkedInToday: false, streakDays: 0, totalDays: 0 })
 const calendar = ref({ month: '', checkedDates: [] })
 const badgeList = ref([])
+const badgeBaselineReady = ref(false)
 const unlockQueue = ref([])
 const checkinTrigger = ref(null)
 const primaryCheckinButton = ref(null)
@@ -107,6 +108,7 @@ async function loadSummary() {
     status.value = statusData || status.value
     calendar.value = calendarData || { month: requestedMonth, checkedDates: [] }
     badgeList.value = Array.isArray(badgesData) ? badgesData : []
+    badgeBaselineReady.value = true
     return { status: statusData, calendar: calendarData, badges: badgeList.value }
   } catch (error) {
     if (summaryGate.isCurrent(requestToken)) {
@@ -141,7 +143,7 @@ async function loadLeaderboard() {
 }
 
 async function checkin(event) {
-  if (checkinPending.value || status.value.checkedInToday) return
+  if (!badgeBaselineReady.value || checkinPending.value || status.value.checkedInToday) return
   checkinTrigger.value = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null
   checkinPending.value = true
   checkinError.value = ''
@@ -246,7 +248,7 @@ onBeforeUnmount(() => {
           ref="primaryCheckinButton"
           class="checkin-button"
           :disabled="checkinPending"
-          :aria-disabled="status.checkedInToday ? 'true' : undefined"
+          :aria-disabled="!badgeBaselineReady || status.checkedInToday ? 'true' : undefined"
           @click="checkin"
         >
           {{ checkinPending ? '签到中…' : status.checkedInToday ? '今日已签到' : '踩下今日一板' }}

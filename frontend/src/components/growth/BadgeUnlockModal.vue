@@ -78,8 +78,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.unlock-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(9, 12, 15, .76); backdrop-filter: blur(4px); }
-.unlock-dialog { --modal-accent: #cbd5e1; position: relative; isolation: isolate; width: min(390px, 100%); overflow: hidden; padding: 38px 28px 28px; border: 3px solid #17202a; border-radius: 12px 18px 10px 16px; color: #17202a; text-align: center; background: #f5efdf repeating-linear-gradient(112deg, transparent 0 22px, rgba(23,32,42,.035) 23px 24px); box-shadow: 8px 9px 0 var(--modal-accent), 12px 13px 0 #17202a; animation: sticker-in .34s cubic-bezier(.2,.8,.25,1.15) both; }
+.unlock-backdrop { --modal-gutter: clamp(10px, 3vh, 18px); position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; overflow-y: auto; padding: var(--modal-gutter); background: rgba(9, 12, 15, .76); backdrop-filter: blur(4px); }
+.unlock-dialog { --modal-accent: #cbd5e1; box-sizing: border-box; position: relative; isolation: isolate; width: min(390px, 100%); max-height: calc(100dvh - var(--modal-gutter) - var(--modal-gutter)); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding: 38px 28px 28px; border: 3px solid #17202a; border-radius: 12px 18px 10px 16px; color: #17202a; text-align: center; background: #f5efdf repeating-linear-gradient(112deg, transparent 0 22px, rgba(23,32,42,.035) 23px 24px); box-shadow: 8px 9px 0 var(--modal-accent), 12px 13px 0 #17202a; animation: sticker-in .34s cubic-bezier(.2,.8,.25,1.15) both; }
 .rarity-common { --modal-accent: #cbd5e1; }
 .rarity-rare { --modal-accent: #60a5fa; }
 .rarity-epic { --modal-accent: #c084fc; }
@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
 button:focus-visible { outline: 3px solid var(--modal-accent); outline-offset: 3px; }
 @keyframes sticker-in { from { opacity: 0; transform: translateY(18px) rotate(-2deg) scale(.92); } to { opacity: 1; transform: none; } }
 @keyframes rays-in { from { opacity: 0; transform: scale(.65) rotate(-12deg); } }
-@media (max-width: 440px) { .unlock-dialog { padding-inline: 20px; } }
+@media (max-width: 440px) { .unlock-dialog { padding: 34px 20px 22px; } }
 @media (prefers-reduced-motion: reduce) {
   .unlock-dialog, .rays, .claim-button, .modal-close { animation: none !important; transition: none !important; }
 }

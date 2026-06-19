@@ -24,8 +24,7 @@ const title = computed(() => `${props.badge?.name || '未知勋章'}，${rarity.
   <figure class="achievement-badge" :class="{ locked: !badge.unlocked, compact }" :style="{ '--badge-color': rarity.color, '--badge-size': dimension }" :aria-label="title">
     <span class="badge-shadow" aria-hidden="true"></span>
     <span class="badge-sticker"><span class="badge-face">
-      <svg viewBox="0 0 64 64" role="img" focusable="false">
-        <title>{{ title }}</title>
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
         <path v-for="(path, index) in paths" :key="index" :d="path" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </span></span>
