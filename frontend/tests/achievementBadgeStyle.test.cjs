@@ -7,6 +7,7 @@ const read = relativePath => fs.readFileSync(path.resolve(__dirname, relativePat
 const constants = read('../src/constants/badges.js')
 const badge = read('../src/components/growth/AchievementBadge.vue')
 const modal = read('../src/components/growth/BadgeUnlockModal.vue')
+const drawer = read('../src/components/growth/BadgeDetailDrawer.vue')
 const panel = read('../src/components/growth/GrowthCenterPanel.vue')
 
 for (const iconCode of [
@@ -51,6 +52,13 @@ assert.match(modal, /\.unlock-dialog\s*\{[^}]*max-height:\s*calc\(100dvh/s, 'dia
 assert.match(modal, /\.unlock-dialog\s*\{[^}]*overflow-y:\s*auto/s, 'dialog content scrolls internally')
 assert.match(modal, /\.unlock-dialog\s*\{[^}]*overscroll-behavior:\s*contain/s, 'dialog scroll is contained')
 assert.match(modal, /@media\s*\(prefers-reduced-motion:\s*reduce\)/, 'reduced motion is honored')
+
+assert.match(drawer, /role="dialog"/, 'badge detail drawer exposes dialog role')
+assert.match(drawer, /aria-modal="true"/, 'badge detail drawer is modal')
+assert.match(drawer, /Escape/, 'Escape closes the badge detail drawer')
+assert.match(drawer, /returnFocusTo/, 'badge detail drawer restores focus to its trigger')
+assert.match(drawer, /document\.body\.style\.overflow/, 'badge detail drawer restores body scrolling')
+assert.match(drawer, /@media\s*\(prefers-reduced-motion:\s*reduce\)/, 'badge detail drawer honors reduced motion')
 
 assert.match(panel, /import\s+AchievementBadge\s+from/, 'growth center imports badge artwork')
 assert.match(panel, /import\s+BadgeUnlockModal\s+from/, 'growth center imports unlock modal')
