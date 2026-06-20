@@ -19,6 +19,7 @@ assert.ok(compactApi.includes("checkinStatus:()=>http.get('/api/user/checkin/sta
 assert.ok(compactApi.includes("checkinCalendar:(month)=>http.get('/api/user/checkin/calendar',{params:{month}})"), 'checkinCalendar sends only month')
 assert.ok(compactApi.includes("growthLeaderboard:(params)=>http.get('/api/user/leaderboard',{params})"), 'growthLeaderboard forwards params')
 assert.ok(compactApi.includes("badges:()=>http.get('/api/user/badges')"), 'badges uses the exact endpoint')
+assert.ok(compactApi.includes("levelRoadmap:()=>http.get('/api/user/level-roadmap')"), 'levelRoadmap uses the exact endpoint')
 
 assert.match(profile, /import\s+GrowthCenterPanel\s+from\s+['"]\.\.\/components\/growth\/GrowthCenterPanel\.vue['"]/, 'profile imports panel')
 assert.match(profile, />\s*成长中心\s*</, 'profile exposes growth tab')

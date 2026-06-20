@@ -14,6 +14,7 @@ import com.skatehub.pojo.growth.CheckinCalendarResponse;
 import com.skatehub.pojo.growth.CheckinResponse;
 import com.skatehub.pojo.growth.CheckinStatusResponse;
 import com.skatehub.pojo.growth.LeaderboardResponse;
+import com.skatehub.pojo.growth.LevelRoadmapResponse;
 import com.skatehub.service.BadgeService;
 import com.skatehub.service.CheckinService;
 import com.skatehub.service.LeaderboardService;
@@ -23,6 +24,7 @@ import com.skatehub.service.ReportService;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.SecurityUtils;
 import com.skatehub.service.UserService;
+import com.skatehub.service.UserGrowthService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Pattern;
@@ -49,6 +51,7 @@ public class UserController {
     private final CheckinService checkinService;
     private final LeaderboardService leaderboardService;
     private final BadgeService badgeService;
+    private final UserGrowthService userGrowthService;
 
     @GetMapping("/profile")
     public ApiResponse<User> profile() {
@@ -163,5 +166,12 @@ public class UserController {
     public ApiResponse<List<BadgeView>> badges() {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(badgeService.evaluateAndList(currentUser.id()));
+    }
+
+    @GetMapping("/level-roadmap")
+    @PreAuthorize("hasRole('USER')")
+    public ApiResponse<LevelRoadmapResponse> levelRoadmap() {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(userGrowthService.levelRoadmap(currentUser.id()));
     }
 }

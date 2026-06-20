@@ -9,6 +9,8 @@ import com.skatehub.pojo.growth.CheckinResponse;
 import com.skatehub.pojo.growth.CheckinStatusResponse;
 import com.skatehub.pojo.growth.LeaderboardEntry;
 import com.skatehub.pojo.growth.LeaderboardResponse;
+import com.skatehub.pojo.growth.LevelRoadmapItem;
+import com.skatehub.pojo.growth.LevelRoadmapResponse;
 import com.skatehub.service.BadgeService;
 import com.skatehub.service.CheckinService;
 import com.skatehub.service.LeaderboardService;
@@ -16,6 +18,7 @@ import com.skatehub.service.PlaceReviewService;
 import com.skatehub.service.RecommendationService;
 import com.skatehub.service.ReportService;
 import com.skatehub.service.UserService;
+import com.skatehub.service.UserGrowthService;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.JwtAuthenticationFilter;
 import com.skatehub.util.JwtTokenService;
@@ -67,6 +70,8 @@ class UserGrowthControllerTest {
     private LeaderboardService leaderboardService;
     @MockBean
     private BadgeService badgeService;
+    @MockBean
+    private UserGrowthService userGrowthService;
     @MockBean
     private JwtTokenService jwtTokenService;
     @MockBean
@@ -120,6 +125,15 @@ class UserGrowthControllerTest {
     }
 
     @Test
+    void anonymousLevelRoadmapIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/user/level-roadmap"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
+
+        verifyNoInteractions(userGrowthService);
+    }
+
+    @Test
     void adminCheckinIsForbidden() throws Exception {
         mockMvc.perform(post("/api/user/checkin").with(adminUser()))
                 .andExpect(status().isForbidden())
@@ -166,6 +180,15 @@ class UserGrowthControllerTest {
                 .andExpect(jsonPath("$.code").value(403));
 
         verifyNoInteractions(badgeService);
+    }
+
+    @Test
+    void adminLevelRoadmapIsForbidden() throws Exception {
+        mockMvc.perform(get("/api/user/level-roadmap").with(adminUser()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+
+        verifyNoInteractions(userGrowthService);
     }
 
     @Test
@@ -348,6 +371,35 @@ class UserGrowthControllerTest {
                 .andExpect(jsonPath("$.data[0].target").value(1));
 
         verify(badgeService).evaluateAndList(USER_ID);
+    }
+
+    @Test
+    void levelRoadmapUsesAuthenticatedUserAndSerializesAllFields() throws Exception {
+        LevelRoadmapResponse response = new LevelRoadmapResponse(
+                3,
+                215,
+                4,
+                85,
+                List.of(new LevelRoadmapItem(
+                        3,
+                        "街角常客",
+                        200,
+                        "CURRENT",
+                        "你已经成为街角常见的活跃身影。")));
+        when(userGrowthService.levelRoadmap(USER_ID)).thenReturn(response);
+
+        mockMvc.perform(get("/api/user/level-roadmap").with(currentUser()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.currentLevel").value(3))
+                .andExpect(jsonPath("$.data.currentExp").value(215))
+                .andExpect(jsonPath("$.data.nextLevel").value(4))
+                .andExpect(jsonPath("$.data.remainToNextLevel").value(85))
+                .andExpect(jsonPath("$.data.levels[0].title").value("街角常客"))
+                .andExpect(jsonPath("$.data.levels[0].requiredExp").value(200))
+                .andExpect(jsonPath("$.data.levels[0].state").value("CURRENT"))
+                .andExpect(jsonPath("$.data.levels[0].description").value("你已经成为街角常见的活跃身影。"));
+
+        verify(userGrowthService).levelRoadmap(USER_ID);
     }
 
     private RequestPostProcessor currentUser() {
