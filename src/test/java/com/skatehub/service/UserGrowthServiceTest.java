@@ -4,6 +4,7 @@ import com.skatehub.dao.UserGrowthLogRepository;
 import com.skatehub.dao.UserRepository;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.UserGrowthLog;
+import com.skatehub.pojo.growth.LevelRoadmapResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -115,5 +117,41 @@ class UserGrowthServiceTest {
         assertEquals(0, service.grantExp(USER_ID, "POST_CREATE", "POST", 11L, -1));
 
         verifyNoInteractions(userRepository, userGrowthLogRepository);
+    }
+
+    @Test
+    void roadmapUsesFixedTitlesAndThreeExplicitStates() {
+        user.setExp(215);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        LevelRoadmapResponse result = service.levelRoadmap(USER_ID);
+
+        assertEquals(3, result.currentLevel());
+        assertEquals(4, result.nextLevel());
+        assertEquals(85, result.remainToNextLevel());
+        assertEquals(10, result.levels().size());
+        assertEquals("新板入场", result.levels().get(0).title());
+        assertEquals("COMPLETED", result.levels().get(0).state());
+        assertEquals("街角常客", result.levels().get(2).title());
+        assertEquals("CURRENT", result.levels().get(2).state());
+        assertEquals("LOCKED", result.levels().get(3).state());
+        assertEquals("滑行传奇", result.levels().get(9).title());
+        assertEquals(900, result.levels().get(9).requiredExp());
+    }
+
+    @Test
+    void roadmapKeepsExistingBoundariesAndStopsAtLevelTen() {
+        int[][] cases = {{0, 1}, {99, 1}, {100, 2}, {899, 9}, {900, 10}, {1200, 10}};
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        for (int[] item : cases) {
+            user.setExp(item[0]);
+            assertEquals(item[1], service.levelRoadmap(USER_ID).currentLevel(), "exp=" + item[0]);
+        }
+
+        user.setExp(900);
+        LevelRoadmapResponse max = service.levelRoadmap(USER_ID);
+        assertNull(max.nextLevel());
+        assertEquals(0, max.remainToNextLevel());
     }
 }
