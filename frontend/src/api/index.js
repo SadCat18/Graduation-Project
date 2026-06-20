@@ -69,6 +69,7 @@ export const api = {
   checkinCalendar: (month) => http.get('/api/user/checkin/calendar', { params: { month } }),
   growthLeaderboard: (params) => http.get('/api/user/leaderboard', { params }),
   badges: () => http.get('/api/user/badges'),
+  levelRoadmap: () => http.get('/api/user/level-roadmap'),
   updateProfile: (data) => http.put('/api/user/profile', data),
   updatePassword: (data) => http.put('/api/user/password', data),
   dashboard: () => http.get('/api/user/dashboard'),
