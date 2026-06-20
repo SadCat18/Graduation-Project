@@ -10,7 +10,9 @@ import {
 } from '../../utils/growthCenter'
 import { normalizeMediaUrl } from '../../utils/url'
 import AchievementBadge from './AchievementBadge.vue'
+import BadgeGalleryPanel from './BadgeGalleryPanel.vue'
 import BadgeUnlockModal from './BadgeUnlockModal.vue'
+import LevelRoadmapPanel from './LevelRoadmapPanel.vue'
 
 const props = defineProps({
   profile: { type: Object, required: true }
@@ -19,6 +21,8 @@ const emit = defineEmits(['experience-changed'])
 
 const summaryLoading = ref(false)
 const summaryError = ref('')
+const badgeLoading = ref(false)
+const badgeError = ref('')
 const leaderboardLoading = ref(false)
 const leaderboardError = ref('')
 const checkinPending = ref(false)
@@ -35,10 +39,28 @@ const leaderboard = ref({ total: 0, list: [], currentUser: null })
 const boardType = ref('total')
 const page = ref(1)
 const size = 20
+const growthView = ref('summary')
+const growthViews = [
+  { key: 'summary', label: '成长总览' },
+  { key: 'badges', label: '徽章图鉴' },
+  { key: 'roadmap', label: '等级路线' }
+]
+const growthViewHost = ref(null)
+const growthViewSwitching = ref(false)
+const growthViewEntering = ref(false)
+const levelRoadmap = ref({ levels: [] })
+const levelRoadmapLoading = ref(false)
+const levelRoadmapError = ref('')
 const summaryGate = createLatestRequestGate()
+const badgeGate = createLatestRequestGate()
 const leaderboardGate = createLatestRequestGate()
+const levelRoadmapGate = createLatestRequestGate()
+const GROWTH_VIEW_TRANSITION_MS = 280
 let disposed = false
 let midnightTimer = null
+let growthViewTimer = null
+let growthViewFrame = null
+let growthViewSequence = 0
 
 const todayKey = ref(shanghaiDateKey())
 const currentMonth = ref(todayKey.value.slice(0, 7))
@@ -75,6 +97,10 @@ const currentLeaderboardUser = computed(() => leaderboard.value?.currentUser || 
 const currentUnlock = computed(() => unlockQueue.value[0] || null)
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(leaderboard.value?.total || 0) / size)))
 const scoreLabel = computed(() => boardType.value === 'weekly' ? '本周经验' : '总经验')
+const recentUnlockedBadges = computed(() => badgeList.value
+  .filter(item => item.unlocked)
+  .sort((a, b) => String(b.unlockTime || '').localeCompare(String(a.unlockTime || '')))
+  .slice(0, 3))
 
 function errorMessage(error, fallback) {
   return error?.message || fallback
@@ -100,21 +126,39 @@ async function loadSummary() {
   summaryLoading.value = true
   summaryError.value = ''
   try {
-    const [statusData, calendarData, badgesData] = await Promise.all([
-      api.checkinStatus(), api.checkinCalendar(requestedMonth), api.badges()
+    const [statusData, calendarData] = await Promise.all([
+      api.checkinStatus(), api.checkinCalendar(requestedMonth)
     ])
     if (!summaryGate.isCurrent(requestToken)) return
     status.value = statusData || status.value
     calendar.value = calendarData || { month: requestedMonth, checkedDates: [] }
-    badgeList.value = Array.isArray(badgesData) ? badgesData : []
-    badgeBaselineReady.value = true
-    return { status: statusData, calendar: calendarData, badges: badgeList.value }
+    return { status: statusData, calendar: calendarData }
   } catch (error) {
     if (summaryGate.isCurrent(requestToken)) {
       summaryError.value = errorMessage(error, '成长记录加载失败，请重试。')
     }
   } finally {
     if (summaryGate.isCurrent(requestToken)) summaryLoading.value = false
+  }
+}
+
+async function loadBadges() {
+  if (disposed) return
+  const requestToken = badgeGate.begin()
+  badgeLoading.value = true
+  badgeError.value = ''
+  try {
+    const data = await api.badges()
+    if (!badgeGate.isCurrent(requestToken)) return
+    badgeList.value = Array.isArray(data) ? data : []
+    badgeBaselineReady.value = true
+    return badgeList.value
+  } catch (error) {
+    if (badgeGate.isCurrent(requestToken)) {
+      badgeError.value = errorMessage(error, '徽章图鉴加载失败，请重试。')
+    }
+  } finally {
+    if (badgeGate.isCurrent(requestToken)) badgeLoading.value = false
   }
 }
 
@@ -141,13 +185,33 @@ async function loadLeaderboard() {
   }
 }
 
+async function loadLevelRoadmap() {
+  if (disposed) return
+  const requestToken = levelRoadmapGate.begin()
+  levelRoadmapLoading.value = true
+  levelRoadmapError.value = ''
+  try {
+    const data = await api.levelRoadmap()
+    if (!levelRoadmapGate.isCurrent(requestToken)) return
+    levelRoadmap.value = data || { levels: [] }
+  } catch (error) {
+    if (levelRoadmapGate.isCurrent(requestToken)) {
+      levelRoadmapError.value = errorMessage(error, '等级路线加载失败，请重试。')
+    }
+  } finally {
+    if (levelRoadmapGate.isCurrent(requestToken)) levelRoadmapLoading.value = false
+  }
+}
+
 async function refreshForShanghaiDay(freshToday) {
   if (freshToday === todayKey.value) return true
   todayKey.value = freshToday
   currentMonth.value = freshToday.slice(0, 7)
   summaryGate.invalidate()
+  badgeGate.invalidate()
   badgeBaselineReady.value = false
-  return Boolean(await loadSummary())
+  const [summaryData, badgesData] = await Promise.all([loadSummary(), loadBadges()])
+  return Boolean(summaryData && badgesData)
 }
 
 function scheduleShanghaiMidnightRefresh() {
@@ -169,6 +233,7 @@ async function checkin(event) {
   checkinError.value = ''
   checkinMessage.value = ''
   summaryGate.invalidate()
+  badgeGate.invalidate()
   const badgesBeforeCheckin = badgeList.value
   try {
     const result = await api.dailyCheckin()
@@ -180,8 +245,8 @@ async function checkin(event) {
       emit('experience-changed')
     }
     status.value.checkedInToday = true
-    const [summaryData] = await Promise.all([loadSummary(), loadLeaderboard()])
-    const newlyUnlocked = findNewlyUnlocked(badgesBeforeCheckin, summaryData?.badges)
+    const [, badgesData] = await Promise.all([loadSummary(), loadBadges(), loadLeaderboard(), loadLevelRoadmap()])
+    const newlyUnlocked = findNewlyUnlocked(badgesBeforeCheckin, badgesData)
     if (newlyUnlocked.length) unlockQueue.value.push(...newlyUnlocked)
   } catch (error) {
     checkinError.value = errorMessage(error, '签到失败，请稍后重试。')
@@ -199,6 +264,55 @@ function closeCurrentUnlock() {
   }
 }
 
+function clearGrowthViewTransition() {
+  if (growthViewTimer) clearTimeout(growthViewTimer)
+  if (growthViewFrame) cancelAnimationFrame(growthViewFrame)
+  growthViewTimer = null
+  growthViewFrame = null
+  growthViewSwitching.value = false
+  growthViewEntering.value = false
+  const host = growthViewHost.value
+  if (host) {
+    host.style.height = ''
+    host.style.overflow = ''
+  }
+}
+
+async function switchGrowthView(view) {
+  if (view === growthView.value) return
+  const sequence = ++growthViewSequence
+  const host = growthViewHost.value
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  if (!host || reduceMotion) {
+    clearGrowthViewTransition()
+    growthView.value = view
+    return
+  }
+
+  const currentHeight = host.getBoundingClientRect().height
+  clearGrowthViewTransition()
+  host.style.height = `${currentHeight}px`
+  host.style.overflow = 'hidden'
+  void host.offsetHeight
+  growthViewSwitching.value = true
+  growthView.value = view
+  await nextTick()
+  if (sequence !== growthViewSequence) return
+
+  const nextHeight = host.firstElementChild?.getBoundingClientRect().height || currentHeight
+  growthViewEntering.value = true
+  await nextTick()
+  if (sequence !== growthViewSequence) return
+
+  growthViewFrame = requestAnimationFrame(() => {
+    if (sequence !== growthViewSequence) return
+    host.style.height = `${nextHeight}px`
+    growthViewTimer = setTimeout(() => {
+      if (sequence === growthViewSequence) clearGrowthViewTransition()
+    }, GROWTH_VIEW_TRANSITION_MS)
+  })
+}
+
 function switchBoard(type) {
   if (boardType.value === type) return
   boardType.value = type
@@ -213,21 +327,43 @@ function changePage(nextPage) {
 
 onMounted(() => {
   loadSummary()
+  loadBadges()
   loadLeaderboard()
+  loadLevelRoadmap()
   scheduleShanghaiMidnightRefresh()
 })
 
 onBeforeUnmount(() => {
   disposed = true
   clearTimeout(midnightTimer)
+  growthViewSequence += 1
+  clearGrowthViewTransition()
   checkinTrigger.value = null
   summaryGate.invalidate()
+  badgeGate.invalidate()
   leaderboardGate.invalidate()
+  levelRoadmapGate.invalidate()
 })
 </script>
 
 <template>
   <section class="growth-center" aria-labelledby="growth-title">
+    <nav class="growth-subnav" aria-label="成长中心页面">
+      <button
+        v-for="item in growthViews"
+        :key="item.key"
+        type="button"
+        :aria-current="growthView === item.key ? 'page' : undefined"
+        @click="switchGrowthView(item.key)"
+      >{{ item.label }}</button>
+    </nav>
+
+    <div
+      ref="growthViewHost"
+      class="growth-view-host"
+      :class="{ 'is-switching': growthViewSwitching, 'is-entering': growthViewEntering }"
+    >
+    <div v-if="growthView === 'summary'" class="growth-view growth-summary">
     <header class="growth-header">
       <div>
         <p class="eyebrow">KEEP ROLLING / 成长档案</p>
@@ -309,17 +445,21 @@ onBeforeUnmount(() => {
 
       <article class="panel badges-card">
         <div class="panel-heading">
-          <div><p class="panel-kicker">BADGE WALL</p><h3>徽章墙</h3></div>
-          <span>{{ badgeList.filter(item => item.unlocked).length }}/{{ badgeList.length }} 已解锁</span>
+          <div><p class="panel-kicker">RECENT BADGES</p><h3>最近解锁</h3></div>
+          <button type="button" @click="switchGrowthView('badges')">查看全部徽章</button>
         </div>
-        <div v-if="!badgeList.length" class="empty-state">暂无徽章，保持滑行，第一枚很快就来。</div>
+        <div v-if="badgeLoading" class="empty-state" aria-live="polite">正在整理徽章档案...</div>
+        <div v-else-if="badgeError" class="empty-state error" role="alert">
+          <span>{{ badgeError }}</span><button type="button" @click="loadBadges">重试</button>
+        </div>
+        <div v-else-if="!recentUnlockedBadges.length" class="empty-state">暂无已解锁徽章，保持滑行，第一枚很快就来。</div>
         <ul v-else class="badge-grid">
-          <li v-for="badge in badgeList" :key="badge.code" class="badge" :class="{ locked: !badge.unlocked }">
+          <li v-for="badge in recentUnlockedBadges" :key="badge.code" class="badge">
             <AchievementBadge :badge="badge" :size="58" compact />
             <div>
               <div class="badge-title"><strong>{{ badge.name }}</strong><span>{{ rarityLabel(badge.rarity) }}</span></div>
               <p>{{ badge.description }}</p>
-              <small>{{ badge.current || 0 }} / {{ badge.target || 0 }} · {{ badge.unlocked ? '已解锁' : '未解锁' }}</small>
+              <small>{{ String(badge.unlockTime || '').replace('T', ' ') || '已解锁' }}</small>
             </div>
           </li>
         </ul>
@@ -361,6 +501,25 @@ onBeforeUnmount(() => {
         <button :disabled="page >= totalPages" @click="changePage(page + 1)">下一页</button>
       </div>
     </article>
+    </div>
+
+    <div v-else-if="growthView === 'badges' && badgeLoading" class="growth-view panel state-box" aria-live="polite">
+      正在整理徽章档案...
+    </div>
+    <div v-else-if="growthView === 'badges' && badgeError" class="growth-view panel state-box error" role="alert">
+      <span>{{ badgeError }}</span><button type="button" @click="loadBadges">重试徽章图鉴</button>
+    </div>
+    <BadgeGalleryPanel v-else-if="growthView === 'badges'" class="growth-view" :badges="badgeList" />
+    <LevelRoadmapPanel
+      v-else
+      class="growth-view"
+      :roadmap="levelRoadmap"
+      :loading="levelRoadmapLoading"
+      :error="levelRoadmapError"
+      @retry="loadLevelRoadmap"
+    />
+    </div>
+
     <BadgeUnlockModal
       v-if="currentUnlock"
       :key="currentUnlock.code"
@@ -384,6 +543,48 @@ onBeforeUnmount(() => {
   min-width: 0;
   color: var(--ink);
   font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.growth-subnav {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid rgba(22, 26, 29, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.growth-subnav button {
+  min-height: 38px;
+  border: 1px solid rgba(22, 26, 29, 0.2);
+  background: #fffdf7;
+}
+
+.growth-subnav button[aria-current="page"] {
+  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.growth-view-host,
+.growth-view {
+  width: 100%;
+  min-width: 0;
+}
+
+.growth-view-host {
+  transition: height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.growth-view-host.is-switching { overflow: hidden; }
+.growth-summary { display: grid; gap: 14px; }
+.growth-view-host.is-entering > .growth-view { animation: growth-view-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes growth-view-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .growth-header,
@@ -475,6 +676,8 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
 }
 
 @media (max-width: 520px) {
+  .growth-subnav { overflow-x: auto; }
+  .growth-subnav button { flex: 0 0 auto; }
   .growth-header { padding: 18px; }
   .deck-stamp { font-size: 12px; }
   .panel { padding: 14px; }
@@ -484,6 +687,8 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .growth-view-host { transition: none; }
+  .growth-view-host.is-entering > .growth-view { animation: none; }
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
 </style>
