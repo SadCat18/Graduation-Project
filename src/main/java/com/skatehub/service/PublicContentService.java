@@ -88,6 +88,11 @@ public class PublicContentService {
         return videoRepository.findAllByOrderByCreateTimeDesc();
     }
 
+    public Video videoDetail(Long videoId) {
+        InputValidator.positiveId(videoId, "视频ID");
+        return videoRepository.findById(videoId).orElseThrow(() -> new BizException("视频不存在"));
+    }
+
     public List<Banner> banners() {
         return bannerRepository.findByStatusOrderBySortNumAscCreateTimeDesc("0");
     }

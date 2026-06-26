@@ -42,6 +42,7 @@ const selectedCommentIds = ref([])
 const commentContextVisible = ref(false)
 const commentContextLoading = ref(false)
 const activeCommentContext = ref(null)
+const adminLoadError = ref('')
 const activities = ref([])
 const activityReviewFilter = ref('0')
 const notices = ref([])
@@ -1195,22 +1196,30 @@ async function deletePostFromDetail() {
 }
 
 async function loadComments() {
-  const res = await api.adminComments({
-    page: pageState.comments.page,
-    size: ADMIN_PAGE_SIZE,
-    keyword: String(commentFilters.keyword || '').trim() || undefined,
-    postId: String(commentFilters.postId || '').trim() || undefined,
-    userId: String(commentFilters.userId || '').trim() || undefined,
-    type: commentFilters.type,
-    sort: commentFilters.sort
-  })
-  comments.value = res.list || []
-  pageState.comments.total = Number(res.total || 0)
-  pruneSelectedCommentIds()
-  normalizeServerPage('comments')
-  if (!comments.value.length && pageState.comments.page > 1) {
-    pageState.comments.page -= 1
-    await loadComments()
+  adminLoadError.value = ''
+  try {
+    const res = await api.adminComments({
+      page: pageState.comments.page,
+      size: ADMIN_PAGE_SIZE,
+      keyword: String(commentFilters.keyword || '').trim() || undefined,
+      postId: String(commentFilters.postId || '').trim() || undefined,
+      userId: String(commentFilters.userId || '').trim() || undefined,
+      type: commentFilters.type,
+      sort: commentFilters.sort
+    })
+    comments.value = res.list || []
+    pageState.comments.total = Number(res.total || 0)
+    pruneSelectedCommentIds()
+    normalizeServerPage('comments')
+    if (!comments.value.length && pageState.comments.page > 1) {
+      pageState.comments.page -= 1
+      await loadComments()
+    }
+  } catch (error) {
+    comments.value = []
+    pageState.comments.total = 0
+    selectedCommentIds.value = []
+    adminLoadError.value = error?.message || '评论加载失败，请稍后重试'
   }
 }
 
@@ -1965,29 +1974,35 @@ async function refreshAll() {
 async function loadTabData(tabKey, force = false) {
   if (!force && loadedTabs[tabKey]) return
 
-  if (tabKey === 'workbench') {
-    await loadWorkbench()
-  } else if (tabKey === 'stats') {
-    await loadStats()
-  } else if (tabKey === 'analytics') {
-    await loadAnalytics()
-  } else if (tabKey === 'reviewCenter') {
-    await loadReviewCenterData()
-  } else if (tabKey === 'users') {
-    await loadUsers()
-  } else if (tabKey === 'posts') {
-    await loadPosts()
-  } else if (tabKey === 'comments') {
-    await loadComments()
-  } else if (tabKey === 'activities') {
-    await loadActivities()
-  } else if (tabKey === 'reports') {
-    await loadReports()
-  } else if (tabKey === 'content') {
-    await loadContentData()
-  }
+  adminLoadError.value = ''
+  try {
+    if (tabKey === 'workbench') {
+      await loadWorkbench()
+    } else if (tabKey === 'stats') {
+      await loadStats()
+    } else if (tabKey === 'analytics') {
+      await loadAnalytics()
+    } else if (tabKey === 'reviewCenter') {
+      await loadReviewCenterData()
+    } else if (tabKey === 'users') {
+      await loadUsers()
+    } else if (tabKey === 'posts') {
+      await loadPosts()
+    } else if (tabKey === 'comments') {
+      await loadComments()
+    } else if (tabKey === 'activities') {
+      await loadActivities()
+    } else if (tabKey === 'reports') {
+      await loadReports()
+    } else if (tabKey === 'content') {
+      await loadContentData()
+    }
 
-  loadedTabs[tabKey] = true
+    loadedTabs[tabKey] = true
+  } catch (error) {
+    loadedTabs[tabKey] = false
+    adminLoadError.value = error?.message || '后台数据加载失败，请稍后重试'
+  }
 }
 
 async function refreshCurrentTab() {
@@ -2080,6 +2095,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
+      <p v-if="adminLoadError" class="error admin-load-error">{{ adminLoadError }}</p>
 
       <div v-if="tab === 'workbench'" class="workbench-grid">
         <section class="card workbench-priority">
@@ -4551,7 +4567,7 @@ onBeforeUnmount(() => {
 
 .news-sync-float-enter-active,
 .news-sync-float-leave-active {
-  transition: all 0.22s ease;
+  transition: opacity 0.22s ease, transform 0.22s var(--motion-ease);
 }
 
 .news-sync-float-enter-from,

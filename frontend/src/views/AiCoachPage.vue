@@ -10,84 +10,23 @@ const router = useRouter()
 
 const typingStates = [
   '正在拆解你的问题，先把动作重点理清楚。',
-  '在匹配更适合新手的练习建议和节奏。',
+  '正在匹配更适合新手的练习建议和节奏。',
   '马上整理成更好执行的回答发给你。'
 ]
 
 const quickQuestionPool = [
-  '新手如何选板',
-  'Ollie 怎么练',
-  '如何安全摔倒',
-  '我适合参加什么活动',
-  '练滑板需要哪些护具',
-  '豚跳总是跳不起来怎么办',
-  '新手该买什么滑板',
-  '怎么在滑板上保持平衡',
-  '滑板刹车有哪几种方式',
-  '练多久能学会 Ollie',
-  '滑板路面怎么选',
-  '转弯和转向怎么练',
-  '练滑板前怎么热身比较好',
-  '滑板动作学习顺序是什么',
-  '怎么练 Manual 后轮滑',
-  '滑板轴承怎么保养清理',
-  '玩滑板摔伤怎么应急处理',
-  '怎么选滑板轮子的硬度',
-  '豚跳收脚总是不够高怎么办',
-  '练滑板一天练多久才合理',
-  '滑板桥的松紧怎么调',
-  '刚学会滑行下一步练什么',
-  '滑板尺寸 7.75 和 8.0 怎么选',
-  '双翘滑板和长板有什么区别',
-  '轮子硬度 99A 和 101A 有什么区别',
-  '砂纸磨脚怎么办',
-  '滑板轮子变黄还能用吗',
-  '板面裂了还能继续玩吗',
-  'Regular 和 Goofy 怎么判断',
-  '怎么练习蹬地更稳定',
-  '滑行时身体重心怎么放',
-  'T 刹怎么练比较安全',
-  '脚刹总是不稳怎么办',
-  '滑行速度一快就害怕怎么办',
-  '怎么练习下小坡',
-  'Ollie 起跳脚应该怎么发力',
-  'Ollie 前脚带不起来怎么办',
-  'Ollie 总是板头先落地怎么办',
-  'Ollie 能跳起来但不稳怎么练',
-  'Manual 怎么入门',
-  'Shuvit 怎么开始练',
-  'Pop Shuvit 和 Shuvit 区别是什么',
-  'Kickflip 前应该先会哪些动作',
-  '台阶和道具动作怎么循序渐进',
-  '刷街前怎么热身',
-  '摔倒时怎么保护手腕',
-  '膝盖摔伤后怎么处理',
-  '扭到脚踝还能继续练吗',
-  '怎么判断今天不适合练高强度',
-  '夏天练滑板怎么防中暑',
-  '夜滑需要注意什么',
-  '雨后路面能不能滑',
-  '一个人练滑板怎么安排计划',
-  '每周练几次比较合理',
-  '30 分钟训练怎么安排',
-  '卡在一个动作很久怎么办',
-  '怎么克服摔倒恐惧',
-  '怎么记录自己的练习进步',
-  '同城约板要注意哪些礼貌',
-  '第一次去滑板场怎么融入',
-  '滑板场新手应该避开什么区域',
-  '街式、公园、碗池分别适合谁',
-  '怎么找适合练 Ollie 的地方',
-  '练习路线怎么规划更安全',
-  '滑板视频怎么拍更容易看动作',
-  '别人帮我看动作时该拍哪个角度',
-  '怎么判断动作问题在前脚还是后脚',
-  '滑板鞋磨损太快怎么办',
-  '鞋底太滑适合练滑板吗',
-  '换新板后为什么感觉不稳定',
-  '轮子太吵是什么原因',
-  '滑板异响怎么排查',
-  '滑板螺丝松了怎么处理'
+  '新手如何选择第一块滑板？',
+  'Ollie 总是跳不起来怎么办？',
+  '摔倒时怎么保护手腕和膝盖？',
+  '我适合参加什么同城活动？',
+  '滑板轴承应该怎么保养？',
+  '怎么判断自己是 Regular 还是 Goofy？',
+  '练习前怎么热身比较好？',
+  'Kickflip 前需要先会哪些动作？',
+  '雨后路面还能滑吗？',
+  '一个人练滑板怎么安排计划？',
+  '滑板场新手应该避开什么区域？',
+  '拍动作视频用什么角度更容易看清？'
 ]
 
 const quickQuestions = ref([])
@@ -96,44 +35,62 @@ const quickRefreshing = ref(false)
 let quickQuestionQueue = []
 let quickRefreshTimer = null
 
-const quickQuestionCategories = [
-  { label: '入门', match: ['新手', '选板', '平衡', '蹬地', 'Regular', 'Goofy', '尺寸', '双翘'] },
-  { label: '动作', match: ['Ollie', '豚跳', 'Manual', 'Shuvit', 'Kickflip', '台阶', '道具'] },
-  { label: '安全', match: ['安全', '摔', '护具', '热身', '膝盖', '手腕', '强度', '夜滑', '雨后', '防中暑'] },
-  { label: '装备', match: ['轴承', '轮子', '硬度', '桥', '砂纸', '板面', '螺丝', '异响', '鞋'] },
-  { label: '计划', match: ['计划', '多久', '每周', '30 分钟', '进步', '恐惧', '卡在'] },
-  { label: '场地', match: ['活动', '同城', '滑板场', '街式', '公园', '碗池', '路线', '路面'] },
-  { label: '拍摄', match: ['视频', '拍', '角度', '前脚', '后脚'] }
+const categoryRules = [
+  { label: '入门', match: ['新手', '选择', 'Regular', 'Goofy'] },
+  { label: '动作', match: ['Ollie', 'Kickflip', '跳'] },
+  { label: '安全', match: ['摔倒', '保护', '热身', '雨后'] },
+  { label: '装备', match: ['滑板', '轴承'] },
+  { label: '计划', match: ['计划', '安排'] },
+  { label: '场地', match: ['活动', '滑板场'] },
+  { label: '拍摄', match: ['视频', '角度'] }
 ]
 
-function quickQuestionLabel(question) {
-  const category = quickQuestionCategories.find(item =>
-    item.match.some(keyword => String(question).includes(keyword))
-  )
-  return category?.label || '提问'
+const sessions = ref([])
+const sessionsLoading = ref(false)
+const sessionsError = ref('')
+const activeSessionId = ref('')
+const currentTitle = ref('新对话')
+const messages = ref([welcomeMessage()])
+const messagesLoading = ref(false)
+const messagesError = ref('')
+const inputValue = ref('')
+const sending = ref(false)
+const mobilePanel = ref('chat')
+const isMobile = ref(false)
+const chatBodyRef = ref(null)
+const relatedContent = ref(emptyRelated())
+const typingStateIndex = ref(0)
+const deletingSession = ref('')
+let typingStateTimer = null
+
+const activeSession = computed(() =>
+  sessions.value.find(item => item.sessionId === activeSessionId.value) || null
+)
+
+const hasRelatedContent = computed(() =>
+  relatedContent.value.posts.length ||
+  relatedContent.value.videos.length ||
+  relatedContent.value.activities.length
+)
+
+const currentTypingState = computed(() => typingStates[typingStateIndex.value] || typingStates[0])
+
+function welcomeMessage() {
+  return {
+    id: `welcome-${Date.now()}`,
+    role: 'assistant',
+    content: '你好，我是 AI 滑板老师。你可以问我入门动作、装备选择、练习步骤或安全问题，我会尽量分步骤讲清楚。',
+    suggestions: [],
+    createTime: ''
+  }
 }
 
-function formatCoachContent(content) {
-  const normalized = String(content || '').replace(/\r\n/g, '\n').trim()
-  if (!normalized) return []
-  let stepIndex = 0
-  return normalized
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const numbered = line.match(/^(\d+)[.、]\s*(.+)$/)
-      const bullet = line.match(/^[-•]\s*(.+)$/)
-      const text = numbered?.[2] || bullet?.[1] || line
-      const isSafety = /注意|安全|护具|摔|疼|受伤|休息|停止|热身|风险/.test(text)
-      const looksLikeStep = !!numbered || !!bullet || /^(先|再|然后|最后|第一|第二|第三|第四)/.test(text)
-      if (isSafety) return { type: 'tip', text, index: '!' }
-      if (looksLikeStep) {
-        stepIndex += 1
-        return { type: 'step', text, index: numbered?.[1] || stepIndex }
-      }
-      return { type: 'text', text, index: '' }
-    })
+function emptyRelated() {
+  return { posts: [], videos: [], activities: [] }
+}
+
+function quickQuestionLabel(question) {
+  return categoryRules.find(item => item.match.some(keyword => question.includes(keyword)))?.label || '提问'
 }
 
 function shuffleQuestions(list) {
@@ -170,55 +127,35 @@ function refreshQuickQuestions() {
   }, 360)
 }
 
-const welcomeMessage = () => ({
-  id: `welcome-${Date.now()}`,
-  role: 'assistant',
-  content: '你好，我是 AI 滑板老师。你可以问我入门动作、装备选择、练习步骤或安全问题，我会尽量分步骤讲清楚。',
-  suggestions: [],
-  createTime: ''
-})
+function formatCoachContent(content) {
+  const normalized = String(content || '').replace(/\r\n/g, '\n').trim()
+  if (!normalized) return []
 
-const emptyRelated = () => ({
-  posts: [],
-  videos: [],
-  activities: []
-})
+  let stepIndex = 0
+  return normalized
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const numbered = line.match(/^(\d+)[.、]\s*(.+)$/)
+      const bullet = line.match(/^[-•]\s*(.+)$/)
+      const text = numbered?.[2] || bullet?.[1] || line
+      const isSafety = /注意|安全|护具|摔|受伤|休息|停止|热身|风险/.test(text)
+      const looksLikeStep = !!numbered || !!bullet || /^(先|再|然后|最后|第一|第二|第三|第四)/.test(text)
 
-const sessions = ref([])
-const sessionsLoading = ref(false)
-const sessionsError = ref('')
-const activeSessionId = ref('')
-const currentTitle = ref('新对话')
-const messages = ref([welcomeMessage()])
-const messagesLoading = ref(false)
-const messagesError = ref('')
-const inputValue = ref('')
-const sending = ref(false)
-const mobilePanel = ref('chat')
-const isMobile = ref(false)
-const chatBodyRef = ref(null)
-const relatedContent = ref(emptyRelated())
-const typingStateIndex = ref(0)
-let typingStateTimer = null
-
-const activeSession = computed(() =>
-  sessions.value.find(item => item.sessionId === activeSessionId.value) || null
-)
-
-const hasRelatedContent = computed(() =>
-  relatedContent.value.posts.length
-    || relatedContent.value.videos.length
-    || relatedContent.value.activities.length
-)
-
-const currentTypingState = computed(() => typingStates[typingStateIndex.value] || typingStates[0])
+      if (isSafety) return { type: 'tip', text, index: '!' }
+      if (looksLikeStep) {
+        stepIndex += 1
+        return { type: 'step', text, index: numbered?.[1] || stepIndex }
+      }
+      return { type: 'text', text, index: '' }
+    })
+}
 
 function isCoachHistoryApiUnavailable(error) {
   const status = error?.response?.status
   const message = String(error?.response?.data?.message || error?.message || '').toLowerCase()
-  return status === 404
-    || message.includes('no static resource')
-    || message.includes('/api/ai/coach/sessions')
+  return status === 404 || message.includes('no static resource') || message.includes('/api/ai/coach/sessions')
 }
 
 function formatSessionTime(value) {
@@ -256,7 +193,6 @@ function startTypingStateMotion() {
   stopTypingStateMotion()
   typingStateIndex.value = 0
   if (typingStates.length <= 1) return
-
   typingStateTimer = window.setInterval(() => {
     typingStateIndex.value = (typingStateIndex.value + 1) % typingStates.length
   }, 1800)
@@ -286,11 +222,9 @@ function resetConversation() {
   relatedContent.value = emptyRelated()
 }
 
-const deletingSession = ref('')
-
 function confirmDeleteSession(sessionId) {
   if (sending.value || messagesLoading.value) return
-  if (!window.confirm('确定删除此对话？删除后无法恢复。')) return
+  if (!window.confirm('确定删除这段对话？删除后无法恢复。')) return
   deleteSession(sessionId)
 }
 
@@ -369,11 +303,9 @@ async function openSession(sessionId) {
     }
     await scrollToBottom()
   } catch (error) {
-    if (isCoachHistoryApiUnavailable(error)) {
-      messagesError.value = ''
-    } else {
-      messagesError.value = error?.message || '历史消息加载失败，请稍后重试。'
-    }
+    messagesError.value = isCoachHistoryApiUnavailable(error)
+      ? ''
+      : (error?.message || '历史消息加载失败，请稍后重试。')
     messages.value = [welcomeMessage()]
   } finally {
     messagesLoading.value = false
@@ -409,7 +341,7 @@ async function sendMessage(text = inputValue.value) {
       )
     )
 
-    relatedContent.value = emptyRelated()
+    applyRelatedContent(result || {})
     await loadSessions(false)
     if (activeSessionId.value) {
       const current = sessions.value.find(item => item.sessionId === activeSessionId.value)
@@ -436,13 +368,8 @@ async function loadRelatedContentAsync(question, reply) {
       applyRelatedContent(result)
     }
   } catch (error) {
-    // related content is optional, silently ignore errors
+    // Related content is optional; the chat answer should not fail because of it.
   }
-}
-
-function fillQuickQuestion(question) {
-  if (sending.value) return
-  inputValue.value = question
 }
 
 async function sendQuickQuestion(question) {
@@ -473,10 +400,14 @@ function goActivities() {
   router.push('/activities')
 }
 
-function openVideo(url) {
-  const target = normalizeMediaUrl(url)
+function openVideo(video) {
+  if (video?.videoId) {
+    router.push(`/videos/${video.videoId}`)
+    return
+  }
+  const target = normalizeMediaUrl(video?.url)
   if (!target) return
-  window.open(target, '_blank')
+  window.location.href = target
 }
 
 onMounted(async () => {
@@ -504,37 +435,26 @@ onBeforeUnmount(() => {
         <p class="hero-kicker">AI COACH</p>
         <h1>AI 滑板老师</h1>
         <p class="hero-text">
-          现在不仅能连续追问，还会把你引导到站内真实内容里。问完动作、装备或活动问题后，
-          可以顺手查看相关帖子、教学视频和同城活动。
+          连续追问动作、装备、训练计划和安全问题。回答后会补充站内帖子、教学视频和同城活动，让建议可以马上继续看、继续练。
         </p>
       </div>
       <div class="hero-panel">
         <div class="hero-stat">
           <span>对话能力</span>
-          <strong>连续上下文、多轮追问、站内内容联动、练习建议延续</strong>
+          <strong>上下文追问、分步骤讲解、风险提醒、练习计划延展</strong>
         </div>
         <div class="hero-stat">
           <span>推荐来源</span>
-          <strong>社区帖子、教学视频、同城约板活动，全部来自站内已有真实数据</strong>
+          <strong>社区帖子、教学视频、同城约板活动，全部来自站内真实内容</strong>
         </div>
       </div>
     </section>
 
     <div class="mobile-switch">
-      <button
-        type="button"
-        class="btn-soft"
-        :class="{ active: mobilePanel === 'sessions' }"
-        @click="mobilePanel = 'sessions'"
-      >
+      <button type="button" class="btn-soft" :class="{ active: mobilePanel === 'sessions' }" @click="mobilePanel = 'sessions'">
         会话列表
       </button>
-      <button
-        type="button"
-        class="btn-soft"
-        :class="{ active: mobilePanel === 'chat' }"
-        @click="mobilePanel = 'chat'"
-      >
+      <button type="button" class="btn-soft" :class="{ active: mobilePanel === 'chat' }" @click="mobilePanel = 'chat'">
         当前对话
       </button>
     </div>
@@ -566,11 +486,7 @@ onBeforeUnmount(() => {
             :key="item.sessionId"
             :class="['session-item', { active: item.sessionId === activeSessionId }]"
           >
-            <button
-              type="button"
-              class="session-item-main"
-              @click="openSession(item.sessionId)"
-            >
+            <button type="button" class="session-item-main" @click="openSession(item.sessionId)">
               <span class="session-title">{{ item.title || '未命名会话' }}</span>
               <span class="session-time">{{ formatSessionTime(item.updateTime) }}</span>
             </button>
@@ -578,8 +494,8 @@ onBeforeUnmount(() => {
               type="button"
               class="session-delete-btn"
               :disabled="deletingSession === item.sessionId"
+              :title="'删除 ' + (item.title || '这段对话')"
               @click.stop="confirmDeleteSession(item.sessionId)"
-              :title="'删除 ' + (item.title || '此对话')"
             >
               <AppIcon name="x" :size="13" />
             </button>
@@ -593,7 +509,7 @@ onBeforeUnmount(() => {
             <div>
               <h2>{{ currentTitle }}</h2>
               <p class="muted">
-                {{ activeSession ? `最近更新：${formatSessionTime(activeSession.updateTime)}` : '新对话尚未写入历史，发送第一条消息后会自动创建会话。' }}
+                {{ activeSession ? `最近更新：${formatSessionTime(activeSession.updateTime)}` : '发送第一条消息后会自动创建会话。' }}
               </p>
             </div>
             <span class="tag">
@@ -639,9 +555,9 @@ onBeforeUnmount(() => {
                         :key="suggestion"
                         type="button"
                         class="btn-soft suggestion-chip"
-                       :disabled="sending"
+                        :disabled="sending"
                         @click="sendQuickQuestion(suggestion)"
-                     >
+                      >
                         {{ suggestion }}
                       </button>
                     </div>
@@ -662,10 +578,7 @@ onBeforeUnmount(() => {
                   </div>
                   <span class="typing-label">正在组织回答</span>
                   <p class="typing-copy">{{ currentTypingState }}</p>
-                  <div class="typing-track" aria-hidden="true">
-                    <span></span>
-                  </div>
-                  <div class="message-role">AI 滑板老师</div>
+                  <div class="typing-track" aria-hidden="true"><span></span></div>
                   <div class="typing-dots" aria-label="AI 正在思考">
                     <span></span>
                     <span></span>
@@ -713,7 +626,7 @@ onBeforeUnmount(() => {
               @keydown.enter="handleEnter"
             />
             <div class="composer-bar">
-              <p class="muted">按 Enter 发送，Shift + Enter 换行。</p>
+              <p class="muted">Enter 发送，Shift + Enter 换行。</p>
               <div class="composer-actions">
                 <button type="button" class="btn-soft" :disabled="sending || messagesLoading" @click="startNewConversation">
                   新建对话
@@ -736,7 +649,7 @@ onBeforeUnmount(() => {
           <div class="section-head related-head">
             <div>
               <h3>站内相关内容</h3>
-              <p class="muted">根据这次提问，补充一些可直接继续看的真实内容。</p>
+              <p class="muted">根据这次提问，补充一些可以直接继续看的真实内容。</p>
             </div>
           </div>
 
@@ -750,7 +663,7 @@ onBeforeUnmount(() => {
               @click="goPostDetail(post.postId)"
             >
               <span class="related-title">{{ post.title }}</span>
-              <span class="related-meta">{{ post.category || '社区帖子' }} · {{ formatSessionTime(post.createTime) }}</span>
+              <span class="related-meta">{{ post.category || '社区帖子' }} / {{ formatSessionTime(post.createTime) }}</span>
               <span v-if="post.content" class="related-desc">{{ post.content }}</span>
             </button>
           </div>
@@ -762,10 +675,10 @@ onBeforeUnmount(() => {
               :key="video.videoId"
               type="button"
               class="related-item"
-              @click="openVideo(video.url)"
+              @click="openVideo(video)"
             >
               <span class="related-title">{{ video.title }}</span>
-              <span class="related-meta">教学视频 · {{ formatSessionTime(video.createTime) }}</span>
+              <span class="related-meta">教学视频 / {{ formatSessionTime(video.createTime) }}</span>
               <span v-if="video.intro" class="related-desc">{{ video.intro }}</span>
             </button>
           </div>
@@ -781,8 +694,8 @@ onBeforeUnmount(() => {
             >
               <span class="related-title">{{ activity.title }}</span>
               <span class="related-meta">
-                {{ activity.city || '未设置城市' }}{{ activity.district ? ` · ${activity.district}` : '' }}
-                · {{ formatActivityTime(activity.activityTime) }}
+                {{ activity.city || '未设置城市' }}{{ activity.district ? ` / ${activity.district}` : '' }}
+                / {{ formatActivityTime(activity.activityTime) }}
               </span>
               <span v-if="activity.activityType" class="related-desc">{{ activity.activityType }}</span>
             </button>
@@ -804,12 +717,11 @@ onBeforeUnmount(() => {
   overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.62fr);
-  gap: 14px;
-  padding: 20px 22px;
+  gap: 16px;
+  padding: 22px;
   background:
-    radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(31, 41, 55, 0.12), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 248, 0.92));
+    radial-gradient(circle at top left, rgba(183, 210, 90, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 244, 239, 0.94));
   box-shadow: var(--shadow-md);
 }
 
@@ -821,8 +733,8 @@ onBeforeUnmount(() => {
   height: 240px;
   border-radius: 36px;
   transform: rotate(18deg);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(15, 23, 42, 0.05));
+  border: 1px solid rgba(18, 21, 19, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(18, 21, 19, 0.05));
 }
 
 .hero-copy,
@@ -836,21 +748,21 @@ onBeforeUnmount(() => {
   color: var(--accent);
   letter-spacing: 0.22em;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .hero-copy h1 {
   margin: 8px 0 10px;
-  font-size: clamp(28px, 3.2vw, 44px);
+  font-size: clamp(30px, 3.4vw, 46px);
   line-height: 1.06;
 }
 
 .hero-text {
   margin: 0;
-  max-width: 620px;
+  max-width: 640px;
   color: var(--text-soft);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .hero-panel {
@@ -862,9 +774,9 @@ onBeforeUnmount(() => {
 .hero-stat {
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.84);
   padding: 13px 14px;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 22px rgba(18, 21, 19, 0.06);
 }
 
 .hero-stat span {
@@ -910,7 +822,7 @@ onBeforeUnmount(() => {
 }
 
 .session-card {
-  min-height: 720px;
+  min-height: 650px;
   align-content: start;
 }
 
@@ -972,7 +884,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   color: var(--text-muted);
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -985,16 +897,11 @@ onBeforeUnmount(() => {
   color: #dc2626;
 }
 
-.session-item.active .session-delete-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fca5a5;
-}
-
 .session-item.active {
-  background: linear-gradient(180deg, rgba(31, 41, 55, 0.96), rgba(55, 65, 81, 0.94));
+  background: linear-gradient(180deg, rgba(21, 25, 23, 0.96), rgba(45, 51, 47, 0.94));
   color: #f8fafc;
-  border-color: rgba(31, 41, 55, 0.7);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+  border-color: rgba(21, 25, 23, 0.7);
+  box-shadow: 0 14px 28px rgba(18, 21, 19, 0.16);
 }
 
 .session-title {
@@ -1045,7 +952,7 @@ onBeforeUnmount(() => {
 .message-user .message-card {
   order: 1;
   justify-self: end;
-  background: linear-gradient(180deg, rgba(31, 41, 55, 0.96), rgba(55, 65, 81, 0.94));
+  background: linear-gradient(180deg, rgba(21, 25, 23, 0.96), rgba(45, 51, 47, 0.94));
   color: #f8fafc;
 }
 
@@ -1072,7 +979,7 @@ onBeforeUnmount(() => {
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 250, 251, 0.96));
   padding: 14px 15px;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 22px rgba(18, 21, 19, 0.05);
   animation: messageRise 0.34s var(--motion-ease) both;
 }
 
@@ -1180,8 +1087,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: 14px;
   background:
-    radial-gradient(circle at 20% 18%, rgba(45, 212, 191, 0.18), transparent 34%),
-    linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08));
+    radial-gradient(circle at 20% 18%, rgba(183, 210, 90, 0.22), transparent 34%),
+    linear-gradient(90deg, rgba(8, 122, 109, 0.08), rgba(14, 165, 233, 0.08));
 }
 
 .coach-loader-track {
@@ -1201,7 +1108,7 @@ onBeforeUnmount(() => {
   inset: 0;
   width: 46%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(20, 184, 166, 0), rgba(20, 184, 166, 0.9), rgba(14, 165, 233, 0));
+  background: linear-gradient(90deg, rgba(8, 122, 109, 0), rgba(8, 122, 109, 0.9), rgba(14, 165, 233, 0));
   animation: coachTrackSweep var(--skate-motion-duration) infinite cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1212,7 +1119,7 @@ onBeforeUnmount(() => {
   width: 92px;
   height: 40px;
   transform-origin: 50% 90%;
-  filter: drop-shadow(0 10px 10px rgba(15, 23, 42, 0.16));
+  filter: drop-shadow(0 10px 10px rgba(18, 21, 19, 0.16));
   animation: coachBoardRide var(--skate-motion-duration) infinite cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1260,7 +1167,7 @@ onBeforeUnmount(() => {
   width: 34%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.72), rgba(45, 212, 191, 0.3));
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.72), rgba(183, 210, 90, 0.48));
   animation: typingTrackSlide 1.8s infinite ease-in-out;
 }
 
@@ -1275,7 +1182,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(18, 21, 19, 0.3);
   animation: dotPulse 1s infinite ease-in-out;
 }
 
@@ -1295,7 +1202,7 @@ onBeforeUnmount(() => {
   border-top: 1px solid var(--line);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 14% 0%, rgba(15, 118, 110, 0.08), transparent 32%),
+    radial-gradient(circle at 14% 0%, rgba(8, 122, 109, 0.08), transparent 32%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
 }
 
@@ -1400,7 +1307,7 @@ onBeforeUnmount(() => {
 
 .related-card {
   background:
-    radial-gradient(circle at top right, rgba(15, 118, 110, 0.09), transparent 35%),
+    radial-gradient(circle at top right, rgba(8, 122, 109, 0.09), transparent 35%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 248, 0.96));
 }
 
@@ -1441,7 +1348,9 @@ onBeforeUnmount(() => {
 }
 
 @keyframes dotPulse {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
     opacity: 0.35;
   }
@@ -1455,9 +1364,7 @@ onBeforeUnmount(() => {
   0% {
     transform: translateX(-110%);
   }
-  55% {
-    transform: translateX(160%);
-  }
+  55%,
   100% {
     transform: translateX(160%);
   }
@@ -1468,7 +1375,6 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(8px) scale(0.992);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1486,12 +1392,10 @@ onBeforeUnmount(() => {
     transform: translateX(-120%);
     opacity: 0;
   }
-
   18%,
   72% {
     opacity: 1;
   }
-
   100% {
     transform: translateX(245%);
     opacity: 0;
@@ -1503,16 +1407,13 @@ onBeforeUnmount(() => {
     transform: translateX(0) rotate(-5deg);
     opacity: 0;
   }
-
   18% {
     opacity: 1;
   }
-
   60% {
     transform: translateX(148px) rotate(4deg);
     opacity: 1;
   }
-
   100% {
     transform: translateX(224px) rotate(-3deg);
     opacity: 0;
@@ -1637,14 +1538,8 @@ onBeforeUnmount(() => {
   .coach-loader-track::before,
   .coach-loader-board,
   .typing-track span,
-  .typing-dots span {
-    animation: none;
-  }
-
-  .message-card {
-    animation: none;
-  }
-
+  .typing-dots span,
+  .message-card,
   .refresh-pill.is-refreshing :deep(svg) {
     animation: none;
   }

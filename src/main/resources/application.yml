@@ -19,12 +19,13 @@ spring:
   config:
     import: optional:classpath:application-local.yml
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME:appuser}
-    password: ${DB_PASSWORD:App@123456}
+    url: ${DB_URL:jdbc:mysql://sh-cynosdbmysql-grp-rk926sji.sql.tencentcdb.com:29848/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root@123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
+
       repositories:
         enabled: false
       host: ${REDIS_HOST:127.0.0.1}

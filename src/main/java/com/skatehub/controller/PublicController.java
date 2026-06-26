@@ -116,6 +116,11 @@ public class PublicController {
         return ApiResponse.success(publicContentService.videos());
     }
 
+    @GetMapping("/videos/{id}")
+    public ApiResponse<Video> videoDetail(@PathVariable("id") @Positive(message = "id必须为正数") Long videoId) {
+        return ApiResponse.success(publicContentService.videoDetail(videoId));
+    }
+
     @GetMapping("/banners")
     public ApiResponse<List<Banner>> banners() {
         return ApiResponse.success(publicContentService.banners());

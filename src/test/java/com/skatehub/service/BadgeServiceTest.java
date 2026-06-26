@@ -27,6 +27,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -147,9 +149,39 @@ class BadgeServiceTest {
 
         service.evaluateAndList(USER_ID);
 
-        InOrder order = inOrder(userRepository, userBadgeRepository);
+        InOrder order = inOrder(userRepository, badgeRepository, userBadgeRepository);
         order.verify(userRepository).findByIdForUpdate(USER_ID);
+        order.verify(badgeRepository).findByEnabledOrderBySortOrderAsc("1");
         order.verify(userBadgeRepository).findByUserIdOrderByUnlockTimeDesc(USER_ID);
+    }
+
+    @Test
+    void seedsDefaultCatalogWhenDatabaseHasNoBadgeRows() {
+        User user = new User();
+        user.setUserId(USER_ID);
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user));
+        when(badgeRepository.findByEnabledOrderBySortOrderAsc("1")).thenReturn(List.of());
+        when(badgeRepository.saveAll(argThat(badges -> {
+            List<Badge> catalog = new ArrayList<>();
+            badges.forEach(catalog::add);
+            return catalog.size() == 8
+                    && catalog.stream().map(Badge::getCode).toList().containsAll(List.of(
+                            "FIRST_CHECKIN", "STREAK_7", "CHECKIN_30", "FIRST_POST",
+                            "POST_10", "FIRST_ACTIVITY_CHECKIN", "ACTIVITY_CHECKIN_3", "PLACE_REVIEW_3"));
+        }))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userBadgeRepository.findByUserIdOrderByUnlockTimeDesc(USER_ID)).thenReturn(List.of());
+        when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(0L);
+        when(dailyCheckinRepository.findMaximumStreakDaysByUserId(USER_ID)).thenReturn(0L);
+        when(postRepository.countByUserId(USER_ID)).thenReturn(0L);
+        when(activitySignRepository.countByUserIdAndIsCheckin(USER_ID, "1")).thenReturn(0L);
+        when(placeReviewRepository.countByUserId(USER_ID)).thenReturn(0L);
+
+        List<BadgeView> views = service.evaluateAndList(USER_ID);
+
+        assertEquals(8, views.size());
+        assertEquals("FIRST_CHECKIN", views.get(0).code());
+        assertEquals("初来乍到", views.get(0).name());
+        assertFalse(views.get(0).unlocked());
     }
 
     @Test

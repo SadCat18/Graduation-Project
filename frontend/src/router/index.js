@@ -17,6 +17,7 @@ const ProfilePage = () => import(/* webpackChunkName: "view-profile" */ '../view
 const AdminPage = () => import(/* webpackChunkName: "view-admin" */ '../views/AdminPage.vue')
 const PlaceDetailPage = () => import(/* webpackChunkName: "view-places" */ '../views/PlaceDetailPage.vue')
 const AiCoachPage = () => import(/* webpackChunkName: "view-ai-coach" */ '../views/AiCoachPage.vue')
+const VideoWatchPage = () => import(/* webpackChunkName: "view-videos" */ '../views/VideoWatchPage.vue')
 
 const routes = [
   { path: '/login', component: LoginPage },
@@ -33,9 +34,10 @@ const routes = [
   { path: '/bulletins/:id', component: BulletinDetailPage },
   { path: '/bulletins/publish', component: BulletinPublishPage, meta: { requiresAuth: true } },
   { path: '/news/:id', component: NewsDetailPage },
+  { path: '/videos/:id', component: VideoWatchPage },
   { path: '/ai-coach', component: AiCoachPage, meta: { requiresAuth: true } },
   { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
-  { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true } }
+  { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true, wideLayout: true } }
 ]
 
 const router = createRouter({

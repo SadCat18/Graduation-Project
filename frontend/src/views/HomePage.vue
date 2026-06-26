@@ -311,10 +311,10 @@ onDeactivated(() => {
         </div>
         <div class="hero-shade"></div>
         <button class="carousel-nav nav-prev" type="button" aria-label="上一张" @click.stop="prevBanner">
-          <
+          <AppIcon name="arrow-left" :size="18" />
         </button>
         <button class="carousel-nav nav-next" type="button" aria-label="下一张" @click.stop="nextBanner">
-          >
+          <AppIcon name="arrow-right" :size="18" />
         </button>
         <div class="hero-caption">
           <transition name="hero-caption-copy" mode="out-in">
@@ -356,6 +356,26 @@ onDeactivated(() => {
             @click.stop="setCurrentSlide(index)"
           />
         </div>
+      </div>
+    </section>
+
+    <section class="mobile-event-strip" aria-label="移动端滑板资讯">
+      <div class="mobile-event-head">
+        <span>NEWS</span>
+        <button type="button" class="event-more-btn" @click="$router.push('/bulletins')">更多</button>
+      </div>
+      <div class="mobile-event-list">
+        <button
+          v-for="item in newsList.slice(0, 3)"
+          :key="`mobile-news-${item.newsId}`"
+          type="button"
+          class="mobile-event-item"
+          @click="goNewsDetail(item.newsId)"
+        >
+          <strong>{{ item.title }}</strong>
+          <small>{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</small>
+        </button>
+        <p v-if="!newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新动态。</p>
       </div>
     </section>
 
@@ -763,6 +783,10 @@ onDeactivated(() => {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
+.mobile-event-strip {
+  display: none;
+}
+
 .event-panel::-webkit-scrollbar {
   width: 6px;
 }
@@ -877,7 +901,7 @@ onDeactivated(() => {
   border-radius: 999px;
   border: 1px solid rgba(226, 232, 240, 0.95);
   background: rgba(255, 255, 255, 0.78);
-  transition: all 0.25s ease;
+  transition: transform 0.25s var(--motion-ease), background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .dot.active {
@@ -1067,11 +1091,87 @@ onDeactivated(() => {
   }
 
   .event-panel {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
+    max-height: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
   }
 
   .hero-caption {
     max-width: calc(100% - 52px);
+  }
+
+  .mobile-event-strip {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid rgba(18, 21, 19, 0.08);
+    border-radius: 16px;
+    background:
+      linear-gradient(90deg, rgba(21, 25, 23, 0.96), rgba(8, 122, 109, 0.88)),
+      #151917;
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(18, 21, 19, 0.14);
+  }
+
+  .mobile-event-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobile-event-head span {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+  }
+
+  .mobile-event-head .event-more-btn {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #fff;
+  }
+
+  .mobile-event-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(210px, 78%);
+    gap: 9px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .mobile-event-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-event-item {
+    display: grid;
+    gap: 5px;
+    min-height: 76px;
+    padding: 11px 12px;
+    border-color: rgba(255, 255, 255, 0.16);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    text-align: left;
+    box-shadow: none;
+  }
+
+  .mobile-event-item strong {
+    line-height: 1.38;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .mobile-event-item small {
+    color: rgba(255, 255, 255, 0.72);
   }
 
   .notice-grid {

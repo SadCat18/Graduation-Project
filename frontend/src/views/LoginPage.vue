@@ -692,13 +692,14 @@ watch(
 
 .captcha-row {
   display: grid;
-  grid-template-columns: 1fr 120px;
+  grid-template-columns: minmax(0, 1fr) 120px;
   gap: 10px;
   align-items: center;
 }
 
 .captcha-input {
   margin: 0;
+  min-width: 0;
 }
 
 .captcha-image {
@@ -792,6 +793,17 @@ watch(
     transform: translateX(132px) rotate(-3deg);
   }
 
+  .captcha-row {
+    grid-template-columns: minmax(0, 1fr) 104px;
+    gap: 8px;
+  }
+
+  .captcha-image {
+    width: 104px;
+  }
+}
+
+@media (max-width: 360px) {
   .captcha-row {
     grid-template-columns: 1fr;
   }

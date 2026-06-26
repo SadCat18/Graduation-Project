@@ -257,7 +257,7 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(148, 163, 184, 0.16);
   color: var(--text-muted);
-  transition: all 0.25s ease;
+  transition: transform 0.25s var(--motion-ease), background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
 .ai-step.active {

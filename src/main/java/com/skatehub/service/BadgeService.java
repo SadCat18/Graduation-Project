@@ -27,6 +27,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BadgeService {
 
+    private static final List<BadgeDefinition> DEFAULT_BADGES = List.of(
+            new BadgeDefinition("FIRST_CHECKIN", "初来乍到", "首次每日签到", "COMMON", "first-checkin", 10),
+            new BadgeDefinition("STREAK_7", "坚持训练", "连续签到 7 天", "RARE", "streak-seven", 20),
+            new BadgeDefinition("CHECKIN_30", "日积月累", "累计签到 30 天", "LEGENDARY", "checkin-thirty", 30),
+            new BadgeDefinition("FIRST_POST", "初次发声", "成功发布第一篇帖子", "COMMON", "first-post", 40),
+            new BadgeDefinition("POST_10", "内容达人", "累计成功发布 10 篇帖子", "EPIC", "post-ten", 50),
+            new BadgeDefinition("FIRST_ACTIVITY_CHECKIN", "初次约板", "首次完成活动现场签到", "COMMON", "first-activity", 60),
+            new BadgeDefinition("ACTIVITY_CHECKIN_3", "约板达人", "累计完成 3 次活动现场签到", "RARE", "activity-three", 70),
+            new BadgeDefinition("PLACE_REVIEW_3", "场地探索者", "累计成功提交 3 条场地评价", "RARE", "place-explorer", 80));
+
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final DailyCheckinRepository dailyCheckinRepository;
@@ -42,6 +52,9 @@ public class BadgeService {
                 .orElseThrow(() -> new BizException("User not found"));
 
         List<Badge> badges = badgeRepository.findByEnabledOrderBySortOrderAsc("1");
+        if (badges.isEmpty()) {
+            badges = badgeRepository.saveAll(defaultBadgeCatalog());
+        }
         Map<Long, UserBadge> awardsByBadgeId = userBadgeRepository
                 .findByUserIdOrderByUnlockTimeDesc(userId)
                 .stream()
@@ -88,6 +101,33 @@ public class BadgeService {
             case "PLACE_REVIEW_3" -> new Progress(metrics.reviewCount(), 3, true);
             default -> new Progress(0, Long.MAX_VALUE, false);
         };
+    }
+
+    private List<Badge> defaultBadgeCatalog() {
+        return DEFAULT_BADGES.stream()
+                .map(BadgeDefinition::toBadge)
+                .toList();
+    }
+
+    private record BadgeDefinition(
+            String code,
+            String name,
+            String description,
+            String rarity,
+            String iconCode,
+            Integer sortOrder) {
+
+        private Badge toBadge() {
+            Badge badge = new Badge();
+            badge.setCode(code);
+            badge.setName(name);
+            badge.setDescription(description);
+            badge.setRarity(rarity);
+            badge.setIconCode(iconCode);
+            badge.setSortOrder(sortOrder);
+            badge.setEnabled("1");
+            return badge;
+        }
     }
 
     private record Progress(long current, long target, boolean achievable) {

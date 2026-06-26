@@ -85,7 +85,12 @@ export function buildActivityPlaceRecommendations(places, activities, limit = 8)
     }
   })
 
-  return enriched
+  const hasLinkedPlaces = enriched.some(place => place.hasActivityLink)
+  const candidates = hasLinkedPlaces
+    ? enriched.filter(place => place.hasActivityLink)
+    : enriched
+
+  return candidates
     .sort((a, b) => {
       if (Number(b.hasActivityLink) !== Number(a.hasActivityLink)) {
         return Number(b.hasActivityLink) - Number(a.hasActivityLink)

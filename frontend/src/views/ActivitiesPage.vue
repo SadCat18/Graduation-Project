@@ -596,7 +596,13 @@ onBeforeUnmount(() => {
 }
 
 .right-pane {
-  position: relative;
+  position: sticky;
+  top: 74px;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  scrollbar-width: thin;
 }
 
 .list-card {
@@ -773,9 +779,6 @@ onBeforeUnmount(() => {
 }
 
 .map-card {
-  position: sticky;
-  top: 74px;
-  z-index: 3;
   border-radius: 18px;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
@@ -1001,6 +1004,13 @@ onBeforeUnmount(() => {
   .list-toolbar .btn-primary {
     width: 100%;
     min-height: 42px;
+  }
+
+  .right-pane {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .map-card {

@@ -60,6 +60,7 @@ export const api = {
   placeDetail: (id) => http.get(`/api/public/places/${id}`),
   placeReviews: (id) => http.get(`/api/public/places/${id}/reviews`),
   videos: () => http.get('/api/public/videos'),
+  videoDetail: (id) => http.get(`/api/public/videos/${id}`),
   publicBanners: () => http.get('/api/public/banners'),
   createVideo: (data) => http.post('/api/videos', data),
 

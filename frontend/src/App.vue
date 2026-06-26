@@ -2,13 +2,16 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
+import AppToast from './components/AppToast.vue'
 import { clearAuth, getAuthChangedEventName, getName, getRole, getToken } from './utils/auth'
 import { warmLikelyRouteChunks } from './utils/routePrefetch'
+import { installToastAlertBridge, restoreToastAlertBridge } from './utils/toast'
 
 const route = useRoute()
 const router = useRouter()
 
 const isAuthPage = computed(() => ['/login', '/register'].includes(route.path))
+const useWideLayout = computed(() => route.meta.wideLayout === true)
 const authState = ref({
   token: '',
   role: '',
@@ -52,6 +55,7 @@ function handleAuthChange() {
 
 onMounted(() => {
   syncAuthState()
+  installToastAlertBridge()
   window.addEventListener('storage', handleAuthChange)
   window.addEventListener(getAuthChangedEventName(), handleAuthChange)
 
@@ -66,6 +70,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('storage', handleAuthChange)
   window.removeEventListener(getAuthChangedEventName(), handleAuthChange)
+  restoreToastAlertBridge()
 })
 </script>
 
@@ -109,7 +114,7 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <main class="main-container">
+    <main :class="['main-container', { 'main-container-wide': useWideLayout }]">
       <RouterView v-slot="{ Component, route: viewRoute }">
         <Transition name="route-glide" mode="out-in">
           <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
@@ -118,12 +123,55 @@ onBeforeUnmount(() => {
         </Transition>
       </RouterView>
     </main>
+
+    <nav v-if="!isAuthPage" class="mobile-bottom-nav" aria-label="移动端主导航">
+      <router-link
+        v-for="item in navItems.slice(0, 5)"
+        :key="`mobile-${item.to}`"
+        :to="item.to"
+        class="mobile-bottom-link"
+      >
+        <AppIcon :name="item.icon" :size="18" />
+        <span>{{ item.label.replace('社区帖子', '社区').replace('同城约板', '活动').replace('AI 滑板老师', 'AI').replace('社区快讯', '快讯') }}</span>
+      </router-link>
+    </nav>
+
+    <footer class="site-footer">
+      <a
+        class="beian-link"
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        浙ICP备2026040697号-1
+      </a>
+      <span class="footer-divider" aria-hidden="true">|</span>
+      <a
+        class="beian-link beian-police"
+        href="https://beian.mps.gov.cn/#/query/webSearch?code=33080202000739"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          class="police-icon"
+          src="https://www.beian.gov.cn/img/ghs.png"
+          alt=""
+          width="20"
+          height="20"
+        >
+        <span>浙公网安备33080202000739号</span>
+      </a>
+    </footer>
+
+    <AppToast />
   </div>
 </template>
 
 <style scoped>
 .app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -180,7 +228,12 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(12px);
   font-size: 14px;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
-  transition: all 0.25s ease;
+  transition:
+    transform 0.24s var(--motion-ease),
+    box-shadow 0.24s ease,
+    border-color 0.24s ease,
+    background-color 0.24s ease,
+    color 0.24s ease;
 }
 
 .nav-link:hover {
@@ -230,39 +283,141 @@ onBeforeUnmount(() => {
   color: #fff;
 }
 
+.main-container {
+  flex: 1;
+}
+
+.main-container-wide {
+  max-width: 1680px;
+  width: 100%;
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 16px 18px 22px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  border-top: 1px solid rgba(209, 213, 219, 0.62);
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.beian-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.beian-link:hover {
+  color: var(--text);
+}
+
+.police-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.footer-divider {
+  color: #cbd5e1;
+}
+
 .route-glide-enter-active,
 .route-glide-leave-active {
-  transition: opacity 0.32s var(--motion-ease), transform 0.32s var(--motion-ease), filter 0.32s ease;
+  transition: opacity 0.24s var(--motion-ease), transform 0.24s var(--motion-ease);
 }
 
 .route-glide-enter-from {
   opacity: 0;
-  transform: translateY(10px) scale(0.992);
-  filter: blur(4px);
+  transform: translateY(8px);
 }
 
 .route-glide-leave-to {
   opacity: 0;
-  transform: translateY(-6px) scale(0.996);
-  filter: blur(4px);
+  transform: translateY(-4px);
+}
+
+.mobile-bottom-nav {
+  display: none;
 }
 
 @media (max-width: 980px) {
   .topbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     gap: 10px;
     padding: 10px 12px;
   }
 
   .nav-links {
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 2px;
+    display: none;
   }
 
   .nav-right {
     justify-content: flex-end;
+  }
+
+  .main-container {
+    padding-bottom: 92px;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 18px 38px rgba(18, 21, 19, 0.18);
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  }
+
+  .mobile-bottom-link {
+    display: grid;
+    place-items: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 50px;
+    border-radius: 13px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s var(--motion-ease);
+  }
+
+  .mobile-bottom-link span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-bottom-link.router-link-active {
+    background: #151917;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .site-footer {
+    padding: 14px 12px 96px;
+    gap: 6px 8px;
+    font-size: 12px;
+  }
+
+  .footer-divider {
+    display: none;
   }
 }
 

@@ -143,12 +143,12 @@ async function changePage(nextPage) {
 }
 
 async function loadSideData() {
-  const [noticeData, newsData] = await Promise.all([
+  const [noticeResult, newsResult] = await Promise.allSettled([
     loadCachedPublic('public:notices', () => api.notices()),
     loadCachedPublic('public:news', () => api.news())
   ])
-  notices.value = noticeData || []
-  newsList.value = newsData || []
+  notices.value = noticeResult.status === 'fulfilled' ? (noticeResult.value || []) : []
+  newsList.value = newsResult.status === 'fulfilled' ? (newsResult.value || []) : []
 }
 
 async function deletePost(postId) {
@@ -238,7 +238,7 @@ watch([selectedCategory, selectedSort], async () => {
 })
 
 onMounted(async () => {
-  await Promise.all([
+  await Promise.allSettled([
     loadPosts(),
     loadSideData()
   ])

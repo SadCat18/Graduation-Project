@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import GrowthCenterPanel from '../components/growth/GrowthCenterPanel.vue'
@@ -29,6 +29,8 @@ const videos = ref([])
 const signedActivities = ref([])
 const role = getRole()
 const router = useRouter()
+const SUPPORTED_AVATAR_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+const SUPPORTED_AVATAR_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/x-ms-bmp']
 
 const avatarFileInputRef = ref(null)
 const selectedAvatarFile = ref(null)
@@ -44,6 +46,9 @@ const videoUploading = ref(false)
 
 const myContentLoading = ref(false)
 const profileTab = ref('overview')
+const profileTabHost = ref(null)
+const profileTabSwitching = ref(false)
+const profileTabEntering = ref(false)
 const contentTab = ref('posts')
 const myPosts = ref([])
 const myCollections = ref([])
@@ -58,6 +63,10 @@ const MAX_OVERVIEW_SIGNED = 3
 const MAX_OVERVIEW_NOTIFICATIONS = 3
 const MAX_OVERVIEW_SAVED = 3
 const activityCenterTab = ref('ALL')
+const PROFILE_TAB_TRANSITION_MS = 280
+let profileTabTransitionTimer = null
+let profileTabAnimationFrame = null
+let profileTabTransitionSequence = 0
 
 const overviewSignedActivities = computed(() => (signedActivities.value || []).slice(0, MAX_OVERVIEW_SIGNED))
 const overviewNotifications = computed(() => (notifications.value || []).slice(0, MAX_OVERVIEW_NOTIFICATIONS))
@@ -124,6 +133,20 @@ function sanitizePhone(value) {
 
 function normalizeGender(value) {
   return value === '男' || value === '女' ? value : ''
+}
+
+function fileExtension(file) {
+  const name = String(file?.name || '')
+  const dotIndex = name.lastIndexOf('.')
+  return dotIndex >= 0 ? name.slice(dotIndex).toLowerCase() : ''
+}
+
+function isSupportedAvatarImage(file) {
+  const ext = fileExtension(file)
+  const type = String(file?.type || '').toLowerCase()
+  if (type && !type.startsWith('image/')) return false
+  if (!SUPPORTED_AVATAR_IMAGE_EXTENSIONS.includes(ext)) return false
+  return !type || SUPPORTED_AVATAR_IMAGE_TYPES.includes(type)
 }
 
 function handleAvatarError() {
@@ -282,8 +305,9 @@ function clearSelectedAvatar() {
 function onSelectAvatar(event) {
   const file = (event.target.files || [])[0]
   if (!file) return
-  if (!file.type.startsWith('image/')) {
-    alert('请选择图片文件')
+  if (!isSupportedAvatarImage(file)) {
+    alert('头像仅支持 JPG、PNG、GIF、WebP、BMP 图片。iPhone 的 HEIC/HEIF 照片请先转换为 JPG 或 PNG 后再上传')
+    if (avatarFileInputRef.value) avatarFileInputRef.value.value = ''
     return
   }
   if (file.size > 10 * 1024 * 1024) {
@@ -439,6 +463,11 @@ function goPostDetail(postId) {
   router.push(`/community/post/${postId}`)
 }
 
+function goVideoWatch(videoId) {
+  if (!videoId) return
+  router.push(`/videos/${videoId}`)
+}
+
 function goActivitiesPage() {
   router.push('/activities')
 }
@@ -448,13 +477,66 @@ function goPlaceReview(placeId) {
   router.push(`/places/${placeId}`)
 }
 
-function switchToTab(tab) {
+function clearProfileTabTransition() {
+  if (profileTabTransitionTimer) clearTimeout(profileTabTransitionTimer)
+  if (profileTabAnimationFrame) cancelAnimationFrame(profileTabAnimationFrame)
+  profileTabTransitionTimer = null
+  profileTabAnimationFrame = null
+  profileTabSwitching.value = false
+  profileTabEntering.value = false
+
+  const host = profileTabHost.value
+  if (host) {
+    host.style.height = ''
+    host.style.overflow = ''
+  }
+}
+
+async function switchProfileTab(tab) {
+  if (tab === profileTab.value) return
+
+  const sequence = ++profileTabTransitionSequence
+  const host = profileTabHost.value
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  if (!host || reduceMotion) {
+    clearProfileTabTransition()
+    profileTab.value = tab
+    return
+  }
+
+  const currentHeight = host.getBoundingClientRect().height
+  clearProfileTabTransition()
+  host.style.height = `${currentHeight}px`
+  host.style.overflow = 'hidden'
+  void host.offsetHeight
+
+  profileTabSwitching.value = true
   profileTab.value = tab
+  await nextTick()
+  if (sequence !== profileTabTransitionSequence) return
+
+  const nextView = host.firstElementChild
+  const nextHeight = nextView?.getBoundingClientRect().height || currentHeight
+  profileTabEntering.value = true
+  await nextTick()
+  if (sequence !== profileTabTransitionSequence) return
+
+  profileTabAnimationFrame = requestAnimationFrame(() => {
+    if (sequence !== profileTabTransitionSequence) return
+    host.style.height = `${nextHeight}px`
+    profileTabTransitionTimer = setTimeout(() => {
+      if (sequence === profileTabTransitionSequence) clearProfileTabTransition()
+    }, PROFILE_TAB_TRANSITION_MS)
+  })
+}
+
+function switchToTab(tab) {
+  switchProfileTab(tab)
 }
 
 function switchToContentTab(tab) {
-  profileTab.value = 'content'
   contentTab.value = tab
+  switchProfileTab('content')
 }
 
 async function applyNotificationFilter() {
@@ -477,6 +559,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  profileTabTransitionSequence += 1
+  clearProfileTabTransition()
   clearSelectedAvatar()
 })
 </script>
@@ -508,17 +592,22 @@ onBeforeUnmount(() => {
 
       <div class="main-tabs-wrap">
         <div class="main-tabs">
-          <button :class="{ active: profileTab === 'overview' }" @click="profileTab = 'overview'">概览</button>
-          <button :class="{ active: profileTab === 'content' }" @click="profileTab = 'content'">我的内容</button>
-          <button :class="{ active: profileTab === 'activities' }" @click="profileTab = 'activities'">活动中心</button>
-          <button :class="{ active: profileTab === 'growth' }" @click="profileTab = 'growth'">成长中心</button>
-          <button :class="{ active: profileTab === 'notifications' }" @click="profileTab = 'notifications'">通知中心</button>
-          <button :class="{ active: profileTab === 'creation' }" @click="profileTab = 'creation'">创作中心</button>
-          <button :class="{ active: profileTab === 'settings' }" @click="profileTab = 'settings'">账号设置</button>
+          <button :class="{ active: profileTab === 'overview' }" @click="switchProfileTab('overview')">概览</button>
+          <button :class="{ active: profileTab === 'content' }" @click="switchProfileTab('content')">我的内容</button>
+          <button :class="{ active: profileTab === 'activities' }" @click="switchProfileTab('activities')">活动中心</button>
+          <button :class="{ active: profileTab === 'growth' }" @click="switchProfileTab('growth')">成长中心</button>
+          <button :class="{ active: profileTab === 'notifications' }" @click="switchProfileTab('notifications')">通知中心</button>
+          <button :class="{ active: profileTab === 'creation' }" @click="switchProfileTab('creation')">创作中心</button>
+          <button :class="{ active: profileTab === 'settings' }" @click="switchProfileTab('settings')">账号设置</button>
         </div>
       </div>
 
-      <div v-if="profileTab === 'overview'" class="tab-panel">
+      <div
+        ref="profileTabHost"
+        class="profile-tab-host"
+        :class="{ 'is-switching': profileTabSwitching, 'is-entering': profileTabEntering }"
+      >
+      <div v-if="profileTab === 'overview'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head"><h3>我的概览</h3></div>
           <div class="overview-stat-grid">
@@ -581,7 +670,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="profileTab === 'content'" class="tab-panel">
+      <div v-if="profileTab === 'content'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head"><h3>我的内容</h3></div>
         <div class="tabs">
@@ -661,7 +750,7 @@ onBeforeUnmount(() => {
       </div>
       </div>
 
-      <div v-if="profileTab === 'activities'" class="tab-panel">
+      <div v-if="profileTab === 'activities'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head section-head-inline">
             <h3>活动中心 · 我已报名活动</h3>
@@ -710,11 +799,12 @@ onBeforeUnmount(() => {
 
       <GrowthCenterPanel
         v-if="profileTab === 'growth'"
+        class="profile-tab-view"
         :profile="profile"
         @experience-changed="loadProfile"
       />
 
-      <div v-if="profileTab === 'notifications'" class="tab-panel">
+      <div v-if="profileTab === 'notifications'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head section-head-inline">
             <h3>通知中心</h3>
@@ -753,7 +843,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="profileTab === 'creation'" class="tab-panel">
+      <div v-if="profileTab === 'creation'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head"><h3>上传教学视频</h3></div>
           <div class="form-grid">
@@ -806,9 +896,20 @@ onBeforeUnmount(() => {
         <div class="card">
           <div class="section-head"><h3>我的教学视频</h3></div>
           <div v-if="!myTeachingVideos.length" class="empty-tip">你还没有发布教学视频，上传第一条来沉淀你的创作内容吧。</div>
-          <div v-for="v in myTeachingVideos" :key="v.videoId" class="list-item">
-            <strong>{{ v.title }}</strong>
-            <p class="muted">{{ v.intro }}</p>
+          <div v-for="v in myTeachingVideos" :key="v.videoId" class="list-item teaching-video-item">
+            <div class="teaching-video-cover">
+              <img v-if="normalizeMediaUrl(v.cover)" :src="normalizeMediaUrl(v.cover)" alt="视频封面" loading="lazy" decoding="async" />
+              <AppIcon v-else name="play" :size="18" />
+            </div>
+            <div class="teaching-video-copy">
+              <strong>{{ v.title }}</strong>
+              <p class="muted">{{ v.intro || '暂未填写简介' }}</p>
+              <p class="muted">发布时间：{{ formatDateTime(v.createTime) }}</p>
+              <button class="btn-soft" @click="goVideoWatch(v.videoId)">
+                <AppIcon name="play" :size="14" />
+                查看视频
+              </button>
+            </div>
           </div>
         </div>
 
@@ -817,7 +918,7 @@ onBeforeUnmount(() => {
           <div class="empty-tip">后续可在这里保存未完成的视频草稿、封面和简介。</div>
         </div>
       </div>
-      <div v-if="profileTab === 'settings'" class="tab-panel">
+      <div v-if="profileTab === 'settings'" class="profile-tab-view tab-panel">
         <div class="card">
           <div class="section-head"><h3>个人资料</h3></div>
 
@@ -878,6 +979,7 @@ onBeforeUnmount(() => {
             {{ savingPassword ? '更新中...' : '更新密码' }}
           </button>
         </div>
+      </div>
       </div>
     </section>
   </div>
@@ -987,6 +1089,37 @@ onBeforeUnmount(() => {
   background: var(--text);
   border-color: var(--text);
   color: #fff;
+}
+
+.profile-tab-host {
+  width: 100%;
+  min-width: 0;
+  transition: height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.profile-tab-host.is-switching {
+  overflow: hidden;
+}
+
+.profile-tab-view {
+  width: 100%;
+  min-width: 0;
+}
+
+.profile-tab-host.is-entering > .profile-tab-view {
+  animation: profile-tab-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes profile-tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .tab-panel {
@@ -1246,6 +1379,57 @@ onBeforeUnmount(() => {
   word-break: break-word;
 }
 
+.teaching-video-item {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.teaching-video-cover {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #111827;
+  color: #fff;
+}
+
+.teaching-video-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teaching-video-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.teaching-video-copy p {
+  margin: 0;
+}
+
+.teaching-video-copy button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-tab-host {
+    transition: none;
+  }
+
+  .profile-tab-host.is-entering > .profile-tab-view {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .identity-card {
     grid-template-columns: 1fr;
@@ -1311,6 +1495,15 @@ onBeforeUnmount(() => {
 
   .upload-row button {
     width: 100%;
+  }
+
+  .teaching-video-item {
+    grid-template-columns: 1fr;
+  }
+
+  .teaching-video-copy button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
