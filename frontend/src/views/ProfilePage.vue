@@ -57,6 +57,15 @@ const myActivities = ref([])
 const currentUserId = ref(null)
 const notifications = ref([])
 const notificationLoading = ref(false)
+const communityLoading = ref(false)
+const privateUnreadCount = ref(0)
+const privateConversations = ref([])
+const selectedConversationId = ref(null)
+const selectedConversationMessages = ref([])
+const privateMessageInput = ref('')
+const sendingPrivateMessage = ref(false)
+const followersList = ref([])
+const followingList = ref([])
 const readFilter = ref('all')
 const typeFilter = ref('ALL')
 const MAX_OVERVIEW_SIGNED = 3
@@ -492,6 +501,63 @@ function clearProfileTabTransition() {
   }
 }
 
+async function loadCommunityUtilities() {
+  if (!currentUserId.value) return
+  communityLoading.value = true
+  try {
+    const [unread, conversations, followers, following] = await Promise.all([
+      api.privateUnreadCount(),
+      api.privateConversations(),
+      api.followers(currentUserId.value),
+      api.following(currentUserId.value)
+    ])
+    privateUnreadCount.value = Number(unread?.unreadCount || 0)
+    privateConversations.value = conversations || []
+    followersList.value = followers || []
+    followingList.value = following || []
+    if (!selectedConversationId.value && privateConversations.value.length) {
+      selectedConversationId.value = privateConversations.value[0].conversationId
+      await loadConversationMessages(selectedConversationId.value)
+    }
+  } finally {
+    communityLoading.value = false
+  }
+}
+
+async function loadConversationMessages(conversationId) {
+  selectedConversationId.value = conversationId
+  selectedConversationMessages.value = await api.privateMessages(conversationId)
+  await api.readPrivateConversation(conversationId)
+  const unread = await api.privateUnreadCount()
+  privateUnreadCount.value = Number(unread?.unreadCount || 0)
+}
+
+async function startConversationWith(userId) {
+  const conversation = await api.createConversation({ targetUserId: userId })
+  await loadCommunityUtilities()
+  if (conversation?.conversationId) {
+    await loadConversationMessages(conversation.conversationId)
+  }
+}
+
+async function sendPrivateMessage() {
+  const content = privateMessageInput.value.trim()
+  if (!selectedConversationId.value || !content) return
+  sendingPrivateMessage.value = true
+  try {
+    await api.sendPrivateMessage(selectedConversationId.value, { content })
+    privateMessageInput.value = ''
+    await Promise.all([
+      loadConversationMessages(selectedConversationId.value),
+      loadCommunityUtilities()
+    ])
+  } catch (e) {
+    alert(e?.message || '私信发送失败，请稍后重试')
+  } finally {
+    sendingPrivateMessage.value = false
+  }
+}
+
 async function switchProfileTab(tab) {
   if (tab === profileTab.value) return
 
@@ -554,7 +620,7 @@ async function openNotification(item) {
 onMounted(async () => {
   if (role !== 'ADMIN') {
     await loadProfile()
-    await Promise.all([loadOthers(), loadMyContent(), loadNotifications()])
+    await Promise.all([loadOthers(), loadMyContent(), loadNotifications(), loadCommunityUtilities()])
   }
 })
 
@@ -595,6 +661,7 @@ onBeforeUnmount(() => {
           <button :class="{ active: profileTab === 'overview' }" @click="switchProfileTab('overview')">概览</button>
           <button :class="{ active: profileTab === 'content' }" @click="switchProfileTab('content')">我的内容</button>
           <button :class="{ active: profileTab === 'activities' }" @click="switchProfileTab('activities')">活动中心</button>
+          <button :class="{ active: profileTab === 'community' }" @click="switchProfileTab('community')">社区关系</button>
           <button :class="{ active: profileTab === 'growth' }" @click="switchProfileTab('growth')">成长中心</button>
           <button :class="{ active: profileTab === 'notifications' }" @click="switchProfileTab('notifications')">通知中心</button>
           <button :class="{ active: profileTab === 'creation' }" @click="switchProfileTab('creation')">创作中心</button>
@@ -803,6 +870,79 @@ onBeforeUnmount(() => {
         :profile="profile"
         @experience-changed="loadProfile"
       />
+
+      <div v-if="profileTab === 'community'" class="profile-tab-view tab-panel">
+        <div class="community-grid">
+          <div class="card">
+            <div class="section-head section-head-inline">
+              <h3>私信会话</h3>
+              <span class="unread-badge">未读 {{ privateUnreadCount }}</span>
+            </div>
+            <p v-if="communityLoading" class="muted">加载中...</p>
+            <div v-if="!communityLoading && !privateConversations.length" class="empty-tip">暂无私信会话，可从关注列表发起沟通。</div>
+            <div
+              v-for="conversation in privateConversations"
+              :key="conversation.conversationId"
+              class="conversation-row"
+              :class="{ active: selectedConversationId === conversation.conversationId }"
+              @click="loadConversationMessages(conversation.conversationId)"
+            >
+              <strong>{{ conversation.otherUsername }}</strong>
+              <span v-if="conversation.unreadCount" class="tag">未读 {{ conversation.unreadCount }}</span>
+              <p class="muted">{{ conversation.lastMessageContent || '还没有消息' }}</p>
+            </div>
+          </div>
+
+          <div class="card chat-card">
+            <div class="section-head"><h3>会话详情</h3></div>
+            <div v-if="!selectedConversationId" class="empty-tip">选择一个会话开始查看消息。</div>
+            <div v-else class="message-panel">
+              <div v-if="!selectedConversationMessages.length" class="empty-tip">这段会话还没有消息。</div>
+              <div
+                v-for="message in selectedConversationMessages"
+                :key="message.messageId"
+                class="message-bubble"
+                :class="{ mine: Number(message.senderId) === Number(currentUserId) }"
+              >
+                <p>{{ message.content }}</p>
+                <span>{{ message.createTime?.replace('T', ' ') }}</span>
+              </div>
+            </div>
+            <div class="inline private-send-row">
+              <input v-model="privateMessageInput" placeholder="发送一条私信..." @keyup.enter="sendPrivateMessage" />
+              <button class="btn-primary" :disabled="sendingPrivateMessage || !selectedConversationId" @click="sendPrivateMessage">
+                {{ sendingPrivateMessage ? '发送中...' : '发送' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="community-grid">
+          <div class="card">
+            <div class="section-head"><h3>我的关注</h3></div>
+            <div v-if="!followingList.length" class="empty-tip">暂未关注其他用户。</div>
+            <div v-for="user in followingList" :key="user.userId" class="relation-row">
+              <div>
+                <strong>{{ user.username }}</strong>
+                <p class="muted">{{ user.skateStyle || '暂未填写滑板风格' }}</p>
+              </div>
+              <button class="btn-soft" @click="startConversationWith(user.userId)">私信</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-head"><h3>我的粉丝</h3></div>
+            <div v-if="!followersList.length" class="empty-tip">暂时还没有粉丝。</div>
+            <div v-for="user in followersList" :key="user.userId" class="relation-row">
+              <div>
+                <strong>{{ user.username }}</strong>
+                <p class="muted">{{ user.skateStyle || '暂未填写滑板风格' }}</p>
+              </div>
+              <button class="btn-soft" @click="startConversationWith(user.userId)">私信</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div v-if="profileTab === 'notifications'" class="profile-tab-view tab-panel">
         <div class="card">
@@ -1373,6 +1513,94 @@ onBeforeUnmount(() => {
   margin-top: 8px;
 }
 
+.community-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 12px;
+}
+
+.conversation-row,
+.relation-row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.conversation-row {
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.conversation-row.active {
+  border-color: rgba(8, 122, 109, 0.38);
+  background: rgba(240, 253, 250, 0.88);
+}
+
+.conversation-row p {
+  margin: 4px 0 0;
+}
+
+.chat-card {
+  min-width: 0;
+}
+
+.message-panel {
+  display: grid;
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.message-bubble {
+  justify-self: start;
+  max-width: min(78%, 520px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: var(--surface-muted);
+}
+
+.message-bubble.mine {
+  justify-self: end;
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.message-bubble p {
+  margin: 0;
+  word-break: break-word;
+}
+
+.message-bubble span {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.private-send-row {
+  margin-top: 12px;
+  align-items: stretch;
+}
+
+.private-send-row input {
+  flex: 1;
+}
+
+.relation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.relation-row p {
+  margin: 4px 0 0;
+}
+
 .notification-item p,
 .my-content-item p,
 .signed-item p {
@@ -1437,7 +1665,8 @@ onBeforeUnmount(() => {
   }
 
   .overview-stat-grid,
-  .overview-snapshot-grid {
+  .overview-snapshot-grid,
+  .community-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1504,6 +1733,16 @@ onBeforeUnmount(() => {
   .teaching-video-copy button {
     width: 100%;
     justify-content: center;
+  }
+
+  .relation-row,
+  .private-send-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .message-bubble {
+    max-width: 92%;
   }
 }
 </style>

@@ -64,3 +64,15 @@ WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'ACTIVITY_CHECKIN_3');
 INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
 SELECT 'PLACE_REVIEW_3', '场地探索者', '累计成功提交 3 条场地评价', 'RARE', 'place-explorer', 80, '1'
 WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'PLACE_REVIEW_3');
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_TRICK_CHECKIN', '首次动作打卡', '完成第一次滑板动作打卡', 'COMMON', 'first-trick', 90, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_TRICK_CHECKIN');
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_TRAINING_PLAN', '第一个训练计划', '完成第一个完整训练计划', 'RARE', 'training-plan', 100, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_TRAINING_PLAN');
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_SKATE_EVENT', '首次参加赛事', '完成第一次赛事现场签到', 'RARE', 'skate-event', 110, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_SKATE_EVENT');

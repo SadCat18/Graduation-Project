@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
+import { normalizeCommentThreads } from '../utils/communityComments'
 import { normalizeMediaUrl } from '../utils/url'
 
 const route = useRoute()
@@ -14,6 +15,10 @@ const comments = ref([])
 const loading = ref(false)
 const error = ref('')
 const commentInput = ref('')
+const replyInputs = ref({})
+const replyingCommentId = ref(null)
+const authorFollowStatus = ref(null)
+const authorActionLoading = ref(false)
 const postingComment = ref(false)
 const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违法违规', '其他']
 
@@ -45,7 +50,14 @@ async function loadPostDetail() {
       api.comments(postId.value)
     ])
     post.value = postData
-    comments.value = commentData || []
+    comments.value = normalizeCommentThreads(commentData || [])
+    if (isLoggedIn.value && postData?.userId) {
+      try {
+        authorFollowStatus.value = await api.followStatus(postData.userId)
+      } catch (_) {
+        authorFollowStatus.value = null
+      }
+    }
   } catch (e) {
     error.value = e?.message || '帖子加载失败'
   } finally {
@@ -133,6 +145,77 @@ async function reportComment(commentId) {
   }
 }
 
+async function toggleAuthorFollow() {
+  if (!isLoggedIn.value) return router.push('/login')
+  if (!post.value?.userId) return
+  authorActionLoading.value = true
+  try {
+    authorFollowStatus.value = authorFollowStatus.value?.following
+      ? await api.unfollowUser(post.value.userId)
+      : await api.followUser(post.value.userId)
+  } catch (e) {
+    showActionError(e, '关注操作失败，请稍后重试')
+  } finally {
+    authorActionLoading.value = false
+  }
+}
+
+async function startAuthorConversation() {
+  if (!isLoggedIn.value) return router.push('/login')
+  if (!post.value?.userId) return
+  authorActionLoading.value = true
+  try {
+    await api.createConversation({ targetUserId: post.value.userId })
+    alert('会话已创建，可前往个人中心的社区关系查看私信。')
+  } catch (e) {
+    showActionError(e, '私信会话创建失败，请稍后重试')
+  } finally {
+    authorActionLoading.value = false
+  }
+}
+
+function replyKey(commentId) {
+  return String(commentId)
+}
+
+function setReplyDraft(commentId, value) {
+  replyInputs.value = {
+    ...replyInputs.value,
+    [replyKey(commentId)]: value
+  }
+}
+
+async function sendReply(rootComment, targetComment = rootComment) {
+  if (!isLoggedIn.value) return router.push('/login')
+  const key = replyKey(rootComment.commentId)
+  const content = String(replyInputs.value[key] || '').trim()
+  if (!content) return
+  replyingCommentId.value = rootComment.commentId
+  try {
+    await api.replyComment(rootComment.commentId, {
+      content,
+      parentId: rootComment.commentId,
+      replyToUserId: targetComment.userId
+    })
+    setReplyDraft(rootComment.commentId, '')
+    await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '回复发送失败，请稍后重试')
+  } finally {
+    replyingCommentId.value = null
+  }
+}
+
+async function toggleCommentLike(commentId) {
+  if (!isLoggedIn.value) return router.push('/login')
+  try {
+    await api.likeComment(commentId)
+    await loadPostDetail()
+  } catch (e) {
+    showActionError(e, '评论点赞失败，请稍后重试')
+  }
+}
+
 onMounted(loadPostDetail)
 </script>
 
@@ -154,7 +237,15 @@ onMounted(loadPostDetail)
           <h2>{{ post.title }}</h2>
           <span class="tag">{{ post.category || '未分类' }}</span>
         </div>
-        <p class="muted">作者：{{ post.authorName }} · Lv{{ post.authorLevel || 1 }} · {{ post.createTime?.replace('T', ' ') }}</p>
+        <div class="author-line">
+          <p class="muted">作者：{{ post.authorName }} · Lv{{ post.authorLevel || 1 }} · {{ post.createTime?.replace('T', ' ') }}</p>
+          <div class="inline author-actions">
+            <button class="btn-soft" :disabled="authorActionLoading" @click="toggleAuthorFollow">
+              {{ authorFollowStatus?.mutual ? '互相关注' : authorFollowStatus?.following ? '已关注' : '关注作者' }}
+            </button>
+            <button class="btn-soft" :disabled="authorActionLoading" @click="startAuthorConversation">私信</button>
+          </div>
+        </div>
         <p class="post-content">{{ post.content }}</p>
 
         <div v-if="parseImages(post.images).length" class="post-images">
@@ -182,11 +273,43 @@ onMounted(loadPostDetail)
     <div class="card">
       <div class="section-head"><h3>评论区</h3></div>
       <div v-if="!comments.length" class="empty-state">还没有评论，快来抢沙发吧。</div>
-      <div v-for="item in comments" :key="item.commentId" class="list-item">
-        <p><strong>{{ item.username }}：</strong>{{ item.content }}</p>
-        <div class="inline">
-          <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
-          <button class="btn-soft" @click="reportComment(item.commentId)">举报</button>
+      <div v-for="item in comments" :key="item.commentId" class="comment-card">
+        <div class="comment-main">
+          <p><strong>{{ item.username }}：</strong>{{ item.content }}</p>
+          <div class="inline comment-actions">
+            <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
+            <button class="btn-soft" @click="toggleCommentLike(item.commentId)">赞 {{ item.likeCount || 0 }}</button>
+            <button class="btn-soft" @click="setReplyDraft(item.commentId, `回复 @${item.username}：`)">回复</button>
+            <button class="btn-soft" @click="reportComment(item.commentId)">举报</button>
+          </div>
+        </div>
+
+        <div v-if="item.replies?.length" class="reply-list">
+          <div v-for="reply in item.replies" :key="reply.commentId" class="reply-item">
+            <p>
+              <strong>{{ reply.username }}</strong>
+              <span v-if="reply.replyToUsername" class="muted"> 回复 @{{ reply.replyToUsername }}</span>
+              ：{{ reply.content }}
+            </p>
+            <div class="inline comment-actions">
+              <p class="muted">{{ reply.createTime?.replace('T', ' ') }}</p>
+              <button class="btn-soft" @click="toggleCommentLike(reply.commentId)">赞 {{ reply.likeCount || 0 }}</button>
+              <button class="btn-soft" @click="setReplyDraft(item.commentId, `回复 @${reply.username}：`)">回复</button>
+              <button class="btn-soft" @click="reportComment(reply.commentId)">举报</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline reply-row">
+          <input
+            :value="replyInputs[String(item.commentId)] || ''"
+            placeholder="回复这条评论..."
+            @input="setReplyDraft(item.commentId, $event.target.value)"
+            @keyup.enter="sendReply(item)"
+          />
+          <button class="btn-soft" :disabled="replyingCommentId === item.commentId" @click="sendReply(item)">
+            {{ replyingCommentId === item.commentId ? '回复中...' : '回复' }}
+          </button>
         </div>
       </div>
 
@@ -224,9 +347,21 @@ onMounted(loadPostDetail)
   line-height: 1.28;
 }
 
-.post-head + .muted {
+.author-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
+}
+
+.author-line .muted {
+  margin: 0;
+}
+
+.author-actions {
+  flex-shrink: 0;
 }
 
 .post-content {
@@ -272,18 +407,51 @@ onMounted(loadPostDetail)
   white-space: nowrap;
 }
 
-.list-item {
-  padding: 12px 0;
+.comment-card {
+  padding: 14px 0;
   border-bottom: 1px solid var(--line);
 }
 
-.list-item:last-of-type {
+.comment-card:last-of-type {
   border-bottom: 0;
 }
 
-.list-item p {
+.comment-card p {
   line-height: 1.7;
   word-break: break-word;
+}
+
+.comment-main {
+  min-width: 0;
+}
+
+.comment-actions {
+  align-items: center;
+  gap: 6px;
+}
+
+.reply-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0 18px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
+
+.reply-item {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.reply-row {
+  margin-top: 10px;
+  align-items: stretch;
+}
+
+.reply-row input {
+  flex: 1;
 }
 
 .comment-row {
@@ -301,8 +469,10 @@ onMounted(loadPostDetail)
 
 @media (max-width: 640px) {
   .post-head,
+  .author-line,
   .action-row,
-  .comment-row {
+  .comment-row,
+  .reply-row {
     align-items: stretch;
     flex-direction: column;
   }
@@ -320,8 +490,13 @@ onMounted(loadPostDetail)
   }
 
   .action-row .btn-soft,
-  .comment-row .btn-primary {
+  .comment-row .btn-primary,
+  .reply-row .btn-soft {
     width: 100%;
+  }
+
+  .reply-list {
+    margin-left: 0;
   }
 }
 </style>

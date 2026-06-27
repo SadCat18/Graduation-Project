@@ -3,10 +3,13 @@ package com.skatehub.service;
 import com.skatehub.dao.ActivitySignRepository;
 import com.skatehub.dao.BadgeRepository;
 import com.skatehub.dao.DailyCheckinRepository;
+import com.skatehub.dao.EventSignupRepository;
 import com.skatehub.dao.PlaceReviewRepository;
 import com.skatehub.dao.PostRepository;
+import com.skatehub.dao.TrickCheckinRepository;
 import com.skatehub.dao.UserBadgeRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.dao.UserTrainingPlanRepository;
 import com.skatehub.event.GrowthActionCompletedEvent;
 import com.skatehub.pojo.ActivitySign;
 import com.skatehub.pojo.Badge;
@@ -15,6 +18,9 @@ import com.skatehub.pojo.PlaceReview;
 import com.skatehub.pojo.Post;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.UserBadge;
+import com.skatehub.pojo.skate.EventSignup;
+import com.skatehub.pojo.skate.TrickCheckin;
+import com.skatehub.pojo.skate.UserTrainingPlan;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -165,7 +171,10 @@ class BadgeEventTransactionIntegrationTest {
             DailyCheckin.class,
             Post.class,
             ActivitySign.class,
-            PlaceReview.class
+            PlaceReview.class,
+            TrickCheckin.class,
+            UserTrainingPlan.class,
+            EventSignup.class
     })
     @EnableJpaRepositories(
             basePackageClasses = UserRepository.class,
@@ -178,7 +187,10 @@ class BadgeEventTransactionIntegrationTest {
                             DailyCheckinRepository.class,
                             PostRepository.class,
                             ActivitySignRepository.class,
-                            PlaceReviewRepository.class
+                            PlaceReviewRepository.class,
+                            TrickCheckinRepository.class,
+                            UserTrainingPlanRepository.class,
+                            EventSignupRepository.class
                     }),
             considerNestedRepositories = true
     )
@@ -197,6 +209,9 @@ class BadgeEventTransactionIntegrationTest {
                 PostRepository postRepository,
                 ActivitySignRepository activitySignRepository,
                 PlaceReviewRepository placeReviewRepository,
+                TrickCheckinRepository trickCheckinRepository,
+                UserTrainingPlanRepository userTrainingPlanRepository,
+                EventSignupRepository eventSignupRepository,
                 UserRepository userRepository,
                 Clock clock) {
             return new BadgeService(
@@ -206,6 +221,9 @@ class BadgeEventTransactionIntegrationTest {
                     postRepository,
                     activitySignRepository,
                     placeReviewRepository,
+                    trickCheckinRepository,
+                    userTrainingPlanRepository,
+                    eventSignupRepository,
                     userRepository,
                     clock);
         }

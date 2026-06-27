@@ -3,10 +3,13 @@ package com.skatehub.service;
 import com.skatehub.dao.ActivitySignRepository;
 import com.skatehub.dao.BadgeRepository;
 import com.skatehub.dao.DailyCheckinRepository;
+import com.skatehub.dao.EventSignupRepository;
 import com.skatehub.dao.PlaceReviewRepository;
 import com.skatehub.dao.PostRepository;
+import com.skatehub.dao.TrickCheckinRepository;
 import com.skatehub.dao.UserBadgeRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.dao.UserTrainingPlanRepository;
 import com.skatehub.pojo.Badge;
 import com.skatehub.pojo.UserBadge;
 import com.skatehub.pojo.growth.BadgeView;
@@ -35,7 +38,10 @@ public class BadgeService {
             new BadgeDefinition("POST_10", "内容达人", "累计成功发布 10 篇帖子", "EPIC", "post-ten", 50),
             new BadgeDefinition("FIRST_ACTIVITY_CHECKIN", "初次约板", "首次完成活动现场签到", "COMMON", "first-activity", 60),
             new BadgeDefinition("ACTIVITY_CHECKIN_3", "约板达人", "累计完成 3 次活动现场签到", "RARE", "activity-three", 70),
-            new BadgeDefinition("PLACE_REVIEW_3", "场地探索者", "累计成功提交 3 条场地评价", "RARE", "place-explorer", 80));
+            new BadgeDefinition("PLACE_REVIEW_3", "场地探索者", "累计成功提交 3 条场地评价", "RARE", "place-explorer", 80),
+            new BadgeDefinition("FIRST_TRICK_CHECKIN", "首次动作打卡", "完成第一次滑板动作打卡", "COMMON", "first-trick", 90),
+            new BadgeDefinition("FIRST_TRAINING_PLAN", "第一个训练计划", "完成第一个完整训练计划", "RARE", "training-plan", 100),
+            new BadgeDefinition("FIRST_SKATE_EVENT", "首次参加赛事", "完成第一次赛事现场签到", "RARE", "skate-event", 110));
 
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
@@ -43,6 +49,9 @@ public class BadgeService {
     private final PostRepository postRepository;
     private final ActivitySignRepository activitySignRepository;
     private final PlaceReviewRepository placeReviewRepository;
+    private final TrickCheckinRepository trickCheckinRepository;
+    private final UserTrainingPlanRepository userTrainingPlanRepository;
+    private final EventSignupRepository eventSignupRepository;
     private final UserRepository userRepository;
     private final Clock clock;
 
@@ -99,6 +108,9 @@ public class BadgeService {
             case "FIRST_ACTIVITY_CHECKIN" -> new Progress(metrics.activityCheckinCount(), 1, true);
             case "ACTIVITY_CHECKIN_3" -> new Progress(metrics.activityCheckinCount(), 3, true);
             case "PLACE_REVIEW_3" -> new Progress(metrics.reviewCount(), 3, true);
+            case "FIRST_TRICK_CHECKIN" -> new Progress(metrics.trickCheckinCount(), 1, true);
+            case "FIRST_TRAINING_PLAN" -> new Progress(metrics.trainingPlanCompleteCount(), 1, true);
+            case "FIRST_SKATE_EVENT" -> new Progress(metrics.skateEventAttendCount(), 1, true);
             default -> new Progress(0, Long.MAX_VALUE, false);
         };
     }
@@ -140,6 +152,9 @@ public class BadgeService {
         private Long postCount;
         private Long activityCheckinCount;
         private Long reviewCount;
+        private Long trickCheckinCount;
+        private Long trainingPlanCompleteCount;
+        private Long skateEventAttendCount;
 
         private ProgressMetrics(Long userId) {
             this.userId = userId;
@@ -170,6 +185,23 @@ public class BadgeService {
         private long reviewCount() {
             reviewCount = cached(reviewCount, () -> placeReviewRepository.countByUserId(userId));
             return reviewCount;
+        }
+
+        private long trickCheckinCount() {
+            trickCheckinCount = cached(trickCheckinCount, () -> trickCheckinRepository.countByUserId(userId));
+            return trickCheckinCount;
+        }
+
+        private long trainingPlanCompleteCount() {
+            trainingPlanCompleteCount = cached(trainingPlanCompleteCount,
+                    () -> userTrainingPlanRepository.countByUserIdAndStatus(userId, "COMPLETED"));
+            return trainingPlanCompleteCount;
+        }
+
+        private long skateEventAttendCount() {
+            skateEventAttendCount = cached(skateEventAttendCount,
+                    () -> eventSignupRepository.countByUserIdAndSignupStatus(userId, "ATTENDED"));
+            return skateEventAttendCount;
         }
 
         private Long cached(Long value, LongSupplier supplier) {

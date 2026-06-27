@@ -18,6 +18,7 @@ const AdminPage = () => import(/* webpackChunkName: "view-admin" */ '../views/Ad
 const PlaceDetailPage = () => import(/* webpackChunkName: "view-places" */ '../views/PlaceDetailPage.vue')
 const AiCoachPage = () => import(/* webpackChunkName: "view-ai-coach" */ '../views/AiCoachPage.vue')
 const VideoWatchPage = () => import(/* webpackChunkName: "view-videos" */ '../views/VideoWatchPage.vue')
+const SkateProfessionalPage = () => import(/* webpackChunkName: "view-skate" */ '../views/SkateProfessionalPage.vue')
 
 const routes = [
   { path: '/login', component: LoginPage },
@@ -29,6 +30,7 @@ const routes = [
   { path: '/activities', component: ActivitiesPage },
   { path: '/activities/publish', component: ActivityPublishPage, meta: { requiresAuth: true } },
   { path: '/activities/:id', component: ActivityDetailPage },
+  { path: '/skate', component: SkateProfessionalPage },
   { path: '/places/:id', component: PlaceDetailPage },
   { path: '/bulletins', component: BulletinListPage },
   { path: '/bulletins/:id', component: BulletinDetailPage },

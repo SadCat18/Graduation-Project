@@ -59,6 +59,27 @@ public class PostController {
         return ApiResponse.success();
     }
 
+    @PostMapping("/comments/{id}/replies")
+    public ApiResponse<Comment> reply(@PathVariable("id") @Positive(message = "id必须为正数") Long commentId,
+                                      @RequestBody @Valid CommentCreateRequest request) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        request.setParentId(commentId);
+        Comment parent = postService.commentById(commentId);
+        return ApiResponse.success(postService.addComment(currentUser, parent.getPostId(), request));
+    }
+
+    @PostMapping("/comments/{id}/like")
+    public ApiResponse<Map<String, Object>> likeComment(@PathVariable("id") @Positive(message = "id必须为正数") Long commentId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(postService.toggleCommentLike(currentUser, commentId));
+    }
+
+    @DeleteMapping("/comments/{id}/like")
+    public ApiResponse<Map<String, Object>> unlikeComment(@PathVariable("id") @Positive(message = "id必须为正数") Long commentId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(postService.toggleCommentLike(currentUser, commentId));
+    }
+
     @PostMapping("/posts/{id}/like")
     public ApiResponse<Map<String, Object>> like(@PathVariable("id") @Positive(message = "id必须为正数") Long postId) {
         CurrentUser currentUser = SecurityUtils.currentUser();

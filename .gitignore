@@ -9,6 +9,13 @@ deploy/docker/.env
 # root node
 node_modules/
 
+# local runtime/test artifacts
+.superpowers/
+frontend/.playwright-cli/
+output/
+tmp/
+*.log
+
 # isolated feature worktrees
 .worktrees/
 

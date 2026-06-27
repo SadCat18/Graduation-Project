@@ -13,6 +13,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByPostIdOrderByCreateTimeAsc(Long postId);
 
+    List<Comment> findByPostIdAndParentIdOrderByCreateTimeAsc(Long postId, Long parentId);
+
+    List<Comment> findByPostIdAndParentIdNotOrderByCreateTimeAsc(Long postId, Long parentId);
+
     long countByPostId(Long postId);
 
     Page<Comment> findAllByOrderByCreateTimeDesc(Pageable pageable);

@@ -120,8 +120,12 @@ CREATE TABLE IF NOT EXISTS tb_comment (
   post_id BIGINT NOT NULL,
   user_id BIGINT NOT NULL,
   parent_id BIGINT DEFAULT 0,
+  reply_to_user_id BIGINT,
   content VARCHAR(500) NOT NULL,
-  create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+  like_count INT DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'NORMAL',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS tb_activity (
@@ -179,8 +183,49 @@ CREATE TABLE IF NOT EXISTS tb_message (
   user_id BIGINT NOT NULL,
   msg_type VARCHAR(20),
   content VARCHAR(200),
+  target_type VARCHAR(20),
+  target_id BIGINT,
   is_read CHAR(1) DEFAULT '0',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tb_private_conversation (
+  conversation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_a_id BIGINT NOT NULL,
+  user_b_id BIGINT NOT NULL,
+  last_message_id BIGINT,
+  last_message_content VARCHAR(200),
+  last_message_time DATETIME,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_private_conversation_pair (user_a_id, user_b_id),
+  KEY idx_private_conversation_last_time (last_message_time)
+);
+
+CREATE TABLE IF NOT EXISTS tb_private_message (
+  message_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  conversation_id BIGINT NOT NULL,
+  sender_id BIGINT NOT NULL,
+  receiver_id BIGINT NOT NULL,
+  message_type VARCHAR(20) DEFAULT 'text',
+  content VARCHAR(1000) NOT NULL,
+  read_status CHAR(1) DEFAULT '0',
+  status VARCHAR(20) DEFAULT 'NORMAL',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_private_message_conversation_time (conversation_id, create_time),
+  KEY idx_private_message_receiver_read (receiver_id, read_status)
+);
+
+CREATE TABLE IF NOT EXISTS tb_user_follow (
+  follow_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  follower_id BIGINT NOT NULL,
+  followee_id BIGINT NOT NULL,
+  status CHAR(1) DEFAULT '1',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_follow_pair (follower_id, followee_id),
+  KEY idx_user_follow_follower (follower_id, status),
+  KEY idx_user_follow_followee (followee_id, status)
 );
 
 CREATE TABLE IF NOT EXISTS tb_notice (
@@ -397,3 +442,466 @@ WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('滑板装备 · 轮�
 INSERT INTO tb_banner (title, image_url, link_url, admin_id, sort_num, interval_seconds, status, create_time)
 SELECT '公园斜坡 · 速度练习', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=1800', '/activities', 1, 5, 5, '0', '2026-04-29 20:15:00'
 WHERE NOT EXISTS (SELECT 1 FROM tb_banner WHERE title IN ('城市通勤 · 长板巡航', '公园斜坡 · 速度练习'));
+
+-- ----------------------------
+-- 滑板专业模块
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS tb_skate_trick (
+  trick_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  trick_name VARCHAR(80) NOT NULL,
+  difficulty_level INT,
+  category VARCHAR(40),
+  description TEXT,
+  video_url VARCHAR(255),
+  cover_url VARCHAR(255),
+  sort_order INT DEFAULT 0,
+  status CHAR(1) DEFAULT '1',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tb_trick_checkin (
+  checkin_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  trick_id BIGINT NOT NULL,
+  practice_minutes INT,
+  master_status VARCHAR(30),
+  content TEXT,
+  media_urls VARCHAR(1000),
+  is_public CHAR(1) DEFAULT '0',
+  exp_awarded INT DEFAULT 0,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_trick_checkin_user_trick_time (user_id, trick_id, create_time)
+);
+
+CREATE TABLE IF NOT EXISTS tb_training_plan (
+  plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  plan_name VARCHAR(100) NOT NULL,
+  plan_type VARCHAR(30),
+  difficulty_level INT,
+  duration_days INT,
+  description TEXT,
+  cover_url VARCHAR(255),
+  creator_id BIGINT,
+  status CHAR(1) DEFAULT '1',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tb_training_task (
+  task_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  plan_id BIGINT NOT NULL,
+  day_no INT,
+  task_title VARCHAR(100) NOT NULL,
+  task_content TEXT,
+  target_minutes INT,
+  trick_ids VARCHAR(255),
+  sort_order INT DEFAULT 0,
+  KEY idx_training_task_plan_day (plan_id, day_no, sort_order)
+);
+
+CREATE TABLE IF NOT EXISTS tb_user_training_plan (
+  user_plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  plan_id BIGINT NOT NULL,
+  start_date DATE,
+  current_day INT DEFAULT 1,
+  completed_days INT DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'IN_PROGRESS',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_user_training_plan_user_status (user_id, status, create_time)
+);
+
+CREATE TABLE IF NOT EXISTS tb_user_training_record (
+  record_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_plan_id BIGINT NOT NULL,
+  task_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  practice_minutes INT,
+  content TEXT,
+  media_urls VARCHAR(1000),
+  exp_awarded INT DEFAULT 0,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_training_record_plan_task (user_plan_id, task_id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_skate_event (
+  event_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  event_title VARCHAR(120) NOT NULL,
+  event_type VARCHAR(30),
+  cover_url VARCHAR(255),
+  city VARCHAR(50),
+  location VARCHAR(200),
+  start_time DATETIME,
+  end_time DATETIME,
+  signup_start_time DATETIME,
+  signup_end_time DATETIME,
+  max_participants INT,
+  description TEXT,
+  notice TEXT,
+  status VARCHAR(30) DEFAULT 'SIGNUP_OPEN',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_skate_event_city_time (city, start_time),
+  KEY idx_skate_event_type_status (event_type, status)
+);
+
+CREATE TABLE IF NOT EXISTS tb_event_signup (
+  signup_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  event_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  signup_status VARCHAR(20) DEFAULT 'SIGNED',
+  signup_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  cancel_time DATETIME,
+  checkin_time DATETIME,
+  UNIQUE KEY uk_event_signup_event_user (event_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_skate_equipment (
+  equipment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  equipment_name VARCHAR(120) NOT NULL,
+  category VARCHAR(30),
+  brand VARCHAR(60),
+  cover_url VARCHAR(255),
+  price_range VARCHAR(60),
+  suitable_level VARCHAR(40),
+  spec_params TEXT,
+  description TEXT,
+  buy_url VARCHAR(255),
+  status CHAR(1) DEFAULT '1',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_skate_equipment_filter (category, brand, price_range, suitable_level)
+);
+
+CREATE TABLE IF NOT EXISTS tb_user_equipment_favorite (
+  favorite_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  equipment_id BIGINT NOT NULL,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_equipment_favorite_user_equipment (user_id, equipment_id)
+);
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_TRICK_CHECKIN', '首次动作打卡', '完成第一次滑板动作打卡', 'COMMON', 'first-trick', 90, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_TRICK_CHECKIN');
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_TRAINING_PLAN', '第一个训练计划', '完成第一个完整训练计划', 'RARE', 'training-plan', 100, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_TRAINING_PLAN');
+
+INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
+SELECT 'FIRST_SKATE_EVENT', '首次参加赛事', '完成第一次赛事现场签到', 'RARE', 'skate-event', 110, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_SKATE_EVENT');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Ollie', 1, '基础动作', '滑板入门核心动作，重点是后脚 Pop、前脚刷板和身体同步上提。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=900', 10, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Ollie');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Shuvit', 2, '平地动作', '以后脚横向拨板让板面水平旋转，先练肩膀稳定和落点控制。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', 20, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Shuvit');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Kickflip', 3, '平地动作', '在 Ollie 基础上加入前脚外侧翻板动作，建议先保证 Ollie 稳定高度。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', 30, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Kickflip');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Manual', 2, '基础动作', '以后轮保持平衡滑行，适合训练重心、脚踝控制和路线稳定性。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', 40, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Manual');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT '新手七天入门计划', 'SYSTEM', 1, 7, '面向新手的七天基础训练，包含站姿、滑行、刹停、Ollie 预备和简单平衡练习。', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = '新手七天入门计划');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT 'Ollie 强化计划', 'SYSTEM', 2, 5, '集中提升 Pop 高度、前脚刷板、收腿和落地稳定性。', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = 'Ollie 强化计划');
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, '站姿和蹬地基础', '练习惯用脚判断、平衡站姿、单脚蹬地和低速滑行。', 25, NULL, 10
+FROM tb_training_plan p
+WHERE p.plan_name = '新手七天入门计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, '刹停和转向', '练习脚刹、重心转向和低速绕桩，确保能安全停下。', 30, NULL, 20
+FROM tb_training_plan p
+WHERE p.plan_name = '新手七天入门计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 3, 'Ollie 预备动作', '原地练习后脚 Pop 和前脚刷板，先不追求高度。', 30, CAST(s.trick_id AS CHAR), 30
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '新手七天入门计划' AND s.trick_name = 'Ollie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 3);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, 'Pop 发力强化', '连续练习尾部 Pop，要求声音清脆、身体不要后仰。', 30, CAST(s.trick_id AS CHAR), 10
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = 'Ollie 强化计划' AND s.trick_name = 'Ollie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, '刷板和收腿', '练习前脚沿砂纸上刷，膝盖主动上提，落地保持双肩平行。', 35, CAST(s.trick_id AS CHAR), 20
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = 'Ollie 强化计划' AND s.trick_name = 'Ollie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '杭州街式 Jam 公开挑战', '挑战赛', 'https://images.pexels.com/photos/20227453/pexels-photo-20227453.jpeg?auto=compress&cs=tinysrgb&w=900', '杭州', '滨江滑板公园', '2026-07-20 15:00:00', '2026-07-20 18:00:00', '2026-06-20 00:00:00', '2026-07-18 23:59:59', 40, '面向初中级滑手的街式 Jam，鼓励稳定连招和个人风格。', '请佩戴护具，提前 30 分钟到场签到。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '杭州街式 Jam 公开挑战');
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '上海周末约板基础局', '线下约板', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', '上海', '徐汇滨江滑板点', '2026-07-06 19:00:00', '2026-07-06 21:00:00', '2026-06-20 00:00:00', '2026-07-05 22:00:00', 20, '新手友好的线下约板，包含基础滑行、刹停和 Ollie 交流。', '雨天顺延，以平台通知为准。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '上海周末约板基础局');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '8.0 英寸枫木板面', '板面', 'SkateHub Select', 'https://images.pexels.com/photos/3481338/pexels-photo-3481338.jpeg?auto=compress&cs=tinysrgb&w=900', '200-400', '新手/进阶', '宽度 8.0 英寸；7 层枫木；适合 40-43 码脚型', '8.0 是比较均衡的入门宽度，兼顾翻板和稳定性。', 'https://www.taobao.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '8.0 英寸枫木板面');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '99A 街式轮子', '轮子', 'SkateHub Select', 'https://images.pexels.com/photos/1769553/pexels-photo-1769553.jpeg?auto=compress&cs=tinysrgb&w=900', '100-200', '进阶', '硬度 99A；直径 52mm；适合街式和平地动作', '硬轮回弹直接，适合公园和街式地面，新手粗糙路面可选更软轮。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '99A 街式轮子');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '基础护具三件套', '护具', 'SkateHub Safe', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', '100-300', '新手', '护腕、护肘、护膝；可调节绑带；适合动作学习期', '学习新动作阶段建议佩戴护具，尤其是护腕和护膝。', 'https://www.tmall.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '基础护具三件套');
+
+-- ----------------------------
+-- 滑板专业模块完整演示数据
+-- ----------------------------
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Tic Tac', 1, '基础动作', '通过左右摆动前轮获得前进动力，适合建立肩膀和髋部协调。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', 50, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Tic Tac');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Carving', 1, '刷街动作', '通过压脚跟和脚尖完成连续转弯，是刷街和泵速的基础。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', 60, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Carving');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Powerslide', 3, '刷街动作', '横向甩尾让轮子短暂打滑降速，练习前需佩戴护具并选择空旷地面。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', 70, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Powerslide');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Fakie Ollie', 2, '平地动作', '倒滑状态下完成 Ollie，重点是保持肩线和普通 Ollie 一样稳定。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/20227453/pexels-photo-20227453.jpeg?auto=compress&cs=tinysrgb&w=900', 80, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Fakie Ollie');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Nollie', 3, '平地动作', '用前脚 Pop 的反向 Ollie，需要更强的前脚控制和重心预判。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', 90, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Nollie');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Frontside 180', 2, '平地动作', 'Ollie 后身体和板面向前侧旋转 180 度，先从肩膀带动开始练。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', 100, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Frontside 180');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Backside 180', 2, '平地动作', 'Ollie 后身体和板面向背侧旋转 180 度，视线和肩膀打开很关键。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=900', 110, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Backside 180');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Pop Shuvit', 3, '平地动作', '在 Shuvit 中加入更明显的 Pop，让板面旋转更干净、弹起更高。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', 120, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Pop Shuvit');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Heelflip', 4, '平地动作', '用前脚脚跟侧带出翻板方向，要求 Ollie 高度和收腿空间更充分。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', 130, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Heelflip');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Varial Kickflip', 4, '平地动作', 'Kickflip 与 Pop Shuvit 的组合动作，需要板面旋转和翻转节奏同步。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/20227453/pexels-photo-20227453.jpeg?auto=compress&cs=tinysrgb&w=900', 140, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Varial Kickflip');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT '50-50 Grind', 3, '杆台动作', '前后桥同时上杆或台边滑行，入门先从低矮稳定台边练起。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', 150, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = '50-50 Grind');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Boardslide', 3, '杆台动作', '板面横向压在杆上滑行，练习时注意肩线平行和出口回正。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', 160, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Boardslide');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT '5-0 Grind', 4, '杆台动作', '以后桥压杆或台边滑行，前桥抬起，要求上杆后重心保持在后桥上方。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=900', 170, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = '5-0 Grind');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Drop In', 3, '碗池动作', '从碗池或斜坡边缘进入坡面，关键是果断压前脚并保持身体跟进。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', 180, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Drop In');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Rock to Fakie', 4, '碗池动作', '前轮越过 coping 后回到倒滑状态，适合 Drop In 后的碗池进阶。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', 190, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Rock to Fakie');
+
+INSERT INTO tb_skate_trick (trick_name, difficulty_level, category, description, video_url, cover_url, sort_order, status)
+SELECT 'Pump', 2, '碗池动作', '在坡面通过屈伸身体获得速度，是碗池和泵道持续滑行的核心。', 'https://www.bilibili.com', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', 200, '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_trick WHERE trick_name = 'Pump');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT '平地动作进阶计划', 'SYSTEM', 3, 7, '面向已经掌握 Ollie 的用户，按顺序练习 180、Shuvit、Kickflip 和组合动作。', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = '平地动作进阶计划');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT '刷街安全与控板计划', 'SYSTEM', 1, 5, '围绕蹬地、转向、刹停、避障和路线观察建立安全刷街能力。', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = '刷街安全与控板计划');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT '杆台入门计划', 'SYSTEM', 3, 6, '从低台边开始练习上台、50-50、Boardslide 和出口回正。', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = '杆台入门计划');
+
+INSERT INTO tb_training_plan (plan_name, plan_type, difficulty_level, duration_days, description, cover_url, status)
+SELECT '碗池基础计划', 'SYSTEM', 3, 5, '练习泵速、Drop In、转向和 Rock to Fakie，建立碗池路线感。', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_training_plan WHERE plan_name = '碗池基础计划');
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, 'Ollie 稳定复盘', '完成 30 次 Ollie，记录起跳高度、落地稳定性和肩线问题。', 35, CAST(s.trick_id AS CHAR), 10
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '平地动作进阶计划' AND s.trick_name = 'Ollie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, '180 转体训练', '分别练习 Frontside 180 和 Backside 180，重点是视线和肩膀带动。', 40, CONCAT(fs.trick_id, ',', bs.trick_id), 20
+FROM tb_training_plan p, tb_skate_trick fs, tb_skate_trick bs
+WHERE p.plan_name = '平地动作进阶计划' AND fs.trick_name = 'Frontside 180' AND bs.trick_name = 'Backside 180'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 3, 'Shuvit 与 Pop Shuvit', '先做低速 Shuvit，再加入 Pop，记录板面是否水平旋转。', 40, CONCAT(s1.trick_id, ',', s2.trick_id), 30
+FROM tb_training_plan p, tb_skate_trick s1, tb_skate_trick s2
+WHERE p.plan_name = '平地动作进阶计划' AND s1.trick_name = 'Shuvit' AND s2.trick_name = 'Pop Shuvit'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 3);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 4, 'Kickflip 翻板控制', '练习前脚外侧带板，先追求翻板完整，再追求双脚接板。', 45, CAST(s.trick_id AS CHAR), 40
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '平地动作进阶计划' AND s.trick_name = 'Kickflip'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 4);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 5, '组合动作尝试', '尝试 Ollie、180、Shuvit 三个动作的两连组合，记录成功率。', 45, NULL, 50
+FROM tb_training_plan p
+WHERE p.plan_name = '平地动作进阶计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 5);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, '蹬地与滑行节奏', '练习单脚蹬地、上板、低速直线滑行，保持视线看远处。', 25, NULL, 10
+FROM tb_training_plan p
+WHERE p.plan_name = '刷街安全与控板计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, 'Carving 连续转向', '用脚跟和脚尖连续压弯，目标是保持速度不断。', 30, CAST(s.trick_id AS CHAR), 20
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '刷街安全与控板计划' AND s.trick_name = 'Carving'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 3, '安全刹停', '练习脚刹和低速滑停，确保能在 3 米内稳定停下。', 30, NULL, 30
+FROM tb_training_plan p
+WHERE p.plan_name = '刷街安全与控板计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 3);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 4, '避障路线观察', '用标志物模拟行人和障碍，练习提前观察、减速和绕行。', 30, NULL, 40
+FROM tb_training_plan p
+WHERE p.plan_name = '刷街安全与控板计划'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 4);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, '低台上台与下台', '选择低矮台边，练习 Ollie 上台和安全下台。', 35, CAST(s.trick_id AS CHAR), 10
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '杆台入门计划' AND s.trick_name = 'Ollie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, '50-50 上台练习', '从低速开始练 50-50，要求双桥同时压稳。', 40, CAST(s.trick_id AS CHAR), 20
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '杆台入门计划' AND s.trick_name = '50-50 Grind'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 3, 'Boardslide 入门', '练习横板上杆和出口回正，先从短距离滑行开始。', 40, CAST(s.trick_id AS CHAR), 30
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '杆台入门计划' AND s.trick_name = 'Boardslide'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 3);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 1, 'Pump 找速度', '在坡面反复练 Pump，目标是不用蹬地保持 5 圈速度。', 35, CAST(s.trick_id AS CHAR), 10
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '碗池基础计划' AND s.trick_name = 'Pump'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 1);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 2, 'Drop In 心理关', '从小坡面练习 Drop In，要求前脚果断压下并保持身体跟进。', 35, CAST(s.trick_id AS CHAR), 20
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '碗池基础计划' AND s.trick_name = 'Drop In'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 2);
+
+INSERT INTO tb_training_task (plan_id, day_no, task_title, task_content, target_minutes, trick_ids, sort_order)
+SELECT p.plan_id, 3, 'Rock to Fakie 预备', '先练上坡到 coping 附近回 fakie，再逐步增加高度。', 40, CAST(s.trick_id AS CHAR), 30
+FROM tb_training_plan p, tb_skate_trick s
+WHERE p.plan_name = '碗池基础计划' AND s.trick_name = 'Rock to Fakie'
+  AND NOT EXISTS (SELECT 1 FROM tb_training_task t WHERE t.plan_id = p.plan_id AND t.day_no = 3);
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '宁波新手 Ollie 练习营', '线下约板', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', '宁波', '鄞州体育公园滑板区', '2026-07-12 16:00:00', '2026-07-12 18:30:00', '2026-06-20 00:00:00', '2026-07-11 20:00:00', 24, '面向新手的 Ollie 互助练习，包含动作拆解和视频互评。', '请带好水和护具，雨天取消。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '宁波新手 Ollie 练习营');
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '成都碗池基础体验日', '挑战赛', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', '成都', '东郊记忆滑板场', '2026-07-26 14:00:00', '2026-07-26 17:00:00', '2026-06-20 00:00:00', '2026-07-24 23:59:59', 30, '碗池 Pump、Drop In 和基础路线挑战，适合有基础控板能力的滑手。', '需佩戴头盔，现场按水平分组。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '成都碗池基础体验日');
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '广州夜滑刷街路线局', '线下约板', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '广州', '珠江新城集合点', '2026-08-02 20:00:00', '2026-08-02 22:00:00', '2026-06-20 00:00:00', '2026-08-01 22:00:00', 18, '中低速夜滑路线体验，重点是安全队形、刹停和路况观察。', '请带尾灯或反光贴，禁止高速冲坡。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '广州夜滑刷街路线局');
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '北京高校滑板交流赛', '比赛', 'https://images.pexels.com/photos/20227453/pexels-photo-20227453.jpeg?auto=compress&cs=tinysrgb&w=900', '北京', '五道口滑板广场', '2026-08-16 13:30:00', '2026-08-16 18:00:00', '2026-06-25 00:00:00', '2026-08-12 23:59:59', 60, '高校滑手交流赛，分新手组、公开组和最佳风格奖。', '报名后请按短信或站内通知确认分组。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '北京高校滑板交流赛');
+
+INSERT INTO tb_skate_event (event_title, event_type, cover_url, city, location, start_time, end_time, signup_start_time, signup_end_time, max_participants, description, notice, status)
+SELECT '深圳平地动作线上挑战', '挑战赛', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', '深圳', '线上投稿', '2026-08-01 00:00:00', '2026-08-15 23:59:59', '2026-06-25 00:00:00', '2026-07-31 23:59:59', 200, '上传平地动作连招视频，按完成度、流畅度和创意进行展示。', '视频需为本人近期拍摄，禁止搬运。', 'SIGNUP_OPEN'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_event WHERE event_title = '深圳平地动作线上挑战');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '7.75 英寸轻量板面', '板面', 'SkateHub Select', 'https://images.pexels.com/photos/3481338/pexels-photo-3481338.jpeg?auto=compress&cs=tinysrgb&w=900', '200-400', '新手', '宽度 7.75 英寸；适合脚码偏小或喜欢翻板灵活的用户', '更灵活的板面宽度，适合平地动作和体重较轻的新手。', 'https://www.taobao.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '7.75 英寸轻量板面');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '8.25 英寸稳定板面', '板面', 'SkateHub Select', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', '300-500', '进阶', '宽度 8.25 英寸；适合街式、台阶和碗池基础', '更宽的脚下空间，落地更稳，适合练台阶和碗池。', 'https://www.taobao.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '8.25 英寸稳定板面');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '中空街式桥', '桥', 'ThunderLine', 'https://images.pexels.com/photos/1769553/pexels-photo-1769553.jpeg?auto=compress&cs=tinysrgb&w=900', '300-600', '进阶', '中空 kingpin；适配 8.0-8.25 板面；转向响应中等', '兼顾重量和强度，适合街式和平地进阶训练。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '中空街式桥');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '新手稳定桥', '桥', 'SkateHub Select', 'https://images.pexels.com/photos/1984121/pexels-photo-1984121.jpeg?auto=compress&cs=tinysrgb&w=900', '150-300', '新手', '标准 kingpin；转向偏稳；适合 7.75-8.0 板面', '转向不会过分灵敏，适合刚开始练滑行和 Ollie。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '新手稳定桥');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '78A 刷街软轮', '轮子', 'CruiseLab', 'https://images.pexels.com/photos/10923772/pexels-photo-10923772.jpeg?auto=compress&cs=tinysrgb&w=900', '120-260', '新手', '硬度 78A；直径 56mm；适合粗糙路面和通勤', '软轮吸震好，适合刷街和新手代步，但不适合高频翻板。', 'https://www.tmall.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '78A 刷街软轮');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT 'ABEC-7 轴承', '轴承', 'RollCore', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '50-120', '新手/进阶', 'ABEC-7；双面防尘盖；适合日常训练', '维护简单、性价比高，适合日常练习和刷街。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = 'ABEC-7 轴承');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '陶瓷高速轴承', '轴承', 'RollCore Pro', 'https://images.pexels.com/photos/20227453/pexels-photo-20227453.jpeg?auto=compress&cs=tinysrgb&w=900', '200-500', '进阶', '陶瓷滚珠；低阻力；适合速度和碗池训练', '滚动阻力低，适合对速度保持有要求的进阶用户。', 'https://www.tmall.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '陶瓷高速轴承');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '粗砂防滑砂纸', '砂纸', 'GripWorks', 'https://images.pexels.com/photos/8374782/pexels-photo-8374782.jpeg?auto=compress&cs=tinysrgb&w=900', '20-80', '进阶', '粗颗粒；强抓脚；适合翻板动作', '抓脚强，利于 Kickflip 等动作，但鞋底磨损会更快。', 'https://www.taobao.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '粗砂防滑砂纸');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '滑板专用 T 型工具', '工具', 'SkateHub Tool', 'https://images.pexels.com/photos/10590453/pexels-photo-10590453.jpeg?auto=compress&cs=tinysrgb&w=900', '30-80', '新手/进阶', '支持桥钉、轮轴螺母、kingpin 调节', '日常调桥、换轮、紧螺丝必备工具，建议随包携带。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '滑板专用 T 型工具');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '低帮耐磨滑板鞋', '滑板鞋', 'StreetSole', 'https://images.pexels.com/photos/10923771/pexels-photo-10923771.jpeg?auto=compress&cs=tinysrgb&w=900', '300-600', '新手/进阶', '翻毛皮鞋面；硫化底；加厚鞋头', '脚感清晰，适合平地动作训练，鞋头耐磨更适合翻板。', 'https://www.tmall.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '低帮耐磨滑板鞋');
+
+INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
+SELECT '碗池训练头盔', '护具', 'SkateHub Safe', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '150-350', '新手/进阶', 'ABS 外壳；EPS 缓冲；可调节头围', '练 Drop In、碗池和坡面时建议佩戴，降低头部受伤风险。', 'https://www.jd.com', '1'
+WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '碗池训练头盔');

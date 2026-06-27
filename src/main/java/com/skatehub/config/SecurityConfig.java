@@ -46,6 +46,15 @@ public class SecurityConfig {
                                 "/api/auth/login/user",
                                 "/api/auth/login/admin").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**", "/upload/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/skate/tricks",
+                                "/api/skate/tricks/*",
+                                "/api/skate/training-plans",
+                                "/api/skate/training-plans/*",
+                                "/api/skate/events",
+                                "/api/skate/events/*",
+                                "/api/skate/equipments",
+                                "/api/skate/equipments/*").permitAll()
                         .requestMatchers("/api/ai/chat", "/api/ai/execute", "/api/ai/config").hasRole("ADMIN")
                         .requestMatchers("/api/auth/bootstrap-admin", "/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

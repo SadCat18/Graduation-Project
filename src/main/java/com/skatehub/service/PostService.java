@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -108,8 +109,11 @@ public class PostService {
     public List<Map<String, Object>> comments(Long postId) {
         InputValidator.positiveId(postId, "帖子ID");
         getPost(postId);
-        return commentRepository.findByPostIdOrderByCreateTimeAsc(postId).stream()
-                .map(this::toCommentVO)
+        List<Comment> roots = commentRepository.findByPostIdAndParentIdOrderByCreateTimeAsc(postId, 0L);
+        Map<Long, List<Comment>> repliesByParent = commentRepository.findByPostIdAndParentIdNotOrderByCreateTimeAsc(postId, 0L).stream()
+                .collect(Collectors.groupingBy(Comment::getParentId));
+        return roots.stream()
+                .map(comment -> toCommentVO(comment, repliesByParent.getOrDefault(comment.getCommentId(), List.of())))
                 .toList();
     }
 
@@ -117,17 +121,38 @@ public class PostService {
         InputValidator.positiveId(postId, "帖子ID");
         Long currentUserId = requireCurrentUserId(currentUser);
         Post post = getPost(postId);
+        Long parentId = request.getParentId() == null ? 0L : request.getParentId();
+        Comment parent = null;
+        if (parentId > 0) {
+            parent = commentRepository.findById(parentId).orElseThrow(() -> new BizException("父评论不存在"));
+            if (!postId.equals(parent.getPostId())) {
+                throw new BizException("父评论不属于当前帖子");
+            }
+        }
         Comment comment = new Comment();
         comment.setPostId(postId);
         comment.setUserId(currentUserId);
-        comment.setParentId(request.getParentId() == null ? 0L : request.getParentId());
+        comment.setParentId(parentId);
+        if (parent != null) {
+            comment.setReplyToUserId(request.getReplyToUserId() == null ? parent.getUserId() : request.getReplyToUserId());
+        } else {
+            comment.setReplyToUserId(request.getReplyToUserId());
+        }
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
-        userGrowthService.grantExp(currentUserId, "POST_COMMENT", "COMMENT", saved.getCommentId(), 8);
-        if (!post.getUserId().equals(currentUserId)) {
+        boolean reply = parentId > 0;
+        userGrowthService.grantExp(currentUserId, reply ? "COMMENT_REPLY" : "COMMENT_CREATE", "COMMENT", saved.getCommentId(), reply ? 2 : 3);
+        if (reply && parent != null && !parent.getUserId().equals(currentUserId)) {
+            messageNotifyService.send(parent.getUserId(), "COMMENT", "你的评论收到回复：" + saved.getContent(), "POST", post.getPostId());
+        } else if (!reply && !post.getUserId().equals(currentUserId)) {
             messageNotifyService.send(post.getUserId(), "COMMENT", "你的帖子收到新评论：" + post.getTitle(), "POST", post.getPostId());
         }
         return saved;
+    }
+
+    public Comment commentById(Long commentId) {
+        InputValidator.positiveId(commentId, "评论ID");
+        return commentRepository.findById(commentId).orElseThrow(() -> new BizException("评论不存在"));
     }
 
     public void deleteComment(CurrentUser currentUser, Long commentId, boolean isAdmin) {
@@ -157,6 +182,35 @@ public class PostService {
 
     public Map<String, Object> toggleWatchLater(CurrentUser currentUser, Long postId) {
         return toggleInteraction(currentUser, postId, "WATCH_LATER");
+    }
+
+    public Map<String, Object> toggleCommentLike(CurrentUser currentUser, Long commentId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(commentId, "评论ID");
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new BizException("评论不存在"));
+        Interaction exists = interactionRepository
+                .findByUserIdAndTargetTypeAndTargetIdAndType(currentUserId, "COMMENT", commentId, "LIKE")
+                .orElse(null);
+        boolean active;
+        if (exists == null) {
+            Interaction interaction = new Interaction();
+            interaction.setUserId(currentUserId);
+            interaction.setTargetType("COMMENT");
+            interaction.setTargetId(commentId);
+            interaction.setType("LIKE");
+            interactionRepository.save(interaction);
+            active = true;
+        } else {
+            interactionRepository.delete(exists);
+            active = false;
+        }
+        long likeCount = interactionRepository.countByTargetTypeAndTargetIdAndType("COMMENT", commentId, "LIKE");
+        comment.setLikeCount((int) likeCount);
+        commentRepository.save(comment);
+        Map<String, Object> result = new HashMap<>();
+        result.put("active", active);
+        result.put("likeCount", likeCount);
+        return result;
     }
 
     public Post top(Long postId, String top) {
@@ -251,16 +305,29 @@ public class PostService {
     }
 
     private Map<String, Object> toCommentVO(Comment comment) {
+        return toCommentVO(comment, List.of());
+    }
+
+    private Map<String, Object> toCommentVO(Comment comment, List<Comment> replies) {
         Map<String, Object> map = new HashMap<>();
         map.put("commentId", comment.getCommentId());
         map.put("postId", comment.getPostId());
         map.put("userId", comment.getUserId());
         map.put("parentId", comment.getParentId());
+        map.put("replyToUserId", comment.getReplyToUserId());
         map.put("content", comment.getContent());
+        map.put("likeCount", comment.getLikeCount() == null ? 0 : comment.getLikeCount());
         map.put("createTime", comment.getCreateTime());
         User user = userRepository.findById(comment.getUserId()).orElse(null);
         map.put("username", user == null ? "已注销用户" : user.getUsername());
         map.put("avatar", user == null ? null : user.getAvatar());
+        if (comment.getReplyToUserId() != null) {
+            User replyToUser = userRepository.findById(comment.getReplyToUserId()).orElse(null);
+            map.put("replyToUsername", replyToUser == null ? "已注销用户" : replyToUser.getUsername());
+        } else {
+            map.put("replyToUsername", null);
+        }
+        map.put("replies", replies.stream().map(this::toCommentVO).toList());
         return map;
     }
 }

@@ -54,7 +54,10 @@ class GrowthSchemaContractTest {
             "'POST_10', '内容达人', '累计成功发布 10 篇帖子', 'EPIC', 'post-ten', 50, '1'",
             "'FIRST_ACTIVITY_CHECKIN', '初次约板', '首次完成活动现场签到', 'COMMON', 'first-activity', 60, '1'",
             "'ACTIVITY_CHECKIN_3', '约板达人', '累计完成 3 次活动现场签到', 'RARE', 'activity-three', 70, '1'",
-            "'PLACE_REVIEW_3', '场地探索者', '累计成功提交 3 条场地评价', 'RARE', 'place-explorer', 80, '1'"
+            "'PLACE_REVIEW_3', '场地探索者', '累计成功提交 3 条场地评价', 'RARE', 'place-explorer', 80, '1'",
+            "'FIRST_TRICK_CHECKIN', '首次动作打卡', '完成第一次滑板动作打卡', 'COMMON', 'first-trick', 90, '1'",
+            "'FIRST_TRAINING_PLAN', '第一个训练计划', '完成第一个完整训练计划', 'RARE', 'training-plan', 100, '1'",
+            "'FIRST_SKATE_EVENT', '首次参加赛事', '完成第一次赛事现场签到', 'RARE', 'skate-event', 110, '1'"
     );
 
     @Test
@@ -72,8 +75,8 @@ class GrowthSchemaContractTest {
             assertTrue(initSql.contains(badgeRow), () -> "Init missing badge: " + badgeRow);
         }
 
-        assertEquals(8, countOccurrences(migrationSql, "INSERT INTO tb_badge"));
-        assertEquals(8, countOccurrences(initSql, "INSERT INTO tb_badge"));
+        assertEquals(11, countOccurrences(migrationSql, "INSERT INTO tb_badge"));
+        assertEquals(11, countOccurrences(initSql, "INSERT INTO tb_badge"));
     }
 
     @Test
@@ -86,7 +89,7 @@ class GrowthSchemaContractTest {
         assertEquals(extractNormalizedBlocks(migrationSql, BADGE_INSERT_BLOCK),
                 extractNormalizedBlocks(initSql, BADGE_INSERT_BLOCK));
         assertEquals(3, extractNormalizedBlocks(migrationSql, GROWTH_TABLE_BLOCK).size());
-        assertEquals(8, extractNormalizedBlocks(migrationSql, BADGE_INSERT_BLOCK).size());
+        assertEquals(11, extractNormalizedBlocks(migrationSql, BADGE_INSERT_BLOCK).size());
     }
 
     @Test

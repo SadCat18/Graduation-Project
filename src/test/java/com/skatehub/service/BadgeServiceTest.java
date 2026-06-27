@@ -5,6 +5,9 @@ import com.skatehub.dao.BadgeRepository;
 import com.skatehub.dao.DailyCheckinRepository;
 import com.skatehub.dao.PlaceReviewRepository;
 import com.skatehub.dao.PostRepository;
+import com.skatehub.dao.EventSignupRepository;
+import com.skatehub.dao.TrickCheckinRepository;
+import com.skatehub.dao.UserTrainingPlanRepository;
 import com.skatehub.dao.UserBadgeRepository;
 import com.skatehub.dao.UserRepository;
 import com.skatehub.pojo.Badge;
@@ -58,6 +61,9 @@ class BadgeServiceTest {
     @Mock private PostRepository postRepository;
     @Mock private ActivitySignRepository activitySignRepository;
     @Mock private PlaceReviewRepository placeReviewRepository;
+    @Mock private TrickCheckinRepository trickCheckinRepository;
+    @Mock private UserTrainingPlanRepository userTrainingPlanRepository;
+    @Mock private EventSignupRepository eventSignupRepository;
     @Mock private UserRepository userRepository;
 
     private BadgeService service;
@@ -71,6 +77,9 @@ class BadgeServiceTest {
                 postRepository,
                 activitySignRepository,
                 placeReviewRepository,
+                trickCheckinRepository,
+                userTrainingPlanRepository,
+                eventSignupRepository,
                 userRepository,
                 Clock.fixed(NOW, SHANGHAI));
     }
@@ -164,10 +173,11 @@ class BadgeServiceTest {
         when(badgeRepository.saveAll(argThat(badges -> {
             List<Badge> catalog = new ArrayList<>();
             badges.forEach(catalog::add);
-            return catalog.size() == 8
+            return catalog.size() == 11
                     && catalog.stream().map(Badge::getCode).toList().containsAll(List.of(
                             "FIRST_CHECKIN", "STREAK_7", "CHECKIN_30", "FIRST_POST",
-                            "POST_10", "FIRST_ACTIVITY_CHECKIN", "ACTIVITY_CHECKIN_3", "PLACE_REVIEW_3"));
+                            "POST_10", "FIRST_ACTIVITY_CHECKIN", "ACTIVITY_CHECKIN_3", "PLACE_REVIEW_3",
+                            "FIRST_TRICK_CHECKIN", "FIRST_TRAINING_PLAN", "FIRST_SKATE_EVENT"));
         }))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userBadgeRepository.findByUserIdOrderByUnlockTimeDesc(USER_ID)).thenReturn(List.of());
         when(dailyCheckinRepository.countByUserId(USER_ID)).thenReturn(0L);
@@ -175,10 +185,13 @@ class BadgeServiceTest {
         when(postRepository.countByUserId(USER_ID)).thenReturn(0L);
         when(activitySignRepository.countByUserIdAndIsCheckin(USER_ID, "1")).thenReturn(0L);
         when(placeReviewRepository.countByUserId(USER_ID)).thenReturn(0L);
+        when(trickCheckinRepository.countByUserId(USER_ID)).thenReturn(0L);
+        when(userTrainingPlanRepository.countByUserIdAndStatus(USER_ID, "COMPLETED")).thenReturn(0L);
+        when(eventSignupRepository.countByUserIdAndSignupStatus(USER_ID, "ATTENDED")).thenReturn(0L);
 
         List<BadgeView> views = service.evaluateAndList(USER_ID);
 
-        assertEquals(8, views.size());
+        assertEquals(11, views.size());
         assertEquals("FIRST_CHECKIN", views.get(0).code());
         assertEquals("初来乍到", views.get(0).name());
         assertFalse(views.get(0).unlocked());
@@ -269,7 +282,10 @@ class BadgeServiceTest {
                 Arguments.of("POST_10", 10L, 9L, Metric.POST_COUNT),
                 Arguments.of("FIRST_ACTIVITY_CHECKIN", 1L, 0L, Metric.ACTIVITY_COUNT),
                 Arguments.of("ACTIVITY_CHECKIN_3", 3L, 2L, Metric.ACTIVITY_COUNT),
-                Arguments.of("PLACE_REVIEW_3", 3L, 2L, Metric.REVIEW_COUNT));
+                Arguments.of("PLACE_REVIEW_3", 3L, 2L, Metric.REVIEW_COUNT),
+                Arguments.of("FIRST_TRICK_CHECKIN", 1L, 0L, Metric.TRICK_CHECKIN_COUNT),
+                Arguments.of("FIRST_TRAINING_PLAN", 1L, 0L, Metric.TRAINING_PLAN_COUNT),
+                Arguments.of("FIRST_SKATE_EVENT", 1L, 0L, Metric.SKATE_EVENT_COUNT));
     }
 
     private void stubCatalog(List<Badge> badges, List<UserBadge> awards) {
@@ -290,6 +306,9 @@ class BadgeServiceTest {
             case ACTIVITY_COUNT -> when(activitySignRepository.countByUserIdAndIsCheckin(USER_ID, "1"))
                     .thenReturn(value);
             case REVIEW_COUNT -> when(placeReviewRepository.countByUserId(USER_ID)).thenReturn(value);
+            case TRICK_CHECKIN_COUNT -> when(trickCheckinRepository.countByUserId(USER_ID)).thenReturn(value);
+            case TRAINING_PLAN_COUNT -> when(userTrainingPlanRepository.countByUserIdAndStatus(USER_ID, "COMPLETED")).thenReturn(value);
+            case SKATE_EVENT_COUNT -> when(eventSignupRepository.countByUserIdAndSignupStatus(USER_ID, "ATTENDED")).thenReturn(value);
         }
     }
 
@@ -315,6 +334,6 @@ class BadgeServiceTest {
     }
 
     private enum Metric {
-        DAILY_COUNT, STREAK, POST_COUNT, ACTIVITY_COUNT, REVIEW_COUNT
+        DAILY_COUNT, STREAK, POST_COUNT, ACTIVITY_COUNT, REVIEW_COUNT, TRICK_CHECKIN_COUNT, TRAINING_PLAN_COUNT, SKATE_EVENT_COUNT
     }
 }

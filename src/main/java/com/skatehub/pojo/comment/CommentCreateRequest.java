@@ -14,4 +14,7 @@ public class CommentCreateRequest {
 
     @PositiveOrZero(message = "父评论ID不能为负数")
     private Long parentId = 0L;
+
+    @PositiveOrZero(message = "被回复用户ID不能为负数")
+    private Long replyToUserId;
 }
