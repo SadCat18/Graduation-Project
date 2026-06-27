@@ -8,6 +8,7 @@ import com.skatehub.pojo.Banner;
 import com.skatehub.service.ActivityService;
 import com.skatehub.service.PostService;
 import com.skatehub.service.PublicContentService;
+import com.skatehub.service.PublicUserProfileService;
 import com.skatehub.util.ApiResponse;
 import com.skatehub.util.PageResult;
 import jakarta.validation.constraints.Max;
@@ -31,6 +32,7 @@ public class PublicController {
     private final PostService postService;
     private final ActivityService activityService;
     private final PublicContentService publicContentService;
+    private final PublicUserProfileService publicUserProfileService;
 
     @GetMapping("/posts")
     public ApiResponse<PageResult<Map<String, Object>>> posts(@RequestParam(required = false) @Size(max = 50) String keyword,
@@ -49,6 +51,20 @@ public class PublicController {
     @GetMapping("/posts/{id}/comments")
     public ApiResponse<List<Map<String, Object>>> comments(@PathVariable("id") @Positive(message = "id必须为正数") Long postId) {
         return ApiResponse.success(postService.comments(postId));
+    }
+
+    @GetMapping("/users/{userId}")
+    public ApiResponse<Map<String, Object>> publicUserProfile(
+            @PathVariable("userId") @Positive(message = "userId must be positive") Long userId) {
+        return ApiResponse.success(publicUserProfileService.profile(userId));
+    }
+
+    @GetMapping("/users/{userId}/posts")
+    public ApiResponse<PageResult<Map<String, Object>>> publicUserPosts(
+            @PathVariable("userId") @Positive(message = "userId must be positive") Long userId,
+            @RequestParam(required = false) @Min(1) @Max(10000) Integer page,
+            @RequestParam(required = false) @Min(1) @Max(50) Integer size) {
+        return ApiResponse.success(publicUserProfileService.posts(userId, page, size));
     }
 
     @GetMapping("/activities")

@@ -86,6 +86,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findByUserIdOrderByCreateTimeDesc(Long userId);
 
+    Page<Post> findByUserIdOrderByCreateTimeDesc(Long userId, Pageable pageable);
+
     long countByUserId(Long userId);
 
     long countByCreateTimeBetween(LocalDateTime start, LocalDateTime end);
