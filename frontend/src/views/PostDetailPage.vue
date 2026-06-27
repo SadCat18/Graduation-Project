@@ -17,8 +17,6 @@ const error = ref('')
 const commentInput = ref('')
 const replyInputs = ref({})
 const replyingCommentId = ref(null)
-const authorFollowStatus = ref(null)
-const authorActionLoading = ref(false)
 const postingComment = ref(false)
 const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违法违规', '其他']
 
@@ -51,13 +49,6 @@ async function loadPostDetail() {
     ])
     post.value = postData
     comments.value = normalizeCommentThreads(commentData || [])
-    if (isLoggedIn.value && postData?.userId) {
-      try {
-        authorFollowStatus.value = await api.followStatus(postData.userId)
-      } catch (_) {
-        authorFollowStatus.value = null
-      }
-    }
   } catch (e) {
     error.value = e?.message || '帖子加载失败'
   } finally {
@@ -145,37 +136,13 @@ async function reportComment(commentId) {
   }
 }
 
-async function toggleAuthorFollow() {
-  if (!isLoggedIn.value) return router.push('/login')
-  if (!post.value?.userId) return
-  authorActionLoading.value = true
-  try {
-    authorFollowStatus.value = authorFollowStatus.value?.following
-      ? await api.unfollowUser(post.value.userId)
-      : await api.followUser(post.value.userId)
-  } catch (e) {
-    showActionError(e, '关注操作失败，请稍后重试')
-  } finally {
-    authorActionLoading.value = false
-  }
-}
-
-async function startAuthorConversation() {
-  if (!isLoggedIn.value) return router.push('/login')
-  if (!post.value?.userId) return
-  authorActionLoading.value = true
-  try {
-    await api.createConversation({ targetUserId: post.value.userId })
-    alert('会话已创建，可前往个人中心的社区关系查看私信。')
-  } catch (e) {
-    showActionError(e, '私信会话创建失败，请稍后重试')
-  } finally {
-    authorActionLoading.value = false
-  }
-}
-
 function replyKey(commentId) {
   return String(commentId)
+}
+
+function goUserProfile(userId) {
+  if (!userId) return
+  router.push(`/users/${userId}`)
 }
 
 function setReplyDraft(commentId, value) {
@@ -238,13 +205,10 @@ onMounted(loadPostDetail)
           <span class="tag">{{ post.category || '未分类' }}</span>
         </div>
         <div class="author-line">
-          <p class="muted">作者：{{ post.authorName }} · Lv{{ post.authorLevel || 1 }} · {{ post.createTime?.replace('T', ' ') }}</p>
-          <div class="inline author-actions">
-            <button class="btn-soft" :disabled="authorActionLoading" @click="toggleAuthorFollow">
-              {{ authorFollowStatus?.mutual ? '互相关注' : authorFollowStatus?.following ? '已关注' : '关注作者' }}
-            </button>
-            <button class="btn-soft" :disabled="authorActionLoading" @click="startAuthorConversation">私信</button>
-          </div>
+          <button class="author-link" type="button" @click="goUserProfile(post.userId)">
+            {{ post.authorName || '匿名滑手' }} · Lv{{ post.authorLevel || 1 }}
+          </button>
+          <p class="muted">{{ post.createTime?.replace('T', ' ') }}</p>
         </div>
         <p class="post-content">{{ post.content }}</p>
 
@@ -275,7 +239,12 @@ onMounted(loadPostDetail)
       <div v-if="!comments.length" class="empty-state">还没有评论，快来抢沙发吧。</div>
       <div v-for="item in comments" :key="item.commentId" class="comment-card">
         <div class="comment-main">
-          <p><strong>{{ item.username }}：</strong>{{ item.content }}</p>
+          <p>
+            <button class="comment-author" type="button" @click="goUserProfile(item.userId)">
+              {{ item.username || '匿名滑手' }}
+            </button>
+            ：{{ item.content }}
+          </p>
           <div class="inline comment-actions">
             <p class="muted">{{ item.createTime?.replace('T', ' ') }}</p>
             <button class="btn-soft" @click="toggleCommentLike(item.commentId)">赞 {{ item.likeCount || 0 }}</button>
@@ -287,7 +256,9 @@ onMounted(loadPostDetail)
         <div v-if="item.replies?.length" class="reply-list">
           <div v-for="reply in item.replies" :key="reply.commentId" class="reply-item">
             <p>
-              <strong>{{ reply.username }}</strong>
+              <button class="comment-author" type="button" @click="goUserProfile(reply.userId)">
+                {{ reply.username || '匿名滑手' }}
+              </button>
               <span v-if="reply.replyToUsername" class="muted"> 回复 @{{ reply.replyToUsername }}</span>
               ：{{ reply.content }}
             </p>
@@ -349,67 +320,68 @@ onMounted(loadPostDetail)
 
 .author-line {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
+  gap: 10px 14px;
+  margin-top: 10px;
 }
 
 .author-line .muted {
   margin: 0;
 }
 
-.author-actions {
-  flex-shrink: 0;
+.author-link,
+.comment-author {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #111827;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.author-link:hover,
+.comment-author:hover {
+  text-decoration: underline;
 }
 
 .post-content {
+  margin: 18px 0;
   white-space: pre-wrap;
-  line-height: 1.8;
-  word-break: break-word;
+  line-height: 1.85;
 }
 
 .post-images {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
 }
 
 .post-images a {
   display: block;
-  min-width: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  background: #f8fafc;
 }
 
 .post-images img {
+  display: block;
   width: 100%;
-  height: 136px;
-  border-radius: 10px;
+  height: 220px;
   object-fit: cover;
-  border: 1px solid var(--line);
-  background: var(--surface-muted);
 }
 
 .action-row {
-  align-items: center;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
-.action-row .btn-soft {
-  min-height: 38px;
-}
-
-.action-row .muted {
-  margin-left: auto;
-  white-space: nowrap;
+  padding-top: 8px;
 }
 
 .comment-card {
   padding: 14px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(15, 23, 42, .08);
 }
 
 .comment-card:last-of-type {
@@ -417,37 +389,38 @@ onMounted(loadPostDetail)
 }
 
 .comment-card p {
-  line-height: 1.7;
-  word-break: break-word;
+  margin: 0;
+  line-height: 1.75;
 }
 
 .comment-main {
-  min-width: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .comment-actions {
-  align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .reply-list {
   display: grid;
-  gap: 8px;
-  margin: 10px 0 0 18px;
-  padding-left: 12px;
-  border-left: 2px solid var(--line);
+  gap: 10px;
+  margin: 12px 0 0 18px;
+  padding-left: 14px;
+  border-left: 3px solid rgba(56, 189, 248, .25);
 }
 
 .reply-item {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .reply-row {
-  margin-top: 10px;
-  align-items: stretch;
+  margin-top: 12px;
+  gap: 8px;
 }
 
 .reply-row input {
@@ -455,8 +428,8 @@ onMounted(loadPostDetail)
 }
 
 .comment-row {
-  margin-top: 14px;
   align-items: stretch;
+  margin-top: 16px;
 }
 
 .comment-row input {
@@ -464,13 +437,12 @@ onMounted(loadPostDetail)
 }
 
 .comment-row .btn-primary {
-  min-width: 104px;
+  width: 100px;
 }
 
 @media (max-width: 640px) {
   .post-head,
   .author-line,
-  .action-row,
   .comment-row,
   .reply-row {
     align-items: stretch;
@@ -478,18 +450,13 @@ onMounted(loadPostDetail)
   }
 
   .post-images {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .post-images img {
-    height: 118px;
+    height: 190px;
   }
 
-  .action-row .muted {
-    margin-left: 0;
-  }
-
-  .action-row .btn-soft,
   .comment-row .btn-primary,
   .reply-row .btn-soft {
     width: 100%;
