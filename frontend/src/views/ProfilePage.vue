@@ -1,6 +1,6 @@
 ﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import GrowthCenterPanel from '../components/growth/GrowthCenterPanel.vue'
 import { api } from '../api'
@@ -29,6 +29,7 @@ const videos = ref([])
 const signedActivities = ref([])
 const role = getRole()
 const router = useRouter()
+const route = useRoute()
 const SUPPORTED_AVATAR_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
 const SUPPORTED_AVATAR_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/x-ms-bmp']
 
@@ -76,6 +77,7 @@ const PROFILE_TAB_TRANSITION_MS = 280
 let profileTabTransitionTimer = null
 let profileTabAnimationFrame = null
 let profileTabTransitionSequence = 0
+let conversationQueryApplied = false
 
 const overviewSignedActivities = computed(() => (signedActivities.value || []).slice(0, MAX_OVERVIEW_SIGNED))
 const overviewNotifications = computed(() => (notifications.value || []).slice(0, MAX_OVERVIEW_NOTIFICATIONS))
@@ -515,6 +517,7 @@ async function loadCommunityUtilities() {
     privateConversations.value = conversations || []
     followersList.value = followers || []
     followingList.value = following || []
+    await applyConversationQuery()
     if (!selectedConversationId.value && privateConversations.value.length) {
       selectedConversationId.value = privateConversations.value[0].conversationId
       await loadConversationMessages(selectedConversationId.value)
@@ -530,6 +533,26 @@ async function loadConversationMessages(conversationId) {
   await api.readPrivateConversation(conversationId)
   const unread = await api.privateUnreadCount()
   privateUnreadCount.value = Number(unread?.unreadCount || 0)
+}
+
+async function selectConversationById(conversationId) {
+  const normalizedId = Number(conversationId)
+  if (!normalizedId) return
+  const target = privateConversations.value.find(item => Number(item.conversationId) === normalizedId)
+  if (target) {
+    await loadConversationMessages(target.conversationId)
+  }
+}
+
+async function applyConversationQuery() {
+  if (conversationQueryApplied) return
+  if (route.query.tab === 'community') {
+    profileTab.value = 'community'
+  }
+  if (route.query.conversationId) {
+    await selectConversationById(route.query.conversationId)
+  }
+  conversationQueryApplied = true
 }
 
 async function startConversationWith(userId) {
