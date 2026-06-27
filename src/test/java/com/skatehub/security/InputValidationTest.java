@@ -17,6 +17,7 @@ import com.skatehub.service.NewsSyncTaskService;
 import com.skatehub.service.PlaceReviewService;
 import com.skatehub.service.PostService;
 import com.skatehub.service.PublicContentService;
+import com.skatehub.service.PublicUserProfileService;
 import com.skatehub.service.ReportService;
 import com.skatehub.service.VideoService;
 import com.skatehub.config.NewsSyncProperties;
@@ -62,6 +63,8 @@ class InputValidationTest {
     private ActivityService activityService;
     @MockBean
     private PublicContentService publicContentService;
+    @MockBean
+    private PublicUserProfileService publicUserProfileService;
     @MockBean
     private AdminService adminService;
     @MockBean
