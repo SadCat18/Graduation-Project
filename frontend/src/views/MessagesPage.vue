@@ -1,5 +1,5 @@
 <template>
-  <section class="messages-page">
+  <section ref="pageRoot" class="messages-page">
     <header class="messages-header">
       <div>
         <p class="eyebrow">MESSAGES</p>
@@ -12,7 +12,7 @@
     </header>
 
     <div class="messages-layout" :class="{ 'has-thread': selectedConversationId }">
-      <aside class="conversation-list" aria-label="私信会话列表">
+      <aside ref="conversationList" class="conversation-list" aria-label="私信会话列表">
         <div class="list-heading">
           <h2>会话</h2>
           <span>{{ conversations.length }}</span>
@@ -43,7 +43,7 @@
         </button>
       </aside>
 
-      <section class="message-thread" aria-label="私信对话">
+      <section ref="threadPanel" class="message-thread" aria-label="私信对话">
         <div v-if="!selectedConversationId" class="thread-empty">
           <AppIcon name="message" :size="28" />
           <strong>选择一个会话</strong>
@@ -86,7 +86,7 @@
               placeholder="输入私信内容"
               :disabled="sendingMessage"
             />
-            <button class="btn-primary" type="submit" :disabled="sendingMessage || !messageInput.trim()">
+            <button ref="sendButton" class="btn-primary" type="submit" :disabled="sendingMessage || !messageInput.trim()">
               <AppIcon name="message" :size="15" />
               {{ sendingMessage ? '发送中...' : '发送' }}
             </button>
@@ -98,7 +98,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { gsap } from 'gsap'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
@@ -116,7 +117,11 @@ const loadingConversations = ref(false)
 const loadingMessages = ref(false)
 const sendingMessage = ref(false)
 const messageInput = ref('')
+const pageRoot = ref(null)
+const conversationList = ref(null)
+const threadPanel = ref(null)
 const messageScroller = ref(null)
+const sendButton = ref(null)
 
 const activeConversation = computed(() => {
   const selectedId = Number(selectedConversationId.value)
@@ -142,6 +147,70 @@ function avatarFor(conversation) {
   return normalizeMediaUrl(conversation?.otherAvatar) || defaultAvatar
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+}
+
+function scopedElements(selector) {
+  return pageRoot.value ? gsap.utils.toArray(selector, pageRoot.value) : []
+}
+
+function animatePageEnter() {
+  if (prefersReducedMotion()) return
+  const conversationItems = scopedElements('.conversation-item').slice(0, 8)
+  const header = scopedElements('.messages-header')
+  const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } })
+
+  timeline
+    .from(header, { y: 12, opacity: 0, duration: 0.24 }, 0)
+    .from(conversationList.value, { x: -14, opacity: 0, duration: 0.28 }, 0.04)
+    .from(threadPanel.value, { y: 16, opacity: 0, duration: 0.32 }, 0.08)
+
+  if (conversationItems.length) {
+    timeline.from(conversationItems, { y: 10, opacity: 0, duration: 0.2, stagger: 0.035 }, 0.12)
+  }
+}
+
+function animateThreadSwitch() {
+  if (prefersReducedMotion() || !threadPanel.value) return
+  gsap.fromTo(
+    scopedElements('.thread-header, .message-scroll, .composer'),
+    { y: 10, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.24, stagger: 0.045, ease: 'power2.out', overwrite: 'auto' }
+  )
+}
+
+function animateRecentMessages() {
+  if (prefersReducedMotion()) return
+  const recentMessages = scopedElements('.message-row').slice(-12)
+  if (!recentMessages.length) return
+  gsap.fromTo(
+    recentMessages,
+    { y: 12, scale: 0.985, opacity: 0 },
+    { y: 0, scale: 1, opacity: 1, duration: 0.22, stagger: 0.025, ease: 'power2.out', overwrite: 'auto' }
+  )
+}
+
+function animateUnreadBadges() {
+  if (prefersReducedMotion()) return
+  const badges = scopedElements('.unread-dot')
+  if (!badges.length) return
+  gsap.fromTo(
+    badges,
+    { scale: 0.75, opacity: 0.45 },
+    { scale: 1, opacity: 1, duration: 0.22, ease: 'back.out(2)', overwrite: 'auto' }
+  )
+}
+
+function animateSendPress() {
+  if (prefersReducedMotion() || !sendButton.value) return
+  gsap.fromTo(
+    sendButton.value,
+    { scale: 0.96 },
+    { scale: 1, duration: 0.18, ease: 'back.out(2.2)', overwrite: 'auto' }
+  )
+}
+
 function isMine(message) {
   if (currentUserId.value != null) {
     return Number(message.senderId) === Number(currentUserId.value)
@@ -162,6 +231,8 @@ async function loadCurrentUser() {
 
 async function refreshConversations() {
   conversations.value = normalizeList(await api.privateConversations())
+  await nextTick()
+  animateUnreadBadges()
 }
 
 async function loadConversations(options = {}) {
@@ -206,6 +277,8 @@ async function loadMessages(conversationId) {
     if (messageScroller.value) {
       messageScroller.value.scrollTop = messageScroller.value.scrollHeight
     }
+    animateThreadSwitch()
+    animateRecentMessages()
   } finally {
     loadingMessages.value = false
   }
@@ -216,6 +289,7 @@ async function sendMessage() {
   if (!selectedConversationId.value || !content) return
   sendingMessage.value = true
   try {
+    animateSendPress()
     await api.sendPrivateMessage(selectedConversationId.value, { content })
     messageInput.value = ''
     await loadMessages(selectedConversationId.value)
@@ -242,6 +316,14 @@ watch(
 onMounted(async () => {
   await loadCurrentUser()
   await loadConversations()
+  await nextTick()
+  animatePageEnter()
+})
+
+onBeforeUnmount(() => {
+  const targets = scopedElements('.messages-header, .conversation-list, .message-thread, .conversation-item, .thread-header, .message-scroll, .composer, .message-row, .unread-dot')
+  if (sendButton.value) targets.push(sendButton.value)
+  gsap.killTweensOf(targets)
 })
 </script>
 
