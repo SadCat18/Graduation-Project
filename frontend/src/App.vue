@@ -40,7 +40,7 @@ const navItems = computed(() => {
     { to: '/bulletins', label: '社区快讯', icon: 'news' }
   ]
   if (hasToken.value) {
-    base.splice(2, 0, { to: '/messages', label: '私信', icon: 'message' })
+    base.push({ to: '/messages', label: '私信', icon: 'message' })
     base.push({ to: '/profile', label: '个人中心', icon: 'user' })
   }
   if (role.value === 'ADMIN') base.push({ to: '/admin', label: '后台管理', icon: 'admin' })
