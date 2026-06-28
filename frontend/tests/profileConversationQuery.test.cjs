@@ -1,16 +1,20 @@
 const fs = require('fs')
 const path = require('path')
 
-const source = fs.readFileSync(path.join(__dirname, '../src/views/ProfilePage.vue'), 'utf8')
+const profileSource = fs.readFileSync(path.join(__dirname, '../src/views/ProfilePage.vue'), 'utf8')
+const messagesSource = fs.readFileSync(path.join(__dirname, '../src/views/MessagesPage.vue'), 'utf8')
 
-function assertIncludes(needle, message) {
+function assertIncludes(source, needle, message) {
   if (!source.includes(needle)) throw new Error(message)
 }
 
-assertIncludes('useRoute', 'ProfilePage must import useRoute')
-assertIncludes('const route = useRoute()', 'ProfilePage must create route instance')
-assertIncludes("route.query.tab === 'community'", 'ProfilePage must read tab=community')
-assertIncludes('route.query.conversationId', 'ProfilePage must read conversationId query')
-assertIncludes('selectConversationById', 'ProfilePage must expose conversation selection by id')
+function assertExcludes(source, needle, message) {
+  if (source.includes(needle)) throw new Error(message)
+}
 
-console.log('profile conversation query contract passed')
+assertExcludes(profileSource, "route.query.tab === 'community'", 'ProfilePage must not auto-open community tab for conversations')
+assertExcludes(profileSource, 'route.query.conversationId', 'ProfilePage must not own conversation routing')
+assertExcludes(profileSource, 'selectConversationById', 'ProfilePage must not expose conversation selection by id')
+assertIncludes(messagesSource, 'route.params.conversationId', 'MessagesPage must own direct conversation routing')
+
+console.log('standalone message conversation routing contract passed')

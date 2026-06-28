@@ -19,7 +19,7 @@ assertIncludes(page, 'api.publicUserPosts', 'page must load public posts')
 assertIncludes(page, 'api.profile()', 'page must load signed-in user before deciding self state')
 assertIncludes(page, 'api.createConversation', 'page must start private conversation')
 assertIncludes(page, "router.push(`/community/post/${post.postId}`)", 'page must navigate to post detail')
-assertIncludes(page, "router.push({ path: '/profile', query: { tab: 'community', conversationId: String(conversationId) } })", 'page must jump to profile conversation')
+assertIncludes(page, "router.push(conversationId ? `/messages/${conversationId}` : '/messages')", 'page must jump to standalone message conversation')
 assertIncludes(page, "router.push('/profile')", 'self profile action must go to personal center')
 
 console.log('public user profile page contract passed')

@@ -178,7 +178,7 @@ async function startConversation() {
   try {
     const conversation = await api.createConversation({ targetUserId: targetUserId.value })
     const conversationId = conversation?.conversationId
-    router.push({ path: '/profile', query: { tab: 'community', conversationId: String(conversationId) } })
+    router.push(conversationId ? `/messages/${conversationId}` : '/messages')
   } catch (e) {
     alert(e?.message || '私信会话创建失败')
   } finally {

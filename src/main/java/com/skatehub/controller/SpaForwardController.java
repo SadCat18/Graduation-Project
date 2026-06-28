@@ -17,6 +17,8 @@ public class SpaForwardController {
             "/bulletins",
             "/bulletins/**",
             "/news/**",
+            "/messages",
+            "/messages/**",
             "/profile",
             "/admin"
     })

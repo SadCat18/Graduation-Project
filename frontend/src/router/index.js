@@ -15,6 +15,7 @@ const BulletinPublishPage = () => import(/* webpackChunkName: "view-bulletins" *
 const NewsDetailPage = () => import(/* webpackChunkName: "view-news" */ '../views/NewsDetailPage.vue')
 const ProfilePage = () => import(/* webpackChunkName: "view-profile" */ '../views/ProfilePage.vue')
 const UserProfilePage = () => import(/* webpackChunkName: "view-user-profile" */ '../views/UserProfilePage.vue')
+const MessagesPage = () => import(/* webpackChunkName: "view-messages" */ '../views/MessagesPage.vue')
 const AdminPage = () => import(/* webpackChunkName: "view-admin" */ '../views/AdminPage.vue')
 const PlaceDetailPage = () => import(/* webpackChunkName: "view-places" */ '../views/PlaceDetailPage.vue')
 const AiCoachPage = () => import(/* webpackChunkName: "view-ai-coach" */ '../views/AiCoachPage.vue')
@@ -39,6 +40,8 @@ const routes = [
   { path: '/news/:id', component: NewsDetailPage },
   { path: '/videos/:id', component: VideoWatchPage },
   { path: '/users/:id', component: UserProfilePage },
+  { path: '/messages', component: MessagesPage, meta: { requiresAuth: true } },
+  { path: '/messages/:conversationId', component: MessagesPage, meta: { requiresAuth: true } },
   { path: '/ai-coach', component: AiCoachPage, meta: { requiresAuth: true } },
   { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true, wideLayout: true } }
