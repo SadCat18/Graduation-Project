@@ -11,6 +11,7 @@ import com.skatehub.pojo.Video;
 import com.skatehub.util.BizException;
 import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ public class PublicUserProfileService {
     private final UserGrowthService userGrowthService;
     private final VideoRepository videoRepository;
 
+    @Autowired
     public PublicUserProfileService(UserRepository userRepository,
                                     PostRepository postRepository,
                                     CommentRepository commentRepository,
