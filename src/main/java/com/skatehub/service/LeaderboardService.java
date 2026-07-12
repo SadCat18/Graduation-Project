@@ -16,20 +16,30 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class LeaderboardService {
 
     private static final ZoneId SHANGHAI = ZoneId.of("Asia/Shanghai");
+    private static final Map<String, List<String>> DIMENSION_ACTIONS = Map.of(
+            "training", List.of("TRAINING_TASK_COMPLETE", "TRAINING_PLAN_COMPLETE", "TRICK_CHECKIN"),
+            "contribution", List.of("PLACE_REVIEW_CREATE", "PLACE_CONTRIBUTION_APPROVED", "POST_LIKE", "COMMENT_CREATE", "COMMENT_REPLY", "USER_FOLLOW"),
+            "activity", List.of("ACTIVITY_SIGN", "ACTIVITY_CHECKIN", "SKATE_EVENT_SIGNUP", "SKATE_EVENT_CHECKIN"),
+            "creation", List.of("POST_CREATE", "VIDEO_CREATE", "BULLETIN_CREATE")
+    );
 
     private final LeaderboardQueryRepository repository;
     private final Clock clock;
 
     @Transactional(readOnly = true)
     public LeaderboardResponse list(String type, Integer page, Integer size, Long userId) {
-        if (!"total".equals(type) && !"weekly".equals(type)) {
-            throw new BizException("Leaderboard type must be total or weekly");
+        if (type == null) {
+            throw new BizException("Leaderboard type must be total, weekly, training, contribution, activity, or creation");
+        }
+        if (!"total".equals(type) && !"weekly".equals(type) && !DIMENSION_ACTIONS.containsKey(type)) {
+            throw new BizException("Leaderboard type must be total, weekly, training, contribution, activity, or creation");
         }
 
         int normalizedPage = InputValidator.page(page);
@@ -42,6 +52,16 @@ public class LeaderboardService {
             LeaderboardEntry currentUser = userId == null
                     ? null
                     : repository.findTotalUser(userId).orElse(null);
+            return new LeaderboardResponse(total, entries, currentUser);
+        }
+
+        List<String> actions = DIMENSION_ACTIONS.get(type);
+        if (actions != null) {
+            List<LeaderboardEntry> entries = repository.findByActions(actions, offset, normalizedSize);
+            long total = repository.countByActions(actions);
+            LeaderboardEntry currentUser = userId == null
+                    ? null
+                    : repository.findUserByActions(userId, actions).orElse(null);
             return new LeaderboardResponse(total, entries, currentUser);
         }
 

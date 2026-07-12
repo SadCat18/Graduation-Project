@@ -22,7 +22,7 @@ const profile = reactive({
 })
 
 const passwordForm = reactive({ oldPassword: '', newPassword: '' })
-const videoForm = reactive({ title: '', cover: '', url: '', intro: '' })
+const videoForm = reactive({ title: '', cover: '', url: '', intro: '', creatorSeries: '', trickTags: '' })
 
 const dashboard = ref({})
 const videos = ref([])
@@ -391,17 +391,27 @@ async function createVideo() {
       finalCoverUrl = await api.uploadPostImage(selectedCoverFile.value)
     }
 
-    await api.createVideo({
+    const created = await api.createVideo({
       title: videoForm.title.trim(),
       url: normalizeMediaUrl(finalVideoUrl),
       cover: normalizeMediaUrl(finalCoverUrl),
-      intro: videoForm.intro.trim()
+      intro: videoForm.intro.trim(),
+      creatorSeries: videoForm.creatorSeries.trim(),
+      trickTags: videoForm.trickTags.trim()
     })
+    api.trackProductEvent({
+      eventType: 'PUBLISH_VIDEO',
+      targetType: 'VIDEO',
+      targetId: created?.videoId,
+      sourcePage: 'profile-video-upload'
+    }).catch(() => {})
 
     videoForm.title = ''
     videoForm.url = ''
     videoForm.cover = ''
     videoForm.intro = ''
+    videoForm.creatorSeries = ''
+    videoForm.trickTags = ''
     selectedVideoFile.value = null
     selectedCoverFile.value = null
     await loadOthers()
@@ -942,6 +952,10 @@ onBeforeUnmount(() => {
           </div>
 
           <textarea v-model="videoForm.intro" placeholder="视频简介" />
+          <div class="form-grid">
+            <input v-model="videoForm.creatorSeries" placeholder="系列名称（可选，如 Ollie 入门课）" />
+            <input v-model="videoForm.trickTags" placeholder="动作标签（可选，逗号分隔）" />
+          </div>
           <button class="btn-primary" :disabled="videoUploading" @click="createVideo">
             {{ videoUploading ? '上传并提交中...' : '提交视频' }}
           </button>

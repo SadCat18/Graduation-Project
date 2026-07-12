@@ -19,9 +19,9 @@ spring:
   config:
     import: optional:classpath:application-local.yml
   datasource:
-    url: ${DB_URL:jdbc:mysql://sh-cynosdbmysql-grp-rk926sji.sql.tencentcdb.com:29848/skate_exchange?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root@123456}
+    url: ${DB_URL:}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -38,7 +38,7 @@ spring:
       max-request-size: 300MB
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL_AUTO:none}
     open-in-view: false
     properties:
       hibernate:
@@ -46,8 +46,18 @@ spring:
     show-sql: false
 
 jwt:
-  secret: ${JWT_SECRET:4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a4d6d7d6f3f6f2f7a7f5d3e6a0c8b7e9a}
+  secret: ${JWT_SECRET:}
   expiration-hours: ${JWT_EXPIRATION_HOURS:24}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
 
 ai:
   provider: ${AI_PROVIDER:${AI_PROVIDER_DEFAULT:ark}}

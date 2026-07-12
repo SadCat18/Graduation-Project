@@ -37,6 +37,7 @@ class PostServiceReplyTest {
     @Mock private MessageNotifyService messageNotifyService;
     @Mock private UserGrowthService userGrowthService;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private ModerationRuleService moderationRuleService;
 
     private PostService postService;
     private CurrentUser currentUser;
@@ -44,7 +45,7 @@ class PostServiceReplyTest {
     @BeforeEach
     void setUp() {
         postService = new PostService(postRepository, commentRepository, userRepository, interactionRepository,
-                messageNotifyService, userGrowthService, eventPublisher);
+                messageNotifyService, userGrowthService, eventPublisher, moderationRuleService);
         currentUser = new CurrentUser(2L, "USER", "reply-user");
     }
 

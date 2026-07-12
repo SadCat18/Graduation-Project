@@ -6,7 +6,10 @@ import com.skatehub.dao.CommentRepository;
 import com.skatehub.dao.CommunityBulletinRepository;
 import com.skatehub.dao.InteractionRepository;
 import com.skatehub.dao.PostRepository;
+import com.skatehub.dao.TrainingPlanRepository;
 import com.skatehub.dao.UserRepository;
+import com.skatehub.dao.UserTrainingPlanRepository;
+import com.skatehub.dao.UserTrainingRecordRepository;
 import com.skatehub.pojo.Activity;
 import com.skatehub.pojo.ActivitySign;
 import com.skatehub.pojo.Comment;
@@ -14,9 +17,12 @@ import com.skatehub.pojo.CommunityBulletin;
 import com.skatehub.pojo.Interaction;
 import com.skatehub.pojo.Post;
 import com.skatehub.pojo.User;
+import com.skatehub.pojo.skate.TrainingPlan;
+import com.skatehub.pojo.skate.UserTrainingPlan;
 import com.skatehub.util.ActivityReviewStatus;
 import com.skatehub.util.ActivitySignStatus;
 import com.skatehub.util.ActivityStatus;
+import com.skatehub.util.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -46,6 +52,9 @@ public class RecommendationService {
     private final PostService postService;
     private final ActivityService activityService;
     private final CommunityBulletinService communityBulletinService;
+    private final TrainingPlanRepository trainingPlanRepository;
+    private final UserTrainingPlanRepository userTrainingPlanRepository;
+    private final UserTrainingRecordRepository userTrainingRecordRepository;
 
     public Map<String, Object> recommendForUser(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
@@ -85,7 +94,72 @@ public class RecommendationService {
         result.put("posts", postList.isEmpty() ? fallbackPosts() : postList);
         result.put("activities", activityList.isEmpty() ? fallbackActivities(userId) : activityList);
         result.put("bulletins", bulletinList.isEmpty() ? fallbackBulletins() : bulletinList);
+        result.put("trainingPlans", recommendTrainingPlans(userId, user, style));
+        result.put("nextForYou", buildNextForYou(result));
         return result;
+    }
+
+    private Map<String, Object> buildNextForYou(Map<String, Object> source) {
+        List<Map<String, Object>> plans = listValue(source.get("trainingPlans"));
+        List<Map<String, Object>> posts = listValue(source.get("posts"));
+        List<Map<String, Object>> activities = listValue(source.get("activities"));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("practiceNext", plans.stream()
+                .limit(2)
+                .map(item -> nextAction("TRAINING_PLAN", item.get("planId"), text(item.get("planName")),
+                        text(item.get("reason")), "/skate", "Start task"))
+                .toList());
+        result.put("watchNext", posts.stream()
+                .filter(item -> containsAny(text(item.get("title")) + " " + text(item.get("category")), "教程", "教学", "技巧", "trick", "tutorial"))
+                .limit(2)
+                .map(item -> nextAction("POST", item.get("postId"), text(item.get("title")),
+                        "Based on your recent community interests", "/community/post/" + item.get("postId"), "Read tutorial"))
+                .toList());
+        result.put("joinNext", activities.stream()
+                .limit(2)
+                .map(item -> nextAction("ACTIVITY", item.get("activityId"), text(item.get("title")),
+                        "Local and recent activity signal", "/activities/" + item.get("activityId"), "View activity"))
+                .toList());
+        result.put("reviewSafety", List.of(nextAction("SAFETY", null, "Practice safety check",
+                "Before skating, confirm protective gear, lighting, weather, water, and a return plan.",
+                "/ai-coach?q=safety%20check", "Ask AI Coach")));
+        return result;
+    }
+
+    private Map<String, Object> nextAction(String type, Object id, String title, String reason, String routePath, String actionLabel) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("type", type);
+        item.put("id", id);
+        item.put("title", title);
+        item.put("reason", reason);
+        item.put("routePath", routePath);
+        item.put("actionLabel", actionLabel);
+        return item;
+    }
+
+    private List<Map<String, Object>> listValue(Object value) {
+        if (!(value instanceof List<?> raw)) {
+            return List.of();
+        }
+        return raw.stream()
+                .filter(Map.class::isInstance)
+                .map(item -> (Map<String, Object>) item)
+                .toList();
+    }
+
+    private String text(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private boolean containsAny(String value, String... needles) {
+        String normalized = normalize(value);
+        for (String needle : needles) {
+            if (normalized.contains(normalize(needle))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<Map<String, Object>> recommendedPostsForUser(Long userId, int limit) {
@@ -95,15 +169,75 @@ public class RecommendationService {
     }
 
     private List<Map<String, Object>> fallbackPosts() {
-        return postService.list("", "", "hot", 1, 6).getList();
+        PageResult<Map<String, Object>> result = postService.list("", "", "hot", 1, 6);
+        return result == null || result.getList() == null ? List.of() : result.getList();
     }
 
     private List<Map<String, Object>> fallbackActivities(Long userId) {
-        return activityService.list(1, 4, userId, null, null, null, false).getList();
+        PageResult<Map<String, Object>> result = activityService.list(1, 4, userId, null, null, null, false);
+        return result == null || result.getList() == null ? List.of() : result.getList();
     }
 
     private List<Map<String, Object>> fallbackBulletins() {
-        return communityBulletinService.listPublicApproved(5);
+        List<Map<String, Object>> result = communityBulletinService.listPublicApproved(5);
+        return result == null ? List.of() : result;
+    }
+
+    private List<Map<String, Object>> recommendTrainingPlans(Long userId, User user, String style) {
+        Set<Long> completedOrActivePlanIds = userTrainingPlanRepository.findByUserIdOrderByCreateTimeDesc(userId).stream()
+                .map(UserTrainingPlan::getPlanId)
+                .collect(Collectors.toSet());
+        boolean hasTrainingRecords = !userTrainingRecordRepository.findByUserIdOrderByCreateTimeDesc(userId).isEmpty();
+        int userLevel = user == null || user.getLevel() == null ? 1 : Math.max(1, user.getLevel());
+
+        List<TrainingPlan> plans = trainingPlanRepository.findByStatusOrderByPlanIdAsc("1");
+        Map<Long, Integer> scoreMap = new HashMap<>();
+        Map<Long, String> reasonMap = new HashMap<>();
+        for (TrainingPlan plan : plans) {
+            int score = 0;
+            List<String> reasons = new ArrayList<>();
+            int difficulty = plan.getDifficultyLevel() == null ? 1 : plan.getDifficultyLevel();
+            if (Math.abs(difficulty - userLevel) <= 1) {
+                score += 36;
+                reasons.add("level match");
+            }
+            String text = normalize(plan.getPlanName()) + " " + normalize(plan.getPlanType()) + " " + normalize(plan.getDescription());
+            if (StringUtils.hasText(style) && text.contains(style)) {
+                score += 24;
+                reasons.add("style match");
+            }
+            if (!hasTrainingRecords && difficulty <= 2) {
+                score += 16;
+                reasons.add("starter friendly");
+            }
+            if (completedOrActivePlanIds.contains(plan.getPlanId())) {
+                score -= 50;
+                reasons.add("already tried");
+            }
+            scoreMap.put(plan.getPlanId(), score);
+            reasonMap.put(plan.getPlanId(), reasons.isEmpty() ? "balanced next plan" : String.join(", ", reasons));
+        }
+
+        return plans.stream()
+                .sorted(Comparator.<TrainingPlan>comparingInt(plan -> scoreMap.getOrDefault(plan.getPlanId(), 0)).reversed()
+                        .thenComparing(TrainingPlan::getPlanId))
+                .limit(4)
+                .map(plan -> trainingPlanRecommendation(plan, scoreMap.getOrDefault(plan.getPlanId(), 0),
+                        reasonMap.getOrDefault(plan.getPlanId(), "balanced next plan")))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> trainingPlanRecommendation(TrainingPlan plan, int score, String reason) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("planId", plan.getPlanId());
+        item.put("planName", plan.getPlanName());
+        item.put("planType", plan.getPlanType());
+        item.put("difficultyLevel", plan.getDifficultyLevel());
+        item.put("durationDays", plan.getDurationDays());
+        item.put("coverUrl", plan.getCoverUrl());
+        item.put("score", score);
+        item.put("reason", reason);
+        return item;
     }
 
     private Set<String> collectPostCategories(Long userId) {

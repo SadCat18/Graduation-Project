@@ -9,6 +9,10 @@ assert.match(source, /activityIntro/, 'defines an activity introduction value')
 assert.match(source, /activityContent/, 'defines a full activity content value')
 assert.match(source, /活动说明/, 'renders the full activity description section')
 assert.match(source, /未保存单独的完整说明/, 'explains old activities that do not have separate full content')
+assert.match(source, /api\.myActivityDetail/, 'loads the authenticated detail endpoint when available')
+assert.match(source, /signStatusText/, 'renders the current participation state')
+assert.match(source, /handlePrimaryAction/, 'wires join, cancel, and check-in actions from the detail page')
+assert.match(source, /活动后续/, 'renders a post-event recap and review entry point')
 assert.doesNotMatch(
   source,
   /detail\.activityDesc\s*\|\|\s*detail\.content/,

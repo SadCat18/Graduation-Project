@@ -16,7 +16,15 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -46,41 +54,59 @@ public class ActivityController {
         return ApiResponse.success(activityService.create(currentUser, request));
     }
 
+    @GetMapping("/{id}")
+    public ApiResponse<Map<String, Object>> detail(@PathVariable("id") @Positive Long activityId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(activityService.publicDetail(activityId, currentUser.id()));
+    }
+
     @PostMapping("/{id}/sign")
-    public ApiResponse<Map<String, Object>> sign(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<Map<String, Object>> sign(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(activityService.sign(currentUser, activityId));
     }
 
     @PutMapping("/{id}/close-signup")
-    public ApiResponse<Activity> closeSignup(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<Activity> closeSignup(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(activityService.closeSignup(currentUser, activityId));
     }
 
     @PutMapping("/{id}/sign/cancel")
-    public ApiResponse<Void> cancelSign(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<Void> cancelSign(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         activityService.cancelMySign(currentUser, activityId);
         return ApiResponse.success();
     }
 
     @PostMapping("/{id}/checkin")
-    public ApiResponse<Void> checkin(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<Void> checkin(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         activityService.checkin(currentUser, activityId);
         return ApiResponse.success();
     }
 
+    @PostMapping("/{id}/confirm-arrival")
+    public ApiResponse<ActivitySign> confirmArrival(@PathVariable("id") @Positive Long activityId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(activityService.confirmArrival(currentUser, activityId));
+    }
+
+    @PostMapping("/{id}/confirm-return")
+    public ApiResponse<ActivitySign> confirmReturn(@PathVariable("id") @Positive Long activityId) {
+        CurrentUser currentUser = SecurityUtils.currentUser();
+        return ApiResponse.success(activityService.confirmReturn(currentUser, activityId));
+    }
+
     @GetMapping("/{id}/signs")
-    public ApiResponse<List<ActivitySign>> signs(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<List<ActivitySign>> signs(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(activityService.signs(currentUser, activityId));
     }
 
     @PutMapping("/{id}/signs/{signId}/status")
-    public ApiResponse<ActivitySign> updateSignStatus(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId,
-                                                      @PathVariable @Positive(message = "signId必须为正数") Long signId,
+    public ApiResponse<ActivitySign> updateSignStatus(@PathVariable("id") @Positive Long activityId,
+                                                      @PathVariable @Positive Long signId,
                                                       @RequestBody @Valid ActivitySignStatusUpdateRequest request) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         return ApiResponse.success(activityService.updateSignStatus(currentUser, activityId, signId, request.getSignStatus()));
@@ -99,7 +125,7 @@ public class ActivityController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable("id") @Positive(message = "id必须为正数") Long activityId) {
+    public ApiResponse<Void> delete(@PathVariable("id") @Positive Long activityId) {
         CurrentUser currentUser = SecurityUtils.currentUser();
         activityService.delete(currentUser, activityId, false);
         return ApiResponse.success();

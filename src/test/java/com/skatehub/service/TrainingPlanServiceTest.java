@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +88,50 @@ class TrainingPlanServiceTest {
         assertThat(result.get("taskExpAwarded")).isEqualTo(8);
         assertThat(result.get("planExpAwarded")).isEqualTo(30);
         assertThat(result.get("totalExp")).isEqualTo(138);
+    }
+
+    @Test
+    void completeTaskReturnsNextTaskWhenPlanContinues() {
+        TrainingTask first = new TrainingTask();
+        first.setTaskId(9L);
+        first.setPlanId(2L);
+        first.setDayNo(1);
+        first.setSortOrder(1);
+        when(taskRepository.findById(9L)).thenReturn(Optional.of(first));
+
+        TrainingTask second = new TrainingTask();
+        second.setTaskId(10L);
+        second.setPlanId(2L);
+        second.setDayNo(2);
+        second.setSortOrder(1);
+        second.setTaskTitle("Balance line practice");
+
+        TrainingPlan plan = new TrainingPlan();
+        plan.setPlanId(2L);
+        plan.setDurationDays(3);
+        plan.setStatus("1");
+        when(planRepository.findById(2L)).thenReturn(Optional.of(plan));
+        when(taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(2L))
+                .thenReturn(List.of(first, second));
+
+        UserTrainingPlan userPlan = new UserTrainingPlan();
+        userPlan.setUserPlanId(55L);
+        userPlan.setUserId(USER_ID);
+        userPlan.setPlanId(2L);
+        userPlan.setCurrentDay(1);
+        userPlan.setCompletedDays(0);
+        userPlan.setStatus("IN_PROGRESS");
+        when(userPlanRepository.findFirstByUserIdAndPlanIdAndStatusOrderByCreateTimeDesc(USER_ID, 2L, "IN_PROGRESS"))
+                .thenReturn(Optional.of(userPlan));
+        when(recordRepository.existsByUserPlanIdAndTaskId(55L, 9L)).thenReturn(false);
+        when(recordRepository.save(any(UserTrainingRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userGrowthService.grantExp(USER_ID, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", 9L, 8)).thenReturn(108);
+
+        var result = trainingPlanService.completeTask(currentUser(), 9L, new TrainingTaskCompleteRequest());
+
+        assertThat(result.get("completedPlan")).isEqualTo(false);
+        assertThat(result.get("nextTask")).isEqualTo(second);
+        assertThat(result.get("recommendedNextAction")).isEqualTo("Next: Balance line practice");
     }
 
     private CurrentUser currentUser() {

@@ -45,6 +45,14 @@ const growthViews = [
   { key: 'badges', label: '徽章图鉴' },
   { key: 'roadmap', label: '等级路线' }
 ]
+const leaderboardTypes = [
+  { key: 'total', label: '总榜', scoreLabel: '总经验' },
+  { key: 'weekly', label: '周榜', scoreLabel: '本周经验' },
+  { key: 'training', label: '训练', scoreLabel: '训练经验' },
+  { key: 'contribution', label: '贡献', scoreLabel: '贡献经验' },
+  { key: 'activity', label: '活动', scoreLabel: '活动经验' },
+  { key: 'creation', label: '创作', scoreLabel: '创作经验' }
+]
 const growthViewHost = ref(null)
 const growthViewSwitching = ref(false)
 const growthViewEntering = ref(false)
@@ -96,7 +104,7 @@ const levelProgress = computed(() => calculateLevelProgress({
 const currentLeaderboardUser = computed(() => leaderboard.value?.currentUser || null)
 const currentUnlock = computed(() => unlockQueue.value[0] || null)
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(leaderboard.value?.total || 0) / size)))
-const scoreLabel = computed(() => boardType.value === 'weekly' ? '本周经验' : '总经验')
+const scoreLabel = computed(() => leaderboardTypes.find(item => item.key === boardType.value)?.scoreLabel || '总经验')
 const recentUnlockedBadges = computed(() => badgeList.value
   .filter(item => item.unlocked)
   .sort((a, b) => String(b.unlockTime || '').localeCompare(String(a.unlockTime || '')))
@@ -470,8 +478,13 @@ onBeforeUnmount(() => {
       <div class="leaderboard-head">
         <div><p class="panel-kicker">SPOT RANKING</p><h3>成长排行榜</h3></div>
         <div class="board-switch" aria-label="排行榜类型">
-          <button :class="{ active: boardType === 'total' }" :aria-pressed="boardType === 'total'" @click="switchBoard('total')">总榜</button>
-          <button :class="{ active: boardType === 'weekly' }" :aria-pressed="boardType === 'weekly'" @click="switchBoard('weekly')">周榜</button>
+          <button
+            v-for="item in leaderboardTypes"
+            :key="item.key"
+            :class="{ active: boardType === item.key }"
+            :aria-pressed="boardType === item.key"
+            @click="switchBoard(item.key)"
+          >{{ item.label }}</button>
         </div>
       </div>
 

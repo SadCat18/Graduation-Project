@@ -1,12 +1,13 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { normalizeMediaUrl } from '../utils/url'
 
 const router = useRouter()
+const route = useRoute()
 
 const typingStates = [
   '正在拆解你的问题，先把动作重点理清楚。',
@@ -103,6 +104,10 @@ function refillQuickQuestionQueue(excludedQuestions = []) {
   quickQuestionQueue = shuffleQuestions(preferredPool.length ? preferredPool : quickQuestionPool)
 }
 
+function trackProductEvent(eventType, targetType = 'AI_COACH', targetId = null) {
+  api.trackProductEvent({ eventType, targetType, targetId, sourcePage: 'ai-coach' }).catch(() => {})
+}
+
 function pickQuickQuestions() {
   const nextQuestions = []
   while (nextQuestions.length < 4 && quickQuestionPool.length) {
@@ -125,6 +130,52 @@ function refreshQuickQuestions() {
   quickRefreshTimer = window.setTimeout(() => {
     quickRefreshing.value = false
   }, 360)
+}
+
+function extractFirstJsonObjectText(text) {
+  const start = text.indexOf('{')
+  if (start < 0) return ''
+  let inString = false
+  let escaped = false
+  let depth = 0
+  for (let index = start; index < text.length; index += 1) {
+    const current = text[index]
+    if (escaped) {
+      escaped = false
+      continue
+    }
+    if (current === '\\' && inString) {
+      escaped = true
+      continue
+    }
+    if (current === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (current === '{') {
+      depth += 1
+    } else if (current === '}') {
+      depth -= 1
+      if (depth === 0) return text.slice(start, index + 1)
+    }
+  }
+  return ''
+}
+
+function normalizeCoachDisplayContent(content) {
+  const text = String(content || '').trim()
+  if (!text || !text.includes('"reply"')) return text
+  const jsonText = extractFirstJsonObjectText(text)
+  if (!jsonText) return text
+  try {
+    const parsed = JSON.parse(jsonText)
+    return typeof parsed?.reply === 'string' && parsed.reply.trim()
+      ? parsed.reply.trim()
+      : text
+  } catch (error) {
+    return text
+  }
 }
 
 function formatCoachContent(content) {
@@ -185,6 +236,7 @@ function createMessage(role, content, extra = {}) {
     role,
     content,
     suggestions: Array.isArray(extra.suggestions) ? extra.suggestions : [],
+    references: Array.isArray(extra.references) ? extra.references : [],
     createTime: extra.createTime || ''
   }
 }
@@ -328,6 +380,7 @@ async function sendMessage(text = inputValue.value) {
       message: content,
       sessionId: activeSessionId.value || undefined
     })
+    trackProductEvent('ASK_AI_COACH')
 
     if (result?.sessionId) {
       activeSessionId.value = result.sessionId
@@ -337,7 +390,7 @@ async function sendMessage(text = inputValue.value) {
       createMessage(
         'assistant',
         result?.reply || '我这次没有成功组织出有效回答，你可以换一个更具体的问题再试试。',
-        { suggestions: result?.suggestions || [] }
+        { suggestions: result?.suggestions || [], references: result?.references || [] }
       )
     )
 
@@ -410,6 +463,12 @@ function openVideo(video) {
   window.location.href = target
 }
 
+function openReference(reference) {
+  if (reference?.routePath) {
+    router.push(reference.routePath)
+  }
+}
+
 onMounted(async () => {
   syncViewport()
   window.addEventListener('resize', syncViewport)
@@ -417,6 +476,9 @@ onMounted(async () => {
     mobilePanel.value = 'sessions'
   }
   pickQuickQuestions()
+  if (route.query.q && !inputValue.value) {
+    inputValue.value = String(route.query.q).slice(0, 500)
+  }
   await loadSessions()
   await scrollToBottom()
 })
@@ -539,13 +601,29 @@ onBeforeUnmount(() => {
                   <p v-if="item.role === 'user'" class="message-content">{{ item.content }}</p>
                   <div v-else class="message-content coach-answer">
                     <p
-                      v-for="(block, index) in formatCoachContent(item.content)"
+                      v-for="(block, index) in formatCoachContent(normalizeCoachDisplayContent(item.content))"
                       :key="`${item.id}-answer-${index}`"
                       :class="['coach-answer-line', `is-${block.type}`]"
                     >
                       <span v-if="block.type !== 'text'" class="answer-index">{{ block.index }}</span>
                       <span>{{ block.text }}</span>
                     </p>
+                  </div>
+                  <div v-if="item.role === 'assistant' && item.references?.length" class="coach-references">
+                    <span class="coach-references-title">参考资料</span>
+                    <div class="coach-reference-list">
+                      <button
+                        v-for="reference in item.references"
+                        :key="`${reference.sourceType}-${reference.sourceId}-${reference.title}`"
+                        type="button"
+                        class="coach-reference-card"
+                        :disabled="!reference.routePath"
+                        @click="openReference(reference)"
+                      >
+                        <span class="coach-reference-type">{{ reference.sourceType || 'SOURCE' }}</span>
+                        <span class="coach-reference-title">{{ reference.title }}</span>
+                      </button>
+                    </div>
                   </div>
                   <div v-if="item.role === 'assistant' && item.suggestions?.length" class="suggestion-wrap">
                     <span class="suggestion-title">后续练习建议</span>
@@ -975,6 +1053,7 @@ onBeforeUnmount(() => {
 
 .message-card {
   width: min(100%, 760px);
+  min-width: 0;
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 250, 251, 0.96));
@@ -1005,6 +1084,7 @@ onBeforeUnmount(() => {
 .message-content {
   margin: 8px 0 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   line-height: 1.72;
   color: var(--text);
@@ -1020,7 +1100,14 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 8px;
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   line-height: 1.7;
+}
+
+.coach-answer-line span:last-child {
+  min-width: 0;
 }
 
 .coach-answer-line.is-step,
@@ -1048,6 +1135,59 @@ onBeforeUnmount(() => {
   color: #fff;
   font-size: 12px;
   font-weight: 800;
+}
+
+.coach-references {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.coach-references-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.coach-reference-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.coach-reference-card {
+  display: grid;
+  gap: 3px;
+  max-width: 260px;
+  padding: 9px 11px;
+  border: 1px solid rgba(8, 122, 109, 0.18);
+  border-radius: 12px;
+  background: rgba(8, 122, 109, 0.07);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.coach-reference-card:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.coach-reference-type {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #087a6d;
+}
+
+.coach-reference-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .suggestion-wrap {

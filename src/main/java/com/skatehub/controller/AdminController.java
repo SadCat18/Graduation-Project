@@ -47,12 +47,14 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
 @RestController
@@ -419,8 +421,11 @@ public class AdminController {
     }
 
     @GetMapping("/reports")
-    public ApiResponse<List<Map<String, Object>>> reports() {
-        return ApiResponse.success(reportService.adminList());
+    public ApiResponse<List<Map<String, Object>>> reports(@RequestParam(required = false) @Size(max = 30) String status,
+                                                          @RequestParam(required = false) @Size(max = 20) String targetType,
+                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
+        return ApiResponse.success(reportService.adminList(status, targetType, startTime, endTime));
     }
 
     @PutMapping("/reports/{id}/handle")

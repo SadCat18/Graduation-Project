@@ -23,6 +23,7 @@ import com.skatehub.service.UserService;
 import com.skatehub.service.VideoService;
 import com.skatehub.service.ai.AiCoachAssistantService;
 import com.skatehub.service.ai.AiCoachContentRecommendService;
+import com.skatehub.service.ai.AiCoachRagService;
 import com.skatehub.service.ai.AiGatewayService;
 import com.skatehub.util.ActivityReviewStatus;
 import com.skatehub.util.BizException;
@@ -60,6 +61,7 @@ class DataOwnershipServiceTest {
     @Mock private ActivitySignRepository activitySignRepository;
     @Mock private AiGatewayService aiGatewayService;
     @Mock private AiCoachContentRecommendService aiCoachContentRecommendService;
+    @Mock private AiCoachRagService aiCoachRagService;
     @Mock private AiCoachSessionRepository aiCoachSessionRepository;
     @Mock private AiCoachMessageRepository aiCoachMessageRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -106,7 +108,8 @@ class DataOwnershipServiceTest {
                 aiGatewayService,
                 aiCoachContentRecommendService,
                 aiCoachSessionRepository,
-                aiCoachMessageRepository
+                aiCoachMessageRepository,
+                aiCoachRagService
         );
     }
 

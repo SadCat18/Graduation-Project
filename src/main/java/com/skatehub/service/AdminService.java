@@ -19,6 +19,7 @@ import com.skatehub.util.ActivityReviewStatus;
 import com.skatehub.util.ActivityStatus;
 import com.skatehub.util.NewsStatus;
 import com.skatehub.util.PageResult;
+import com.skatehub.util.PlaceVerificationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -67,6 +68,7 @@ public class AdminService {
     private final CommunityBulletinService communityBulletinService;
     private final CommunityBulletinRepository communityBulletinRepository;
     private final ReportRecordRepository reportRecordRepository;
+    private final ProductAnalyticsService productAnalyticsService;
 
     public PageResult<User> listUsers(Integer page, Integer size) {
         Page<User> result = userRepository.findAll(PageRequest.of(normalizePage(page), normalizeSize(size)));
@@ -347,6 +349,7 @@ public class AdminService {
         place.setAddress(request.getAddress());
         place.setIntro(request.getIntro());
         place.setScore(defaultScore(request.getScore()));
+        place.setVerificationStatus(PlaceVerificationStatus.APPROVED);
         return placeRepository.save(place);
     }
 
@@ -356,6 +359,9 @@ public class AdminService {
         place.setAddress(request.getAddress());
         place.setIntro(request.getIntro());
         place.setScore(defaultScore(request.getScore()));
+        if (!StringUtils.hasText(place.getVerificationStatus())) {
+            place.setVerificationStatus(PlaceVerificationStatus.APPROVED);
+        }
         return placeRepository.save(place);
     }
 
@@ -421,10 +427,51 @@ public class AdminService {
     public Map<String, Object> operationAnalytics() {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("trend7d", buildTrend7d());
+        Map<String, Object> productSummary = productAnalyticsService.summary7d();
+        result.put("productTrend7d", productSummary.get("trend7d"));
+        result.put("recentProductEvents", productSummary.get("recentEvents"));
+        result.put("activityConversion", buildActivityConversion(productSummary));
+        result.put("moduleUsage", buildModuleUsage(productSummary));
         result.put("hotPosts", buildHotPosts());
         result.put("hotActivities", buildHotActivities());
         result.put("bulletinTypeRatio", communityBulletinService.adminTypeStats());
         return result;
+    }
+
+    private Map<String, Object> buildActivityConversion(Map<String, Object> productSummary) {
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) productSummary.getOrDefault("trend7d", List.of());
+        long views = rows.stream().mapToLong(row -> number(row.get("activityViews"))).sum();
+        long signs = rows.stream().mapToLong(row -> number(row.get("activitySigns"))).sum();
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("views", views);
+        map.put("signs", signs);
+        map.put("rate", views <= 0 ? 0D : Math.round((signs * 10000D / views)) / 100D);
+        return map;
+    }
+
+    private List<Map<String, Object>> buildModuleUsage(Map<String, Object> productSummary) {
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) productSummary.getOrDefault("trend7d", List.of());
+        long aiCoach = rows.stream().mapToLong(row -> number(row.get("aiCoachQuestions"))).sum();
+        long training = rows.stream().mapToLong(row -> number(row.get("trainingCompletions"))).sum();
+        long creation = rows.stream().mapToLong(row -> number(row.get("contentCreates"))).sum();
+        long activity = rows.stream().mapToLong(row -> number(row.get("activityViews")) + number(row.get("activitySigns"))).sum();
+        return List.of(
+                moduleUsageRow("AI Coach", aiCoach),
+                moduleUsageRow("Training", training),
+                moduleUsageRow("Creation", creation),
+                moduleUsageRow("Activities", activity)
+        );
+    }
+
+    private Map<String, Object> moduleUsageRow(String module, long value) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("module", module);
+        map.put("value", value);
+        return map;
+    }
+
+    private long number(Object value) {
+        return value instanceof Number number ? number.longValue() : 0L;
     }
 
     private List<Map<String, Object>> buildTrend7d() {

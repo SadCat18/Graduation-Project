@@ -49,6 +49,10 @@ public class FileStorageService {
         this.uploadRoot = uploadRoot.toAbsolutePath().normalize();
     }
 
+    public Path uploadRoot() {
+        return uploadRoot;
+    }
+
     public String storeImage(MultipartFile file) throws IOException {
         validateCommon(file, MAX_IMAGE_SIZE, IMAGE_CONTENT_TYPES, "图片");
         String ext = extractExt(file.getOriginalFilename());

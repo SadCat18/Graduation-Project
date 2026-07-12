@@ -22,6 +22,10 @@ const bulletins = ref([])
 const newsList = ref([])
 const recommendPosts = ref([])
 const recommendActivities = ref([])
+const searchKeyword = ref('')
+const searchResults = ref([])
+const searchLoading = ref(false)
+const searchError = ref('')
 const currentSlide = ref(0)
 let timerId = null
 let deferredHomeDataId = null
@@ -102,6 +106,42 @@ function goPostDetail(postId) {
 function goNewsDetail(newsId) {
   if (!newsId) return
   router.push(`/news/${newsId}`)
+}
+
+async function runUnifiedSearch() {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) {
+    searchResults.value = []
+    searchError.value = ''
+    return
+  }
+  searchLoading.value = true
+  searchError.value = ''
+  try {
+    searchResults.value = await api.publicSearch({ keyword, limit: 12 })
+  } catch (error) {
+    searchError.value = error?.message || '搜索失败，请稍后重试'
+    searchResults.value = []
+  } finally {
+    searchLoading.value = false
+  }
+}
+
+function goSearchResult(item) {
+  if (!item?.routePath) return
+  router.push(item.routePath)
+}
+
+function searchTypeLabel(type) {
+  const labels = {
+    POST: '帖子',
+    ACTIVITY: '活动',
+    PLACE: '场地',
+    VIDEO: '视频',
+    TRICK: '动作',
+    NEWS: '资讯'
+  }
+  return labels[type] || type || '内容'
 }
 
 function goBannerTarget() {
@@ -396,6 +436,37 @@ onDeactivated(() => {
       </button>
     </section>
 
+    <section class="card unified-search-panel" aria-label="全站搜索">
+      <div class="section-head">
+        <div>
+          <p class="section-eyebrow">DISCOVER</p>
+          <h3>搜索帖子、活动、场地、视频和动作</h3>
+        </div>
+      </div>
+      <div class="unified-search-box">
+        <input v-model="searchKeyword" placeholder="试试搜索 Ollie、新手、成都、护具..." @keyup.enter="runUnifiedSearch" />
+        <button class="btn-primary" :disabled="searchLoading" @click="runUnifiedSearch">
+          <AppIcon name="search" :size="15" />
+          {{ searchLoading ? '搜索中...' : '搜索' }}
+        </button>
+      </div>
+      <p v-if="searchError" class="error">{{ searchError }}</p>
+      <div v-if="searchResults.length" class="unified-search-results">
+        <button
+          v-for="item in searchResults"
+          :key="`${item.type}-${item.id}`"
+          type="button"
+          class="search-result-card"
+          @click="goSearchResult(item)"
+        >
+          <span>{{ searchTypeLabel(item.type) }}</span>
+          <strong>{{ item.title }}</strong>
+          <small>{{ item.summary || '暂无摘要' }}</small>
+        </button>
+      </div>
+      <p v-else-if="searchKeyword && !searchLoading && !searchError" class="muted">没有匹配结果，换个关键词试试。</p>
+    </section>
+
     <section class="card info-stage">
       <div class="section-head info-head">
         <div>
@@ -447,7 +518,7 @@ onDeactivated(() => {
       </div>
     </section>
 
-    <section class="grid-2">
+    <section class="grid-2 home-feed-grid">
       <div class="card" v-if="recommendPosts.length || recommendActivities.length">
         <div class="section-head">
           <h3>为你推荐</h3>
@@ -455,7 +526,7 @@ onDeactivated(() => {
         <div
           v-for="item in recommendPosts.slice(0, 3)"
           :key="`rp-${item.postId}`"
-          class="feed-item clickable-feed-item"
+          :class="['feed-item', 'clickable-feed-item', { 'feed-item-no-cover': !firstImage(item.images) }]"
           @click="goPostDetail(item.postId)"
         >
           <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="推荐帖子封面" loading="lazy" decoding="async" />
@@ -482,7 +553,7 @@ onDeactivated(() => {
         <div
           v-for="item in posts.slice(0, 4)"
           :key="item.postId"
-          class="feed-item clickable-feed-item"
+          :class="['feed-item', 'clickable-feed-item', { 'feed-item-no-cover': !firstImage(item.images) }]"
           @click="goPostDetail(item.postId)"
         >
           <img v-if="firstImage(item.images)" :src="firstImage(item.images)" alt="帖子封面" loading="lazy" decoding="async" />
@@ -491,6 +562,10 @@ onDeactivated(() => {
             <p class="muted">{{ item.authorName }} · {{ item.category || '未分类' }}</p>
             <p class="line-clamp">{{ item.content }}</p>
           </div>
+        </div>
+        <div v-if="!loading && !posts.length" class="home-compact-empty">
+          <strong>还没有精选帖子</strong>
+          <p>去社区发布第一条滑板动态。</p>
         </div>
       </div>
 
@@ -508,6 +583,10 @@ onDeactivated(() => {
           <p class="muted">{{ item.city || '未设置城市' }} {{ item.district || '' }} · {{ item.publisherName }}</p>
           <p class="muted">状态：{{ activityStatusText(item) }}</p>
           <p class="muted">报名：{{ item.signNum || 0 }}{{ item.maxNum ? `/${item.maxNum}` : '' }}</p>
+        </div>
+        <div v-if="!loading && !activities.length" class="home-compact-empty">
+          <strong>暂无同城活动</strong>
+          <p>发布约板活动后，这里会展示最近的报名信息。</p>
         </div>
       </div>
 
@@ -756,6 +835,64 @@ onDeactivated(() => {
   font-style: normal;
   font-weight: 700;
   font-size: 13px;
+}
+
+.unified-search-panel {
+  display: grid;
+  gap: 14px;
+  border-radius: 16px;
+}
+
+.unified-search-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.unified-search-box input,
+.unified-search-box button {
+  min-height: 44px;
+}
+
+.unified-search-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.search-result-card {
+  display: grid;
+  gap: 6px;
+  min-height: 118px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+.search-result-card span {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.search-result-card strong {
+  color: #111827;
+  line-height: 1.35;
+}
+
+.search-result-card small {
+  color: var(--text-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .section-eyebrow {
@@ -1013,12 +1150,20 @@ onDeactivated(() => {
   gap: 16px;
 }
 
+.home-feed-grid {
+  align-items: start;
+}
+
 .feed-item {
   display: grid;
   grid-template-columns: 110px 1fr;
   gap: 12px;
   border-bottom: 1px solid var(--line);
   padding: 12px 0;
+}
+
+.feed-item-no-cover {
+  grid-template-columns: 1fr;
 }
 
 .clickable-feed-item {
@@ -1054,6 +1199,26 @@ onDeactivated(() => {
   border-bottom: 1px solid var(--line);
   padding: 12px 0;
 }
+
+.home-compact-empty {
+  margin-top: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.03);
+  padding: 16px;
+  color: var(--muted);
+}
+
+.home-compact-empty strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.home-compact-empty p {
+  margin: 0;
+}
+
 .link { cursor: pointer; }
 .link:hover { text-decoration: underline; }
 
@@ -1228,6 +1393,10 @@ onDeactivated(() => {
   .entry-card em {
     font-size: 12px;
   }
+
+  .unified-search-results {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1289,6 +1458,11 @@ onDeactivated(() => {
   .news-row span,
   .bulletin-row span {
     white-space: normal;
+  }
+
+  .unified-search-box,
+  .unified-search-results {
+    grid-template-columns: 1fr;
   }
 }
 

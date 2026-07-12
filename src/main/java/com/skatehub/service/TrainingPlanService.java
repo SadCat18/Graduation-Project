@@ -126,7 +126,8 @@ public class TrainingPlanService {
             planExp = totalExp > 0 ? PLAN_EXP : 0;
         }
         userPlanRepository.save(userPlan);
-        return progressResult(userPlan, completedPlan, record.getExpAwarded(), planExp, totalExp);
+        TrainingTask nextTask = completedPlan ? null : nextTask(userPlan);
+        return progressResult(userPlan, completedPlan, record.getExpAwarded(), planExp, totalExp, nextTask);
     }
 
     public List<UserTrainingRecord> records(CurrentUser currentUser) {
@@ -139,17 +140,45 @@ public class TrainingPlanService {
         result.put("plan", planRepository.findById(userPlan.getPlanId()).orElse(null));
         result.put("tasks", taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(userPlan.getPlanId()));
         result.put("records", recordRepository.findByUserPlanIdOrderByCreateTimeAsc(userPlan.getUserPlanId()));
+        result.put("nextTask", nextTask(userPlan));
         return result;
     }
 
     private Map<String, Object> progressResult(UserTrainingPlan userPlan, boolean completedPlan, int taskExp, int planExp, int totalExp) {
+        return progressResult(userPlan, completedPlan, taskExp, planExp, totalExp, null);
+    }
+
+    private Map<String, Object> progressResult(UserTrainingPlan userPlan, boolean completedPlan, int taskExp, int planExp, int totalExp, TrainingTask nextTask) {
         Map<String, Object> result = new HashMap<>();
         result.put("userPlan", userPlan);
         result.put("completedPlan", completedPlan);
         result.put("taskExpAwarded", taskExp);
         result.put("planExpAwarded", planExp);
         result.put("totalExp", totalExp);
+        result.put("nextTask", nextTask);
+        result.put("recommendedNextAction", recommendedNextAction(completedPlan, nextTask));
         return result;
+    }
+
+    private TrainingTask nextTask(UserTrainingPlan userPlan) {
+        if (userPlan == null || userPlan.getPlanId() == null || !"IN_PROGRESS".equals(userPlan.getStatus())) {
+            return null;
+        }
+        int currentDay = userPlan.getCurrentDay() == null ? 1 : userPlan.getCurrentDay();
+        return taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(userPlan.getPlanId()).stream()
+                .filter(task -> task.getDayNo() != null && task.getDayNo() >= currentDay)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String recommendedNextAction(boolean completedPlan, TrainingTask nextTask) {
+        if (completedPlan) {
+            return "Plan complete: review your records and choose another plan.";
+        }
+        if (nextTask == null || !StringUtils.hasText(nextTask.getTaskTitle())) {
+            return "Next: keep the current plan moving with the next unlocked task.";
+        }
+        return "Next: " + nextTask.getTaskTitle().trim();
     }
 
     private TrainingPlan activePlan(Long planId) {

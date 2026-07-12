@@ -20,4 +20,9 @@ public class VideoCreateRequest {
 
     @Size(max = 1000, message = "视频简介长度不能超过 1000")
     private String intro;
+    @Size(max = 100, message = "creatorSeries must be at most 100 characters")
+    private String creatorSeries;
+
+    @Size(max = 255, message = "trickTags must be at most 255 characters")
+    private String trickTags;
 }

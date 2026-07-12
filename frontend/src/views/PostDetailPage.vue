@@ -22,6 +22,18 @@ const REPORT_REASONS = ['广告', '辱骂', '人身攻击', '虚假信息', '违
 
 const isLoggedIn = computed(() => !!getToken())
 const postId = computed(() => Number(route.params.id))
+const commentWarnings = computed(() => buildCommentWarnings(commentInput.value))
+
+function buildCommentWarnings(value) {
+  const text = String(value || '').trim()
+  const compact = text.replace(/\s+/g, '')
+  const warnings = []
+  if (compact && compact.length < 2) warnings.push('评论过短，建议补充完整表达。')
+  if ((text.match(/https?:\/\/|www\./gi) || []).length > 1) warnings.push('评论包含多个链接，可能触发审核关注。')
+  if (/(.)\1{8,}|(.{2,8})\2{3,}/.test(compact)) warnings.push('检测到重复文本，请整理后再发送。')
+  if (/约架|骚扰|赌博|贷款|代刷|外挂|casino|loan/i.test(text)) warnings.push('包含敏感词，请确认符合社区规则。')
+  return warnings
+}
 
 function showActionError(e, fallback = '操作失败，请稍后重试') {
   alert(e?.message || fallback)
@@ -282,6 +294,9 @@ onMounted(loadPostDetail)
             {{ replyingCommentId === item.commentId ? '回复中...' : '回复' }}
           </button>
         </div>
+        <ul v-if="buildCommentWarnings(replyInputs[String(item.commentId)]).length" class="comment-warnings">
+          <li v-for="warning in buildCommentWarnings(replyInputs[String(item.commentId)])" :key="warning">{{ warning }}</li>
+        </ul>
       </div>
 
       <div class="inline comment-row">
@@ -290,6 +305,9 @@ onMounted(loadPostDetail)
           {{ postingComment ? '发送中...' : '发送' }}
         </button>
       </div>
+      <ul v-if="commentWarnings.length" class="comment-warnings">
+        <li v-for="warning in commentWarnings" :key="warning">{{ warning }}</li>
+      </ul>
     </div>
   </div>
 </template>
@@ -434,6 +452,18 @@ onMounted(loadPostDetail)
 
 .comment-row input {
   flex: 1;
+}
+
+.comment-warnings {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 8px 10px 8px 26px;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 13px;
 }
 
 .comment-row .btn-primary {

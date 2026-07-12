@@ -40,6 +40,44 @@
         <div><strong>{{ profile.followingCount || 0 }}</strong><span>关注</span></div>
       </section>
 
+      <section v-if="profile.creatorSummary?.hasCreatorContent" class="creator-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CREATOR</p>
+            <h2>创作者贡献</h2>
+          </div>
+          <span>质量 {{ profile.creatorSummary.qualityScore || 0 }}</span>
+        </div>
+        <div class="creator-stats">
+          <div><strong>{{ profile.creatorSummary.videoCount || 0 }}</strong><span>视频</span></div>
+          <div><strong>{{ profile.creatorSummary.tutorialPostCount || 0 }}</strong><span>教程</span></div>
+          <div><strong>{{ profile.creatorSummary.totalEngagement || 0 }}</strong><span>互动</span></div>
+        </div>
+        <div class="creator-strip">
+          <button
+            v-for="video in profile.creatorSummary.recentVideos || []"
+            :key="`creator-video-${video.videoId}`"
+            class="creator-card"
+            type="button"
+            @click="router.push(`/videos/${video.videoId}`)"
+          >
+            <img v-if="video.cover" :src="normalizeMediaUrl(video.cover)" alt="" />
+            <strong>{{ video.title }}</strong>
+            <span>{{ video.creatorSeries || video.trickTags || '教学视频' }}</span>
+          </button>
+          <button
+            v-for="post in profile.creatorSummary.tutorials || []"
+            :key="`creator-post-${post.postId}`"
+            class="creator-card"
+            type="button"
+            @click="router.push(`/community/post/${post.postId}`)"
+          >
+            <strong>{{ post.title }}</strong>
+            <span>{{ post.category || '教程帖' }}</span>
+          </button>
+        </div>
+      </section>
+
       <section class="post-section">
         <div class="section-heading">
           <div>
@@ -330,6 +368,65 @@ watch(() => route.params.id, loadAll)
   margin-bottom: 14px;
 }
 
+.creator-section {
+  margin: 0 0 22px;
+}
+
+.creator-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.creator-stats div,
+.creator-card {
+  border: 1px solid rgba(15, 23, 42, .1);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.creator-stats div {
+  padding: 14px;
+}
+
+.creator-stats strong {
+  display: block;
+  color: #111827;
+  font-size: 22px;
+}
+
+.creator-stats span,
+.creator-card span {
+  color: #64748b;
+}
+
+.creator-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.creator-card {
+  display: grid;
+  gap: 8px;
+  min-height: 118px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.creator-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.creator-card strong {
+  color: #111827;
+}
+
 .post-item {
   display: flex;
   justify-content: space-between;
@@ -408,6 +505,11 @@ watch(() => route.params.id, loadAll)
   }
 
   .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-stats,
+  .creator-strip {
     grid-template-columns: 1fr;
   }
 

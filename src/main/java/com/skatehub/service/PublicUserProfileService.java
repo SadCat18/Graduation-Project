@@ -2,14 +2,15 @@ package com.skatehub.service;
 
 import com.skatehub.dao.CommentRepository;
 import com.skatehub.dao.PostRepository;
+import com.skatehub.dao.VideoRepository;
 import com.skatehub.dao.UserFollowRepository;
 import com.skatehub.dao.UserRepository;
 import com.skatehub.pojo.Post;
 import com.skatehub.pojo.User;
+import com.skatehub.pojo.Video;
 import com.skatehub.util.BizException;
 import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class PublicUserProfileService {
 
     private final UserRepository userRepository;
@@ -27,6 +27,29 @@ public class PublicUserProfileService {
     private final CommentRepository commentRepository;
     private final UserFollowRepository userFollowRepository;
     private final UserGrowthService userGrowthService;
+    private final VideoRepository videoRepository;
+
+    public PublicUserProfileService(UserRepository userRepository,
+                                    PostRepository postRepository,
+                                    CommentRepository commentRepository,
+                                    UserFollowRepository userFollowRepository,
+                                    UserGrowthService userGrowthService,
+                                    VideoRepository videoRepository) {
+        this.userRepository = userRepository;
+        this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
+        this.userFollowRepository = userFollowRepository;
+        this.userGrowthService = userGrowthService;
+        this.videoRepository = videoRepository;
+    }
+
+    public PublicUserProfileService(UserRepository userRepository,
+                                    PostRepository postRepository,
+                                    CommentRepository commentRepository,
+                                    UserFollowRepository userFollowRepository,
+                                    UserGrowthService userGrowthService) {
+        this(userRepository, postRepository, commentRepository, userFollowRepository, userGrowthService, null);
+    }
 
     public Map<String, Object> profile(Long userId) {
         InputValidator.positiveId(userId, "userId");
@@ -46,6 +69,7 @@ public class PublicUserProfileService {
         map.put("postCount", postRepository.countByUserId(userId));
         map.put("followerCount", userFollowRepository.countByFolloweeIdAndStatus(userId, "1"));
         map.put("followingCount", userFollowRepository.countByFollowerIdAndStatus(userId, "1"));
+        map.put("creatorSummary", creatorSummary(userId));
         map.put("createTime", user.getCreateTime());
         return map;
     }
@@ -73,6 +97,52 @@ public class PublicUserProfileService {
         map.put("likeCount", post.getLikeCount() == null ? 0 : post.getLikeCount());
         map.put("collectCount", post.getCollectCount() == null ? 0 : post.getCollectCount());
         map.put("commentCount", commentRepository.countByPostId(post.getPostId()));
+        return map;
+    }
+
+    private Map<String, Object> creatorSummary(Long userId) {
+        Map<String, Object> map = new HashMap<>();
+        java.util.List<Video> videos = videoRepository == null
+                ? java.util.List.of()
+                : videoRepository.findByUserIdOrderByCreateTimeDesc(userId);
+        java.util.List<Post> posts = postRepository.findByUserIdOrderByCreateTimeDesc(userId);
+        java.util.List<Post> tutorials = posts.stream()
+                .filter(this::isTutorialPost)
+                .limit(6)
+                .toList();
+        int totalLikes = posts.stream().mapToInt(post -> post.getLikeCount() == null ? 0 : post.getLikeCount()).sum();
+        int totalCollects = posts.stream().mapToInt(post -> post.getCollectCount() == null ? 0 : post.getCollectCount()).sum();
+        int videoQuality = videos.stream().mapToInt(video -> video.getQualityScore() == null ? 0 : video.getQualityScore()).sum();
+        boolean hasCreatorContent = !videos.isEmpty() || !tutorials.isEmpty();
+
+        map.put("hasCreatorContent", hasCreatorContent);
+        map.put("videoCount", videos.size());
+        map.put("tutorialPostCount", tutorials.size());
+        map.put("followerCount", userFollowRepository.countByFolloweeIdAndStatus(userId, "1"));
+        map.put("totalEngagement", totalLikes + totalCollects);
+        map.put("qualityScore", videos.isEmpty() ? 0 : Math.round(videoQuality * 1.0 / videos.size()));
+        map.put("recentVideos", videos.stream().limit(4).map(this::videoSummary).toList());
+        map.put("tutorials", tutorials.stream().map(this::toPostSummary).toList());
+        return map;
+    }
+
+    private boolean isTutorialPost(Post post) {
+        String text = ((post.getTitle() == null ? "" : post.getTitle()) + " "
+                + (post.getCategory() == null ? "" : post.getCategory()) + " "
+                + (post.getContent() == null ? "" : post.getContent())).toLowerCase();
+        return text.contains("教程") || text.contains("教学") || text.contains("技巧")
+                || text.contains("tutorial") || text.contains("trick") || text.contains("how to");
+    }
+
+    private Map<String, Object> videoSummary(Video video) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("videoId", video.getVideoId());
+        map.put("title", video.getTitle());
+        map.put("cover", video.getCover());
+        map.put("creatorSeries", video.getCreatorSeries());
+        map.put("trickTags", video.getTrickTags());
+        map.put("qualityScore", video.getQualityScore());
+        map.put("createTime", video.getCreateTime());
         return map;
     }
 }

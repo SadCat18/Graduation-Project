@@ -29,6 +29,12 @@ const visibleRelatedVideos = computed(() =>
     .filter(item => Number(item.videoId) !== Number(videoId.value))
     .slice(0, 4)
 )
+const serverTrickTags = computed(() => String(video.value?.trickTags || '')
+  .split(',')
+  .map(item => item.trim())
+  .filter(Boolean)
+)
+const displaySkillTags = computed(() => serverTrickTags.value.length ? serverTrickTags.value : skillTags(video.value))
 
 function formatDateTime(value) {
   if (!value) return '刚刚发布'
@@ -222,7 +228,22 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="watch-tags">
-          <span v-for="tag in skillTags(video)" :key="tag">{{ tag }}</span>
+          <span v-for="tag in displaySkillTags" :key="tag">{{ tag }}</span>
+        </div>
+
+        <div class="creator-meta-panel">
+          <div>
+            <span>创作者系列</span>
+            <strong>{{ video.creatorSeries || '独立教学视频' }}</strong>
+          </div>
+          <div>
+            <span>内容质量分</span>
+            <strong>{{ Number(video.qualityScore || 0) }}</strong>
+          </div>
+          <div>
+            <span>动作标签</span>
+            <strong>{{ displaySkillTags.join(' / ') }}</strong>
+          </div>
         </div>
 
         <div class="intro-panel">
@@ -481,6 +502,33 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
+.creator-meta-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.creator-meta-panel div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(8, 122, 109, 0.18);
+  border-radius: 10px;
+  background: rgba(8, 122, 109, 0.07);
+}
+
+.creator-meta-panel span {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.creator-meta-panel strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .intro-panel,
 .training-panel,
 .related-videos {
@@ -643,6 +691,10 @@ onBeforeUnmount(() => {
   }
 
   .training-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-meta-panel {
     grid-template-columns: 1fr;
   }
 }

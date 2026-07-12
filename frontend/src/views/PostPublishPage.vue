@@ -25,6 +25,19 @@ const postForm = reactive({
 })
 
 const canRunAiPolish = computed(() => postForm.title.trim() || postForm.content.trim())
+const publishWarnings = computed(() => buildPublishWarnings(postForm.title, postForm.content))
+
+function buildPublishWarnings(title, content) {
+  const text = `${title || ''} ${content || ''}`.trim()
+  const compact = text.replace(/\s+/g, '')
+  const warnings = []
+  const linkCount = (text.match(/https?:\/\/|www\./gi) || []).length
+  if (compact && compact.length < 8) warnings.push('内容偏短，建议补充动作背景、地点或经验细节。')
+  if (linkCount > 1) warnings.push('包含多个外部链接，发布后可能被管理员重点复核。')
+  if (/(.)\1{8,}|(.{2,8})\2{3,}/.test(compact)) warnings.push('检测到重复文本，建议整理后再发布。')
+  if (/约架|骚扰|赌博|贷款|代刷|外挂|casino|loan/i.test(text)) warnings.push('包含敏感词，请确认表达符合社区规则。')
+  return warnings
+}
 
 function clearPreviewUrls() {
   previewUrls.value.forEach(url => URL.revokeObjectURL(url))
@@ -143,12 +156,18 @@ async function publishPost() {
   uploading.value = true
   try {
     const imageUrls = await uploadSelectedImages()
-    await api.createPost({
+    const created = await api.createPost({
       title: postForm.title.trim(),
       category: postForm.category.trim(),
       content: postForm.content.trim(),
       images: imageUrls.join(',')
     })
+    api.trackProductEvent({
+      eventType: 'PUBLISH_POST',
+      targetType: 'POST',
+      targetId: created?.postId,
+      sourcePage: 'post-publish'
+    }).catch(() => {})
     alert('发布成功')
     router.push('/community')
   } catch (e) {
@@ -199,7 +218,14 @@ onBeforeUnmount(() => {
 
       <textarea class="publish-step" :style="{ '--motion-index': 1 }" v-model="postForm.content" placeholder="写下你的滑板内容..." />
 
-      <div v-if="aiResult" class="ai-panel publish-step" :style="{ '--motion-index': 2 }">
+      <div v-if="publishWarnings.length" class="prepublish-warning publish-step" :style="{ '--motion-index': 2 }">
+        <strong>发布前提醒</strong>
+        <ul>
+          <li v-for="warning in publishWarnings" :key="warning">{{ warning }}</li>
+        </ul>
+      </div>
+
+      <div v-if="aiResult" class="ai-panel publish-step" :style="{ '--motion-index': 3 }">
         <div class="ai-panel-head">
           <div>
             <span class="ai-badge">AI 润色结果</span>
@@ -263,7 +289,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="upload-block publish-step" :style="{ '--motion-index': 3 }">
+      <div class="upload-block publish-step" :style="{ '--motion-index': 4 }">
         <div class="upload-header">
           <span class="upload-label">上传图片</span>
           <span class="muted">已选 {{ selectedImages.length }}/{{ maxImageCount }}</span>
@@ -286,7 +312,7 @@ onBeforeUnmount(() => {
         <p class="muted">仅支持本地上传，最多 9 张，单张不超过 10MB。</p>
       </div>
 
-      <div v-if="previewUrls.length" class="preview-grid publish-step" :style="{ '--motion-index': 4 }">
+      <div v-if="previewUrls.length" class="preview-grid publish-step" :style="{ '--motion-index': 5 }">
         <div v-for="(url, index) in previewUrls" :key="url" class="preview-item">
           <img :src="url" alt="预览图" />
           <button class="remove-btn" @click="removeSelectedImage(index)">移除</button>
@@ -340,6 +366,26 @@ onBeforeUnmount(() => {
 
 .publish-card textarea {
   min-height: 150px;
+}
+
+.prepublish-warning {
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.prepublish-warning strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.prepublish-warning ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
 }
 
 .ai-panel {

@@ -95,6 +95,10 @@ public class ActivityService {
     }
 
     public Map<String, Object> publicDetail(Long activityId) {
+        return publicDetail(activityId, null);
+    }
+
+    public Map<String, Object> publicDetail(Long activityId, Long userId) {
         InputValidator.positiveId(activityId, "活动ID");
         Activity activity = getActivity(activityId);
         if (!ActivityReviewStatus.APPROVED.equals(activity.getReviewStatus())) {
@@ -104,7 +108,7 @@ public class ActivityService {
         if (ActivityStatus.CANCELED.equals(status) || ActivityStatus.PENDING_REVIEW.equals(status) || ActivityStatus.REVIEW_REJECTED.equals(status)) {
             throw new BizException("活动暂不可查看");
         }
-        return toActivityVO(activity, null);
+        return toActivityVO(activity, userId);
     }
 
     public Activity create(CurrentUser currentUser, ActivityCreateRequest request) {
@@ -157,6 +161,10 @@ public class ActivityService {
         }
         sign.setSignStatus(ActivitySignStatus.PENDING_CONFIRM);
         sign.setIsCheckin("0");
+        sign.setArrivalConfirmed("0");
+        sign.setReturnConfirmed("0");
+        sign.setArrivalConfirmTime(null);
+        sign.setReturnConfirmTime(null);
         activitySignRepository.save(sign);
         userGrowthService.grantExp(currentUserId, "ACTIVITY_SIGN", "ACTIVITY", activityId, 10);
 
@@ -186,6 +194,34 @@ public class ActivityService {
         activitySignRepository.save(sign);
         userGrowthService.grantExp(currentUserId, "ACTIVITY_CHECKIN", "ACTIVITY", activityId, 15);
         eventPublisher.publishEvent(new GrowthActionCompletedEvent(currentUserId, "ACTIVITY_CHECKIN"));
+    }
+
+    @Transactional
+    public ActivitySign confirmArrival(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
+        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUserId)
+                .orElseThrow(() -> new BizException("请先报名该活动"));
+        if (!ActivitySignStatus.APPROVED.equals(sign.getSignStatus())) {
+            throw new BizException("仅已通过报名的用户可确认到达");
+        }
+        sign.setArrivalConfirmed("1");
+        sign.setArrivalConfirmTime(LocalDateTime.now());
+        return activitySignRepository.save(sign);
+    }
+
+    @Transactional
+    public ActivitySign confirmReturn(CurrentUser currentUser, Long activityId) {
+        Long currentUserId = requireCurrentUserId(currentUser);
+        InputValidator.positiveId(activityId, "活动ID");
+        ActivitySign sign = activitySignRepository.findByActivityIdAndUserId(activityId, currentUserId)
+                .orElseThrow(() -> new BizException("请先报名该活动"));
+        if (!ActivitySignStatus.APPROVED.equals(sign.getSignStatus())) {
+            throw new BizException("仅已通过报名的用户可确认安全离开");
+        }
+        sign.setReturnConfirmed("1");
+        sign.setReturnConfirmTime(LocalDateTime.now());
+        return activitySignRepository.save(sign);
     }
 
     public List<ActivitySign> signs(CurrentUser currentUser, Long activityId) {
@@ -218,9 +254,13 @@ public class ActivityService {
         } else if (ActivitySignStatus.REJECTED.equals(signStatus)) {
             sign.setSignStatus(ActivitySignStatus.REJECTED);
             sign.setIsCheckin("0");
+            sign.setArrivalConfirmed("0");
+            sign.setReturnConfirmed("0");
         } else if (ActivitySignStatus.CANCELED.equals(signStatus)) {
             sign.setSignStatus(ActivitySignStatus.CANCELED);
             sign.setIsCheckin("0");
+            sign.setArrivalConfirmed("0");
+            sign.setReturnConfirmed("0");
         } else {
             throw new BizException("报名状态不合法");
         }
@@ -268,6 +308,8 @@ public class ActivityService {
         }
         sign.setSignStatus(ActivitySignStatus.CANCELED);
         sign.setIsCheckin("0");
+        sign.setArrivalConfirmed("0");
+        sign.setReturnConfirmed("0");
         activitySignRepository.save(sign);
         refreshActivityCapacityAndStatus(activity);
     }
@@ -379,16 +421,117 @@ public class ActivityService {
         map.put("reviewStatus", activity.getReviewStatus());
         map.put("activityStatus", activityStatus);
         map.put("status", activityStatus);
+        map.put("spotsLeft", spotsLeft(activity));
+        map.put("full", ActivityStatus.FULL.equals(activityStatus)
+                || (activity.getMaxNum() != null && (activity.getSignNum() == null ? 0 : activity.getSignNum()) >= activity.getMaxNum()));
+        map.put("safetyCompanion", safetyCompanion(activity, activityStatus));
+        map.put("postEventActions", postEventActions(activity, activityStatus));
         map.put("createTime", activity.getCreateTime());
         User user = userRepository.findById(activity.getUserId()).orElse(null);
         map.put("publisherName", user == null ? "已注销用户" : user.getUsername());
         if (userId != null) {
-            boolean signed = activitySignRepository.findByActivityIdAndUserId(activity.getActivityId(), userId)
-                    .map(item -> ActivitySignStatus.PENDING_CONFIRM.equals(item.getSignStatus())
-                            || ActivitySignStatus.APPROVED.equals(item.getSignStatus()))
-                    .orElse(false);
-            map.put("signed", signed);
+            activitySignRepository.findByActivityIdAndUserId(activity.getActivityId(), userId)
+                    .ifPresentOrElse(sign -> applyParticipationState(map, sign, activity, activityStatus),
+                            () -> applyParticipationState(map, null, activity, activityStatus));
         }
+        return map;
+    }
+
+    private void applyParticipationState(Map<String, Object> map, ActivitySign sign, Activity activity, String activityStatus) {
+        String signStatus = sign == null ? null : sign.getSignStatus();
+        boolean activeSign = ActivitySignStatus.PENDING_CONFIRM.equals(signStatus) || ActivitySignStatus.APPROVED.equals(signStatus);
+        boolean checkedIn = sign != null && "1".equals(sign.getIsCheckin());
+        boolean arrivalConfirmed = sign != null && "1".equals(sign.getArrivalConfirmed());
+        boolean returnConfirmed = sign != null && "1".equals(sign.getReturnConfirmed());
+        boolean expired = isExpired(activity);
+        map.put("signed", activeSign);
+        map.put("signId", sign == null ? null : sign.getSignId());
+        map.put("signStatus", signStatus);
+        map.put("isCheckin", checkedIn ? "1" : "0");
+        map.put("arrivalConfirmed", arrivalConfirmed ? "1" : "0");
+        map.put("returnConfirmed", returnConfirmed ? "1" : "0");
+        map.put("arrivalConfirmTime", sign == null ? null : sign.getArrivalConfirmTime());
+        map.put("returnConfirmTime", sign == null ? null : sign.getReturnConfirmTime());
+        map.put("participationState", participationState(signStatus, checkedIn));
+        map.put("canJoin", !activeSign && !expired && ActivityStatus.SIGNUP_OPEN.equals(activityStatus));
+        map.put("canCancelSign", activeSign && !expired
+                && !ActivityStatus.CANCELED.equals(activityStatus)
+                && !ActivityStatus.ENDED.equals(activityStatus));
+        map.put("canCheckin", ActivitySignStatus.APPROVED.equals(signStatus) && !checkedIn
+                && !ActivityStatus.CANCELED.equals(activityStatus));
+        map.put("canConfirmArrival", ActivitySignStatus.APPROVED.equals(signStatus) && !arrivalConfirmed
+                && !ActivityStatus.CANCELED.equals(activityStatus));
+        map.put("canConfirmReturn", ActivitySignStatus.APPROVED.equals(signStatus) && !returnConfirmed
+                && (checkedIn || expired || ActivityStatus.ENDED.equals(activityStatus)));
+        map.put("canReviewAfterEvent", checkedIn && (expired || ActivityStatus.ENDED.equals(activityStatus)));
+    }
+
+    private String participationState(String signStatus, boolean checkedIn) {
+        if (checkedIn) {
+            return "CHECKED_IN";
+        }
+        if (ActivitySignStatus.APPROVED.equals(signStatus)) {
+            return "APPROVED";
+        }
+        if (ActivitySignStatus.PENDING_CONFIRM.equals(signStatus)) {
+            return "PENDING_CONFIRM";
+        }
+        if (ActivitySignStatus.REJECTED.equals(signStatus)) {
+            return "REJECTED";
+        }
+        if (ActivitySignStatus.CANCELED.equals(signStatus)) {
+            return "CANCELED";
+        }
+        return "NONE";
+    }
+
+    private Integer spotsLeft(Activity activity) {
+        if (activity.getMaxNum() == null) {
+            return null;
+        }
+        return Math.max(activity.getMaxNum() - (activity.getSignNum() == null ? 0 : activity.getSignNum()), 0);
+    }
+
+    private List<Map<String, Object>> postEventActions(Activity activity, String activityStatus) {
+        if (!ActivityStatus.ENDED.equals(activityStatus)) {
+            return List.of();
+        }
+        List<Map<String, Object>> actions = new ArrayList<>();
+        if (activity.getPlaceId() != null) {
+            actions.add(Map.of(
+                    "key", "REVIEW_PLACE",
+                    "label", "Review place",
+                    "targetType", "PLACE",
+                    "targetId", activity.getPlaceId()
+            ));
+        }
+        actions.add(Map.of(
+                "key", "WRITE_RECAP_POST",
+                "label", "Write recap post",
+                "targetType", "POST",
+                "targetId", activity.getActivityId()
+        ));
+        actions.add(Map.of(
+                "key", "SHARE_MEDIA",
+                "label", "Share photos or clips",
+                "targetType", "ACTIVITY",
+                "targetId", activity.getActivityId()
+        ));
+        return actions;
+    }
+
+    private Map<String, Object> safetyCompanion(Activity activity, String activityStatus) {
+        boolean nightSession = activity.getActivityTime() != null && activity.getActivityTime().getHour() >= 19;
+        boolean ended = ActivityStatus.ENDED.equals(activityStatus);
+        Map<String, Object> map = new HashMap<>();
+        map.put("nightSession", nightSession);
+        map.put("shareLocationHint", "Share your live location with a trusted contact before leaving for the spot.");
+        map.put("arrivalConfirmationHint", ended
+                ? "After the session, confirm arrival home or mark that you left safely."
+                : "When you reach the spot, confirm arrival so friends know you are safe.");
+        map.put("weatherReminder", "Check rain, wind, ground moisture, and lighting before skating.");
+        map.put("protectiveGearReminder", "Bring helmet, wrist guards, and water, especially for new tricks.");
+        map.put("emergencyContactHint", "Keep one emergency contact reachable during the activity.");
         return map;
     }
 

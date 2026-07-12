@@ -18,19 +18,22 @@ public class EventSignup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long signupId;
 
-    @Column(nullable = false)
+    @Column(name = "event_id", nullable = false)
     private Long eventId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(length = 20)
+    @Column(name = "signup_status", length = 20)
     private String signupStatus = "SIGNED";
 
+    @Column(name = "signup_time")
     private LocalDateTime signupTime;
 
+    @Column(name = "cancel_time")
     private LocalDateTime cancelTime;
 
+    @Column(name = "checkin_time")
     private LocalDateTime checkinTime;
 
     @PrePersist

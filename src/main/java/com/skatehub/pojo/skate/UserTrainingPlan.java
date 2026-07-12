@@ -19,23 +19,28 @@ public class UserTrainingPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userPlanId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "plan_id", nullable = false)
     private Long planId;
 
+    @Column(name = "start_date")
     private LocalDate startDate;
 
+    @Column(name = "current_day")
     private Integer currentDay = 1;
 
+    @Column(name = "completed_days")
     private Integer completedDays = 0;
 
     @Column(length = 20)
     private String status = "IN_PROGRESS";
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
+    @Column(name = "update_time")
     private LocalDateTime updateTime;
 
     @PrePersist

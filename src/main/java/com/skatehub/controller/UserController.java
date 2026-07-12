@@ -154,7 +154,7 @@ public class UserController {
     @GetMapping("/leaderboard")
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<LeaderboardResponse> leaderboard(
-            @RequestParam @Pattern(regexp = "^(total|weekly)$") String type,
+            @RequestParam @Pattern(regexp = "^(total|weekly|training|contribution|activity|creation)$") String type,
             @RequestParam(defaultValue = "1") @Positive @Max(10000) Integer page,
             @RequestParam(defaultValue = "20") @Positive @Max(50) Integer size) {
         CurrentUser currentUser = SecurityUtils.currentUser();

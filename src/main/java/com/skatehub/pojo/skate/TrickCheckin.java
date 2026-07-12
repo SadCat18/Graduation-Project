@@ -18,28 +18,31 @@ public class TrickCheckin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long checkinId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "trick_id", nullable = false)
     private Long trickId;
 
+    @Column(name = "practice_minutes")
     private Integer practiceMinutes;
 
-    @Column(length = 30)
+    @Column(name = "master_status", length = 30)
     private String masterStatus;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "content", columnDefinition = "text")
     private String content;
 
-    @Column(length = 1000)
+    @Column(name = "media_urls", length = 1000)
     private String mediaUrls;
 
-    @Column(length = 1)
+    @Column(name = "is_public", length = 1)
     private String isPublic = "0";
 
+    @Column(name = "exp_awarded")
     private Integer expAwarded = 0;
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
     @PrePersist

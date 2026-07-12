@@ -26,4 +26,6 @@ public class AiCoachChatResponse {
     private List<AiCoachRelatedVideoResponse> relatedVideos;
 
     private List<AiCoachRelatedActivityResponse> relatedActivities;
+
+    private List<AiCoachReferenceResponse> references;
 }

@@ -17,17 +17,19 @@ public class UserFollow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long followId;
 
-    @Column(nullable = false)
+    @Column(name = "follower_id", nullable = false)
     private Long followerId;
 
-    @Column(nullable = false)
+    @Column(name = "followee_id", nullable = false)
     private Long followeeId;
 
     @Column(length = 1)
     private String status = "1";
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
+    @Column(name = "update_time")
     private LocalDateTime updateTime;
 
     @PrePersist

@@ -8,6 +8,7 @@ import com.skatehub.pojo.ai.AiCoachChatRequest;
 import com.skatehub.pojo.ai.AiCoachChatResponse;
 import com.skatehub.pojo.ai.AiCoachContentRecommendResponse;
 import com.skatehub.pojo.ai.AiCoachMessageItemResponse;
+import com.skatehub.pojo.ai.AiCoachReferenceResponse;
 import com.skatehub.pojo.ai.AiCoachSessionItemResponse;
 import com.skatehub.pojo.ai.AiCoachSessionMessagesResponse;
 import com.skatehub.pojo.ai.AiMessage;
@@ -42,6 +43,7 @@ public class AiCoachAssistantService {
     private final AiCoachContentRecommendService aiCoachContentRecommendService;
     private final AiCoachSessionRepository aiCoachSessionRepository;
     private final AiCoachMessageRepository aiCoachMessageRepository;
+    private final AiCoachRagService aiCoachRagService;
 
     @Transactional
     public AiCoachChatResponse chat(CurrentUser currentUser, AiCoachChatRequest request) {
@@ -50,9 +52,10 @@ public class AiCoachAssistantService {
         }
 
         AiCoachSession session = resolveSession(currentUser, request);
+        AiCoachRagContext ragContext = aiCoachRagService.retrieve(request.getMessage().trim());
         AiResponse response;
         try {
-            response = aiGatewayService.chat(buildAiRequest(currentUser, request, session));
+            response = aiGatewayService.chat(buildAiRequest(currentUser, request, session, ragContext));
         } catch (BizException exception) {
             throw new BizException("AI 滑板老师调用失败: " + exception.getMessage());
         } catch (Exception exception) {
@@ -65,6 +68,7 @@ public class AiCoachAssistantService {
 
         AiCoachChatResponse result = parseResponse(response.getContent());
         normalizeResult(result, request);
+        result.setReferences(buildReferences(ragContext));
         // fillRelatedContent is now loaded async by frontend
         // fillRelatedContent(result, request);
         saveMessages(session.getSessionId(), request.getMessage().trim(), result.getReply());
@@ -115,11 +119,12 @@ public class AiCoachAssistantService {
 
     private AiRequest buildAiRequest(CurrentUser currentUser,
                                      AiCoachChatRequest request,
-                                     AiCoachSession session) {
+                                     AiCoachSession session,
+                                     AiCoachRagContext ragContext) {
         return AiRequest.builder()
                 .scene("coach_chat")
                 .systemPrompt(buildSystemPrompt())
-                .messages(buildConversationMessages(currentUser, request, session))
+                .messages(buildConversationMessages(currentUser, request, session, ragContext))
                 .temperature(0.5D)
                 .maxTokens(600)
                 .responseFormat("json_object")
@@ -138,10 +143,14 @@ public class AiCoachAssistantService {
                 You must return valid JSON only, with this shape:
                 {
                   "reply": "string",
-                  "suggestions": ["string", "string"]
+                  "suggestions": ["string", "string"],
+                  "references": [{"sourceType":"TRICK","sourceId":1,"title":"source title","routePath":"/path"}]
                 }
                 Rules:
                 - reply must be useful for skateboard teaching scenarios.
+                - Use Station reference material when it is relevant.
+                - Do not claim SkateHub has a trick, video, plan, post, equipment, or activity unless it appears in the Station reference material.
+                - If the Station reference material is weak or missing, say the station material is limited and give general safe practice guidance.
                 - suggestions should contain 2 to 4 short items, each written as a natural user question or request that extends the current topic. For example, write âè½è¯¦ç»è®²è®²è©é¨åååâ instead of âç»ä¹ æ¶æ³¨æè©é¨ååâ.
                 - suggestions should be specific, contextual follow-ups to your reply, so the next round of conversation stays meaningful and on-topic.
                 - Do not include markdown code fences.
@@ -150,12 +159,19 @@ public class AiCoachAssistantService {
 
     private List<AiMessage> buildConversationMessages(CurrentUser currentUser,
                                                       AiCoachChatRequest request,
-                                                      AiCoachSession session) {
+                                                      AiCoachSession session,
+                                                      AiCoachRagContext ragContext) {
         List<AiMessage> messages = new ArrayList<>();
         messages.add(AiMessage.builder()
                 .role("user")
                 .content(buildSessionIntro(currentUser, session))
                 .build());
+        if (ragContext != null && StringUtils.hasText(ragContext.promptText())) {
+            messages.add(AiMessage.builder()
+                    .role("user")
+                    .content(ragContext.promptText())
+                    .build());
+        }
 
         List<AiCoachMessage> history = loadRecentContextMessages(session.getSessionId());
         for (AiCoachMessage item : history) {
@@ -225,10 +241,14 @@ public class AiCoachAssistantService {
         try {
             return AiUtils.parseJsonQuietly(content, AiCoachChatResponse.class);
         } catch (JsonProcessingException exception) {
-            return AiCoachChatResponse.builder()
-                    .reply(content.trim())
-                    .suggestions(new ArrayList<>())
-                    .build();
+            try {
+                return AiUtils.parseJsonQuietly(AiUtils.extractFirstJsonObject(content), AiCoachChatResponse.class);
+            } catch (JsonProcessingException retryException) {
+                return AiCoachChatResponse.builder()
+                        .reply(content.trim())
+                        .suggestions(new ArrayList<>())
+                        .build();
+            }
         }
     }
 
@@ -337,6 +357,20 @@ public class AiCoachAssistantService {
             }
         }
         return new ArrayList<>(normalized);
+    }
+
+    private List<AiCoachReferenceResponse> buildReferences(AiCoachRagContext ragContext) {
+        if (ragContext == null || ragContext.chunks() == null || ragContext.chunks().isEmpty()) {
+            return List.of();
+        }
+        return ragContext.chunks().stream()
+                .map(chunk -> AiCoachReferenceResponse.builder()
+                        .sourceType(chunk.sourceType())
+                        .sourceId(chunk.sourceId())
+                        .title(chunk.title())
+                        .routePath(chunk.routePath())
+                        .build())
+                .toList();
     }
 
     private boolean containsRiskKeyword(String message) {

@@ -13,6 +13,7 @@ const placeId = computed(() => Number(route.params.id))
 const place = ref(null)
 const reviews = ref([])
 const relatedActivities = ref([])
+const relatedVideos = ref([])
 const loading = ref(false)
 const loadError = ref('')
 const submitting = ref(false)
@@ -37,7 +38,7 @@ const placeStats = computed(() => [
   { label: '综合评分', value: scoreText.value },
   { label: '评价数量', value: reviewCount.value },
   { label: '近期活动', value: relatedActivities.value.length },
-  { label: '适合强度', value: placeTags.value.includes('进阶练习') ? '进阶' : '日常' }
+  { label: '适合等级', value: levelLabel(place.value?.suitableLevel) }
 ])
 
 function cleanText(value) {
@@ -49,6 +50,18 @@ function splitImages(images) {
     .split(',')
     .map(item => normalizeMediaUrl(item.trim()))
     .filter(Boolean)
+}
+
+function levelLabel(level) {
+  const normalized = String(level || '').toUpperCase()
+  if (normalized === 'BEGINNER') return '新手'
+  if (normalized === 'ADVANCED') return '进阶'
+  if (normalized === 'INTERMEDIATE') return '中级'
+  return placeTags.value.includes('进阶练习') ? '进阶' : '日常'
+}
+
+function normalizeSearchText(value) {
+  return String(value || '').toLowerCase().trim()
 }
 
 function inferPlaceTags(detail) {
@@ -103,16 +116,33 @@ async function loadData() {
   place.value = null
   reviews.value = []
   relatedActivities.value = []
+  relatedVideos.value = []
   try {
     const [detail, list] = await Promise.all([api.placeDetail(placeId.value), api.placeReviews(placeId.value)])
     place.value = detail
     reviews.value = list || []
+    relatedVideos.value = Array.isArray(detail?.relatedVideos) ? detail.relatedVideos.slice(0, 4) : []
     await loadRelatedActivities(detail)
+    await loadRelatedVideos(detail)
   } catch (e) {
     loadError.value = e?.message || '场地加载失败，请稍后重试'
   } finally {
     loading.value = false
   }
+}
+
+async function loadRelatedVideos(detail) {
+  if (relatedVideos.value.length || !detail?.name) return
+  const list = await api.videos()
+  const placeName = normalizeSearchText(detail.name)
+  const obstacleTags = Array.isArray(detail?.obstacleTags) ? detail.obstacleTags.map(normalizeSearchText) : []
+  relatedVideos.value = (Array.isArray(list) ? list : [])
+    .filter(item => {
+      const text = normalizeSearchText(`${item.title || ''} ${item.intro || ''}`)
+      if (placeName && text.includes(placeName)) return true
+      return obstacleTags.some(tag => tag && text.includes(tag))
+    })
+    .slice(0, 4)
 }
 
 async function loadRelatedActivities(detail) {
@@ -134,6 +164,11 @@ async function loadRelatedActivities(detail) {
 function goActivity(activityId) {
   if (!activityId) return
   router.push(`/activities/${activityId}`)
+}
+
+function goVideo(videoId) {
+  if (!videoId) return
+  router.push(`/videos/${videoId}`)
 }
 
 function goActivities() {
@@ -239,6 +274,26 @@ watch(placeId, () => {
               <h3>场地介绍</h3>
               <span class="section-note">概况 · 练习 · 安全</span>
             </div>
+            <div class="spot-guidance">
+              <div>
+                <span>适合等级</span>
+                <strong>{{ levelLabel(place.suitableLevel) }}</strong>
+              </div>
+              <div>
+                <span>障碍物标签</span>
+                <p>
+                  <em v-for="tag in place.obstacleTags || []" :key="tag">{{ tag }}</em>
+                  <em v-if="!(place.obstacleTags || []).length">open-space</em>
+                </p>
+              </div>
+              <div>
+                <span>安全提示</span>
+                <p>
+                  <em v-for="tip in place.safetyTips || []" :key="tip">{{ tip }}</em>
+                  <em v-if="!(place.safetyTips || []).length">练习前观察路面、人流和天气。</em>
+                </p>
+              </div>
+            </div>
             <div class="intro-grid">
               <article v-for="section in introSections" :key="section.title" class="intro-card">
                 <span>{{ section.title }}</span>
@@ -263,6 +318,34 @@ watch(placeId, () => {
                   <button class="btn-soft" @click="goActivity(item.activityId)">查看活动</button>
                 </div>
               </article>
+            </div>
+          </div>
+
+          <div class="place-section">
+            <div class="related-videos">
+            <div class="section-head">
+              <h3>相关教学视频</h3>
+              <span class="section-note">{{ relatedVideos.length ? '可结合场地练习' : '暂无匹配视频' }}</span>
+            </div>
+            <div v-if="!relatedVideos.length" class="empty-tip">暂时没有匹配到该场地的视频，可以先查看活动和评价了解现场。</div>
+            <div v-else class="related-video-grid">
+              <button
+                v-for="item in relatedVideos"
+                :key="item.videoId"
+                type="button"
+                class="related-video-card"
+                @click="goVideo(item.videoId)"
+              >
+                <span class="related-cover">
+                  <img v-if="item.cover" :src="normalizeMediaUrl(item.cover)" :alt="item.title" loading="lazy" decoding="async" />
+                  <AppIcon v-else name="play" :size="24" />
+                </span>
+                <span class="related-copy">
+                  <strong>{{ item.title }}</strong>
+                  <small>{{ item.intro || '从这个视频延伸到现场练习。' }}</small>
+                </span>
+              </button>
+            </div>
             </div>
           </div>
 
@@ -507,6 +590,54 @@ watch(placeId, () => {
   padding: 18px;
 }
 
+.spot-guidance {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.spot-guidance div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(240, 253, 250, 0.8), rgba(255, 255, 255, 0.78));
+}
+
+.spot-guidance span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.spot-guidance strong {
+  color: var(--text-main);
+  font-size: 22px;
+}
+
+.spot-guidance p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.spot-guidance em {
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-main);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .intro-grid {
   display: grid;
   gap: 10px;
@@ -538,6 +669,73 @@ watch(placeId, () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.related-video-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.related-video-card {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: inherit;
+  cursor: pointer;
+}
+
+.related-video-card:hover {
+  border-color: rgba(15, 118, 110, 0.34);
+  transform: translateY(-1px);
+}
+
+.related-cover {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.related-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.related-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.related-copy strong,
+.related-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-copy strong {
+  white-space: nowrap;
+}
+
+.related-copy small {
+  display: -webkit-box;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .activity-spot-card {
@@ -672,6 +870,10 @@ watch(placeId, () => {
   .place-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .spot-guidance {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -681,7 +883,8 @@ watch(placeId, () => {
   }
 
   .place-stat-grid,
-  .activity-card-grid {
+  .activity-card-grid,
+  .related-video-grid {
     grid-template-columns: 1fr;
   }
 

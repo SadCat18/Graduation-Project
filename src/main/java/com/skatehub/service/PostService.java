@@ -42,6 +42,18 @@ public class PostService {
     private final MessageNotifyService messageNotifyService;
     private final UserGrowthService userGrowthService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ModerationRuleService moderationRuleService;
+
+    public PostService(PostRepository postRepository,
+                       CommentRepository commentRepository,
+                       UserRepository userRepository,
+                       InteractionRepository interactionRepository,
+                       MessageNotifyService messageNotifyService,
+                       UserGrowthService userGrowthService,
+                       ApplicationEventPublisher eventPublisher) {
+        this(postRepository, commentRepository, userRepository, interactionRepository,
+                messageNotifyService, userGrowthService, eventPublisher, new ModerationRuleService());
+    }
 
     public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
         int currentPage = InputValidator.page(page);
@@ -69,6 +81,7 @@ public class PostService {
     @Transactional
     public Post create(CurrentUser currentUser, PostCreateRequest request) {
         Long currentUserId = requireCurrentUserId(currentUser);
+        moderationRuleService.assertPublishable("POST", request.getTitle(), request.getContent());
         Post post = new Post();
         post.setUserId(currentUserId);
         post.setTitle(request.getTitle());
@@ -88,6 +101,7 @@ public class PostService {
         if (!post.getUserId().equals(currentUserId)) {
             throw new BizException("只能编辑自己发布的帖子");
         }
+        moderationRuleService.assertPublishable("POST", request.getTitle(), request.getContent());
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setImages(request.getImages());
@@ -129,6 +143,7 @@ public class PostService {
                 throw new BizException("父评论不属于当前帖子");
             }
         }
+        moderationRuleService.assertPublishable("COMMENT", "评论", request.getContent());
         Comment comment = new Comment();
         comment.setPostId(postId);
         comment.setUserId(currentUserId);

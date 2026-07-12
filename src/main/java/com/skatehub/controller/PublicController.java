@@ -127,6 +127,12 @@ public class PublicController {
         return ApiResponse.success(publicContentService.placeReviews(placeId));
     }
 
+    @GetMapping("/search")
+    public ApiResponse<List<Map<String, Object>>> search(@RequestParam @Size(min = 1, max = 50) String keyword,
+                                                         @RequestParam(required = false) @Min(1) @Max(50) Integer limit) {
+        return ApiResponse.success(publicContentService.search(keyword, limit));
+    }
+
     @GetMapping("/videos")
     public ApiResponse<List<Video>> videos() {
         return ApiResponse.success(publicContentService.videos());

@@ -22,6 +22,7 @@ const selectedPlanDetail = ref(null)
 const currentTraining = ref(null)
 const events = ref([])
 const equipments = ref([])
+const videos = ref([])
 
 const checkinForm = reactive({
   practiceMinutes: 30,
@@ -61,6 +62,7 @@ const currentRecords = computed(() => currentTraining.value?.records || [])
 const completedTaskIds = computed(() => new Set(currentRecords.value.map(item => item.taskId)))
 const todayTask = computed(() => currentTasks.value.find(item => !completedTaskIds.value.has(item.taskId)) || currentTasks.value[0])
 const isLoggedIn = computed(() => !!getToken())
+const learningStages = computed(() => buildLearningStages())
 
 function showSuccess(message) {
   success.value = message
@@ -80,7 +82,7 @@ async function loadAll() {
   loading.value = true
   error.value = ''
   try {
-    await Promise.all([loadTricks(), loadPlans(), loadEvents(), loadEquipments(), loadCurrentTraining()])
+    await Promise.all([loadTricks(), loadPlans(), loadEvents(), loadEquipments(), loadVideos(), loadCurrentTraining()])
   } catch (e) {
     error.value = e?.message || '滑板专业模块加载失败'
   } finally {
@@ -162,6 +164,7 @@ async function joinPlan(planId) {
   error.value = ''
   try {
     await api.joinTrainingPlan(planId)
+    trackProductEvent('START_TRAINING_PLAN', 'TRAINING_PLAN', planId)
     await loadCurrentTraining()
     showSuccess('已加入训练计划')
   } catch (e) {
@@ -171,12 +174,17 @@ async function joinPlan(planId) {
   }
 }
 
+function trackProductEvent(eventType, targetType, targetId) {
+  api.trackProductEvent({ eventType, targetType, targetId, sourcePage: 'skate-professional' }).catch(() => {})
+}
+
 async function completeTodayTask() {
   if (!requireLogin() || !todayTask.value) return
   actionLoading.value = true
   error.value = ''
   try {
     const result = await api.completeTrainingTask(todayTask.value.taskId, { ...trainingForm })
+    trackProductEvent('COMPLETE_TRAINING_TASK', 'TRAINING_TASK', todayTask.value.taskId)
     trainingForm.content = ''
     trainingForm.mediaUrls = ''
     await loadCurrentTraining()
@@ -251,6 +259,54 @@ async function loadEquipments() {
   equipments.value = data?.list || []
 }
 
+async function loadVideos() {
+  try {
+    videos.value = await api.videos()
+  } catch (_) {
+    videos.value = []
+  }
+}
+
+function buildLearningStages() {
+  const configs = [
+    { key: 'basics', title: 'Board basics', label: '上板基础', keywords: ['新手', '入门', '站姿', 'Regular', 'Goofy', 'push', '滑行'], task: '确认站姿，完成 20 分钟推行练习' },
+    { key: 'balance', title: 'Balance and turning', label: '平衡与转弯', keywords: ['平衡', '转弯', 'carving', 'manual'], task: '练习重心转移和大弧线转向' },
+    { key: 'braking', title: 'Braking', label: '刹车控制', keywords: ['刹车', '停止', 'brake', 'stop'], task: '在低速下完成 10 次稳定刹停' },
+    { key: 'ollie', title: 'Ollie foundation', label: 'Ollie 基础', keywords: ['ollie', '豚跳', 'pop'], task: '拆分 Pop、刷脚和落地三个动作' },
+    { key: 'street', title: 'First street tricks', label: '第一组街式动作', keywords: ['shove', 'kickflip', '街式', '台阶'], task: '选择一个低风险街式动作进入练习' }
+  ]
+  return configs.map((stage, index) => {
+    const matchedTricks = tricks.value.filter(trick => matchesKeywords(`${trick.trickName || ''} ${trick.category || ''} ${trick.description || ''}`, stage.keywords)).slice(0, 3)
+    const matchedVideos = videos.value.filter(video => matchesKeywords(`${video.title || ''} ${video.intro || ''}`, stage.keywords)).slice(0, 2)
+    const matchedTasks = currentTasks.value.filter(task => matchesKeywords(`${task.taskTitle || ''} ${task.taskContent || ''}`, stage.keywords)).slice(0, 2)
+    const completedCount = matchedTasks.filter(task => completedTaskIds.value.has(task.taskId)).length
+    return {
+      ...stage,
+      order: index + 1,
+      tricks: matchedTricks,
+      videos: matchedVideos,
+      tasks: matchedTasks,
+      progress: matchedTasks.length ? Math.round((completedCount / matchedTasks.length) * 100) : 0
+    }
+  })
+}
+
+function matchesKeywords(text, keywords) {
+  const normalized = String(text || '').toLowerCase()
+  return keywords.some(keyword => normalized.includes(String(keyword).toLowerCase()))
+}
+
+function askCoachForStage(stage) {
+  router.push({
+    path: '/ai-coach',
+    query: { q: `我正在学习${stage.label}，请给我一个适合当前阶段的滑板练习步骤和安全提醒。` }
+  })
+}
+
+function openStageVideo(video) {
+  if (video?.videoId) router.push(`/videos/${video.videoId}`)
+}
+
 async function toggleFavorite(item) {
   if (!requireLogin()) return
   actionLoading.value = true
@@ -304,6 +360,33 @@ onMounted(loadAll)
         <span><strong>{{ equipments.length }}</strong> 装备</span>
       </div>
     </div>
+
+    <section class="learning-path-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Beginner Path</p>
+          <h2>学习路径</h2>
+          <p class="muted">按阶段连接动作、训练任务、教学视频和 AI Coach。</p>
+        </div>
+      </div>
+      <div class="learning-stage-grid">
+        <article v-for="stage in learningStages" :key="stage.key" class="learning-stage-card">
+          <span class="stage-index">0{{ stage.order }}</span>
+          <h3>{{ stage.label }}</h3>
+          <p>{{ stage.task }}</p>
+          <div class="stage-progress">
+            <span><i :style="{ width: `${stage.progress}%` }"></i></span>
+            <small>{{ stage.progress }}% 任务进度</small>
+          </div>
+          <div class="stage-links">
+            <button v-for="trick in stage.tricks" :key="trick.trickId" class="btn-soft" @click="chooseTrick(trick.trickId); activeTab = 'tricks'">{{ trick.trickName }}</button>
+            <button v-for="video in stage.videos" :key="video.videoId" class="btn-soft" @click="openStageVideo(video)">{{ video.title }}</button>
+            <span v-if="!stage.tricks.length && !stage.videos.length" class="muted">暂无匹配内容，可先按任务练习。</span>
+          </div>
+          <button class="btn-primary" @click="askCoachForStage(stage)">问 AI Coach</button>
+        </article>
+      </div>
+    </section>
 
     <div class="tab-strip" role="tablist">
       <button
@@ -575,6 +658,78 @@ onMounted(loadAll)
   font-size: 24px;
 }
 
+.learning-path-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.learning-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.learning-stage-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 260px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.learning-stage-card h3,
+.learning-stage-card p {
+  margin: 0;
+}
+
+.stage-index {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #151917;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stage-progress {
+  display: grid;
+  gap: 5px;
+}
+
+.stage-progress span {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.stage-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #b7d25a;
+}
+
+.stage-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stage-links .btn-soft {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
 .tab-strip {
   display: flex;
   gap: 10px;
@@ -721,6 +876,11 @@ label {
   object-fit: cover;
 }
 
+.equipment-card > img {
+  background: #f5f2ea;
+  object-fit: contain;
+}
+
 .feature-card > div {
   padding: 14px;
 }
@@ -761,6 +921,10 @@ label {
   }
 
   .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-stage-grid {
     grid-template-columns: 1fr;
   }
 

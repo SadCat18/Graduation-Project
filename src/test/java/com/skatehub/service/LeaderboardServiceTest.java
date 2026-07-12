@@ -139,6 +139,23 @@ class LeaderboardServiceTest {
         assertNull(response.currentUser());
     }
 
+    @Test
+    void dimensionLeaderboardUsesActionGroup() {
+        LeaderboardEntry first = entry(1, 12L, 55);
+        List<String> expectedActions = List.of("TRAINING_TASK_COMPLETE", "TRAINING_PLAN_COMPLETE", "TRICK_CHECKIN");
+        when(repository.findByActions(expectedActions, 0, 10)).thenReturn(List.of(first));
+        when(repository.countByActions(expectedActions)).thenReturn(1L);
+        when(repository.findUserByActions(USER_ID, expectedActions)).thenReturn(Optional.empty());
+
+        LeaderboardResponse response = service.list("training", 1, 10, USER_ID);
+
+        assertEquals(1L, response.total());
+        assertEquals(List.of(first), response.list());
+        assertNull(response.currentUser());
+        verify(repository).findByActions(expectedActions, 0, 10);
+        verify(repository).findUserByActions(USER_ID, expectedActions);
+    }
+
     private LeaderboardService serviceAt(String instant) {
         return new LeaderboardService(repository, Clock.fixed(Instant.parse(instant), SHANGHAI));
     }

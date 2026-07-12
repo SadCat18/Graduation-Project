@@ -28,6 +28,43 @@ const postDetailVisible = ref(false)
 const postDetailLoading = ref(false)
 const activePostDetail = ref(null)
 const ADMIN_PAGE_SIZE = 10
+const REVIEW_DECISION_TEMPLATES = [
+  {
+    key: 'incomplete',
+    label: '信息不完整',
+    note: '信息不完整，请补充时间、地点、正文或图片后重新提交。',
+    actions: ['reject'],
+    types: ['activity', 'bulletin', 'placeContribution']
+  },
+  {
+    key: 'community-risk',
+    label: '社区风险',
+    note: '内容存在广告引流、攻击性表达或安全风险，已按社区规则处理。',
+    actions: ['reject', 'done'],
+    types: ['activity', 'bulletin', 'report']
+  },
+  {
+    key: 'duplicate',
+    label: '重复内容',
+    note: '内容与已有信息重复，建议合并整理后再提交。',
+    actions: ['reject'],
+    types: ['activity', 'bulletin', 'placeContribution']
+  },
+  {
+    key: 'resolved',
+    label: '已核实处理',
+    note: '已核实举报对象并完成处理，感谢反馈。',
+    actions: ['done'],
+    types: ['report']
+  },
+  {
+    key: 'false-report',
+    label: '误报',
+    note: '经核查举报不成立，内容暂不处理，已标记为误报。',
+    actions: ['done'],
+    types: ['report']
+  }
+]
 const stats = ref({})
 const analytics = ref({
   trend7d: [],
@@ -64,10 +101,16 @@ const newsBatchReviewLoading = ref(false)
 const newsSyncSummary = ref(null)
 const activeNewsDetail = ref(null)
 const places = ref([])
+const pendingPlaces = ref([])
 const placeReviews = ref([])
 const banners = ref([])
 const videos = ref([])
 const reports = ref([])
+const reportFilters = reactive({
+  status: 'pending',
+  targetType: 'all',
+  timeRange: 'all'
+})
 const reviewActivities = ref([])
 const loadedTabs = reactive({
   workbench: false,
@@ -115,6 +158,25 @@ const contentTabs = [
   { key: 'video', label: '视频' }
 ]
 const newsCategoryOptions = ['赛事资讯', '装备动态', '技巧教学', '社区动态', '官方公告', '品牌资讯', '未分类']
+const reportStatusOptions = [
+  { label: '待处理', value: 'pending' },
+  { label: '已处理', value: 'handled' },
+  { label: '已驳回', value: 'rejected' },
+  { label: '误报', value: 'false_report' },
+  { label: '全部', value: 'all' }
+]
+const reportTargetTypeOptions = [
+  { label: '全部类型', value: 'all' },
+  { label: '帖子', value: 'POST' },
+  { label: '评论', value: 'COMMENT' },
+  { label: '快讯', value: 'BULLETIN' }
+]
+const reportTimeOptions = [
+  { label: '全部时间', value: 'all' },
+  { label: '近 24 小时', value: '24h' },
+  { label: '近 7 天', value: '7d' },
+  { label: '近 30 天', value: '30d' }
+]
 
 const noticeForm = reactive({ title: '', content: '', status: '0' })
 const newsForm = reactive({
@@ -321,15 +383,16 @@ const newsBatchStatusText = computed(() => {
 })
 const pendingActivityCount = computed(() => reviewActivities.value.filter(item => normalizeReviewStatus(item?.reviewStatus) === '0').length)
 const pendingBulletinCount = computed(() => reviewBulletins.value.filter(item => String(item?.status || '0') === '0').length)
+const pendingPlaceCount = computed(() => pendingPlaces.value.length)
 const pendingReviewTotal = computed(() => {
-  return pendingActivityCount.value + pendingBulletinCount.value + reports.value.length + placeReviews.value.length
+  return pendingActivityCount.value + pendingBulletinCount.value + pendingPlaceCount.value + reports.value.length + placeReviews.value.length
 })
 const workbenchTodoCards = computed(() => [
   {
     key: 'review',
     label: '审核待办',
     value: pendingReviewTotal.value,
-    detail: `活动 ${pendingActivityCount.value} / 快讯 ${pendingBulletinCount.value} / 举报 ${reports.value.length}`,
+    detail: `活动 ${pendingActivityCount.value} / 快讯 ${pendingBulletinCount.value} / 场地 ${pendingPlaceCount.value} / 举报 ${reports.value.length}`,
     priority: pendingReviewTotal.value ? 'high' : 'normal',
     action: quickAdminActions[0]
   },
@@ -400,7 +463,7 @@ const panelSummaryItems = computed(() => {
     reviewCenter: [
       { label: '待办', value: pendingReviewTotal.value },
       { label: '活动待审', value: pendingActivityCount.value },
-      { label: '快讯待审', value: pendingBulletinCount.value }
+      { label: '场地待审', value: pendingPlaceCount.value }
     ],
     users: [
       { label: '用户总数', value: pageState.users.total },
@@ -456,6 +519,7 @@ const reviewCenterTabs = [
   { key: 'activity', label: '活动' },
   { key: 'bulletin', label: '快讯' },
   { key: 'report', label: '举报' },
+  { key: 'placeContribution', label: '场地贡献' },
   { key: 'placeReview', label: '场地评价' },
   { key: 'done', label: '已处理' }
 ]
@@ -596,8 +660,9 @@ const pendingCounts = computed(() => {
   const activity = filteredReviewCards.value.filter(item => item.type === 'activity').length
   const bulletin = filteredReviewCards.value.filter(item => item.type === 'bulletin').length
   const report = filteredReviewCards.value.filter(item => item.type === 'report').length
+  const placeContribution = filteredReviewCards.value.filter(item => item.type === 'placeContribution').length
   const placeReview = filteredReviewCards.value.filter(item => item.type === 'placeReview').length
-  return { activity, bulletin, report, placeReview }
+  return { activity, bulletin, report, placeContribution, placeReview }
 })
 
 const reviewCards = computed(() => {
@@ -708,6 +773,38 @@ const reviewCards = computed(() => {
       { label: '处理状态', value: item.statusLabel || (item.status === '0' ? '待处理' : '已处理') }
     ]
   }))
+  const placeContributionCards = pendingPlaces.value.map(item => ({
+    id: `place-contribution-${item.placeId}`,
+    type: 'placeContribution',
+    typeLabel: '场地贡献',
+    status: '0',
+    statusLabel: '待验证',
+    title: item.name || `场地 #${item.placeId}`,
+    actor: item.submittedByUserId ? `用户 #${item.submittedByUserId}` : '用户贡献',
+    time: fmtTime(item.createTime),
+    summary: item.intro || item.address || '暂无场地说明',
+    fullContent: item.intro || '暂无场地说明',
+    imageUrl: '',
+    historyNote: item.verificationNote || '',
+    searchText: `${item.name || ''} ${item.address || ''} ${item.intro || ''}`,
+    facts: [
+      { label: '场地地址', value: item.address || '未填写' },
+      { label: '提交人', value: item.submittedByUserId ? `用户 #${item.submittedByUserId}` : '未知' },
+      { label: '验证状态', value: item.verificationStatus || 'PENDING' }
+    ],
+    detailFacts: [
+      { label: '场地ID', value: String(item.placeId || '-') },
+      { label: '场地地址', value: item.address || '未填写' },
+      { label: '提交人', value: item.submittedByUserId ? `用户 #${item.submittedByUserId}` : '未知' },
+      { label: '提交时间', value: fmtTime(item.createTime) }
+    ],
+    moderationPayload: {
+      contentType: 'BULLETIN',
+      title: item.name || `场地 #${item.placeId}`,
+      content: [item.address, item.intro].filter(Boolean).join('\n') || '暂无场地说明',
+      extraInfo: '用户贡献场地，需核实地址、是否可滑、是否涉及隐私或安全风险。'
+    }
+  }))
   const placeReviewCards = placeReviews.value.map(item => ({
     id: `place-review-${item.reviewId}`,
     type: 'placeReview',
@@ -734,7 +831,7 @@ const reviewCards = computed(() => {
       { label: '评价人', value: item.username || '匿名用户' }
     ]
   }))
-  return [...activityCards, ...bulletinCards, ...reportCards, ...placeReviewCards]
+  return [...activityCards, ...bulletinCards, ...reportCards, ...placeContributionCards, ...placeReviewCards]
 })
 
 const filteredReviewCards = computed(() => {
@@ -745,6 +842,7 @@ const filteredReviewCards = computed(() => {
       (item.type === 'activity' && item.status === '0') ||
       (item.type === 'bulletin' && item.status === '0') ||
       (item.type === 'report' && item.status === '0') ||
+      item.type === 'placeContribution' ||
       item.type === 'placeReview'
     )
   } else if (reviewCenterTab.value === 'done') {
@@ -759,6 +857,8 @@ const filteredReviewCards = computed(() => {
     list = list.filter(item => item.type === 'bulletin' && item.status === '0')
   } else if (reviewCenterTab.value === 'report') {
     list = list.filter(item => item.type === 'report' && item.status === '0')
+  } else if (reviewCenterTab.value === 'placeContribution') {
+    list = list.filter(item => item.type === 'placeContribution')
   } else if (reviewCenterTab.value === 'placeReview') {
     list = list.filter(item => item.type === 'placeReview')
   }
@@ -768,7 +868,7 @@ const filteredReviewCards = computed(() => {
   }
 
   if (reviewStatusFilter.value === 'pending') {
-    list = list.filter(item => item.type === 'placeReview' || item.status === '0')
+    list = list.filter(item => item.type === 'placeReview' || item.type === 'placeContribution' || item.status === '0')
   } else if (reviewStatusFilter.value === 'approved') {
     list = list.filter(item => isApprovedStatus(item) || (item.type === 'report' && item.status === '1'))
   } else if (reviewStatusFilter.value === 'rejected') {
@@ -823,6 +923,9 @@ const allFilteredSelected = computed(() => {
 })
 
 const reviewDrawerItem = computed(() => reviewCards.value.find(item => item.id === reviewDrawerId.value) || null)
+const reviewDrawerTemplates = computed(() => reviewDrawerItem.value ? REVIEW_DECISION_TEMPLATES.filter(template =>
+  template.types.includes(reviewDrawerItem.value.type)
+) : [])
 const moderationOverlayVisible = computed(() => Boolean(moderationLoadingKey.value || postModerationLoadingId.value))
 const moderationOverlayTitle = computed(() => {
   if (moderationLoadingKey.value) {
@@ -975,7 +1078,10 @@ async function batchReview(action) {
       if (source) await api.adminReviewActivity(source.activityId, { status: isApprove ? '1' : '2' })
     } else if (item.type === 'bulletin') {
       const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
-      if (source) await api.adminReviewBulletin(source.bulletinId, { status: isApprove ? '1' : '2', rejectReason: '' })
+      if (source) await api.adminReviewBulletin(source.bulletinId, {
+        status: isApprove ? '1' : '2',
+        rejectReason: isApprove ? '' : resolveReviewNote(item, 'reject')
+      })
     }
   }
   selectedReviewIds.value = []
@@ -1223,6 +1329,20 @@ async function loadComments() {
   }
 }
 
+function chooseReviewTemplate(item, action, templateKey = '') {
+  const normalizedAction = action === 'done' ? 'done' : 'reject'
+  const candidates = REVIEW_DECISION_TEMPLATES.filter(template =>
+    template.actions.includes(normalizedAction) &&
+    (!item?.type || template.types.includes(item.type)) &&
+    (!templateKey || template.key === templateKey)
+  )
+  return candidates[0] || REVIEW_DECISION_TEMPLATES.find(template => template.actions.includes(normalizedAction)) || REVIEW_DECISION_TEMPLATES[0]
+}
+
+function resolveReviewNote(item, action, templateKey = '') {
+  return chooseReviewTemplate(item, action, templateKey)?.note || ''
+}
+
 function pruneSelectedCommentIds() {
   if (!selectedCommentIds.value.length) return
   const validIds = new Set(comments.value.map(item => item.commentId))
@@ -1372,10 +1492,11 @@ async function deleteActivity(id) {
 }
 
 async function loadContentData() {
-  const [noticeData, newsData, placeData, bannerData, placeReviewData, videoData] = await Promise.all([
+  const [noticeData, newsData, placeData, pendingPlaceData, bannerData, placeReviewData, videoData] = await Promise.all([
     api.adminNotices(),
     api.adminNews(),
     api.adminPlaces(),
+    api.adminPendingPlaces(),
     api.adminBanners(),
     api.adminPlaceReviews(),
     api.adminVideos()
@@ -1383,6 +1504,7 @@ async function loadContentData() {
   notices.value = noticeData
   newsList.value = newsData
   places.value = placeData
+  pendingPlaces.value = pendingPlaceData || []
   banners.value = bannerData
   placeReviews.value = placeReviewData || []
   videos.value = videoData || []
@@ -1391,7 +1513,25 @@ async function loadContentData() {
 }
 
 async function loadReports() {
-  reports.value = await api.adminReports()
+  reports.value = await api.adminReports(buildReportParams())
+}
+
+function buildReportParams() {
+  const params = {}
+  if (reportFilters.status !== 'all') params.status = reportFilters.status
+  if (reportFilters.targetType !== 'all') params.targetType = reportFilters.targetType
+  const now = Date.now()
+  const rangeMs = {
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000
+  }[reportFilters.timeRange]
+  if (rangeMs) params.startTime = new Date(now - rangeMs).toISOString()
+  return params
+}
+
+async function applyReportFilters() {
+  await loadReports()
 }
 
 async function loadWorkbench() {
@@ -1405,20 +1545,22 @@ async function loadWorkbench() {
 }
 
 async function loadReviewCenterData() {
-  const [activityData, reportData, bulletinData, placeReviewData] = await Promise.all([
+  const [activityData, reportData, bulletinData, pendingPlaceData, placeReviewData] = await Promise.all([
     api.adminActivities({ page: 1, size: 50 }),
-    api.adminReports(),
+    api.adminReports({ status: 'pending' }),
     api.adminBulletins({ type: null, status: null }),
+    api.adminPendingPlaces(),
     api.adminPlaceReviews()
   ])
   reviewActivities.value = activityData.list || []
   reports.value = reportData || []
   reviewBulletins.value = bulletinData || []
+  pendingPlaces.value = pendingPlaceData || []
   placeReviews.value = placeReviewData || []
 }
 
-async function handleReport(item, status) {
-  const handleNote = status === '2' ? (prompt('请输入驳回说明（可选）') || '') : (prompt('请输入处理说明（可选）') || '')
+async function handleReport(item, status, templateKey = '') {
+  const handleNote = resolveReviewNote({ ...item, type: 'report' }, status === '2' ? 'reject' : 'done', templateKey)
   await api.adminHandleReport(item.reportId, { status, handleNote })
   await Promise.all([loadReports(), loadReviewCenterData()])
 }
@@ -1778,8 +1920,8 @@ async function deleteNotice(id) {
   await loadContentData()
 }
 
-async function reviewBulletin(item, status) {
-  const rejectReason = status === '2' ? prompt('请输入驳回原因（可选）') || '' : ''
+async function reviewBulletin(item, status, templateKey = '') {
+  const rejectReason = status === '2' ? resolveReviewNote({ ...item, type: 'bulletin' }, 'reject', templateKey) : ''
   await api.adminReviewBulletin(item.bulletinId, { status, rejectReason })
   await Promise.all([loadContentData(), loadReviewCenterData()])
 }
@@ -1833,6 +1975,13 @@ async function deletePlaceReview(id) {
   await Promise.all([loadContentData(), loadReviewCenterData()])
 }
 
+async function reviewPlaceContribution(item, status, templateKey = '') {
+  const action = status === 'APPROVED' ? 'approve' : 'reject'
+  const note = resolveReviewNote({ ...item, type: 'placeContribution' }, action, templateKey)
+  await api.adminReviewPlace(item.placeId, { status, note })
+  await Promise.all([loadContentData(), loadReviewCenterData()])
+}
+
 async function deleteVideo(id) {
   await api.adminDeleteVideo(id)
   await loadContentData()
@@ -1842,7 +1991,7 @@ function viewReviewItem(item) {
   openReviewDrawer(item)
 }
 
-async function handleReviewCardAction(item, action) {
+async function handleReviewCardAction(item, action, templateKey = '') {
   if (item.type === 'activity') {
     const source = reviewActivities.value.find(i => `activity-${i.activityId}` === item.id)
     if (!source) return
@@ -1854,15 +2003,22 @@ async function handleReviewCardAction(item, action) {
     const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
     if (!source) return
     if (action === 'approve') return reviewBulletin(source, '1')
-    if (action === 'reject') return reviewBulletin(source, '2')
+    if (action === 'reject') return reviewBulletin(source, '2', templateKey)
     if (action === 'view') return viewReviewItem(item)
   }
   if (item.type === 'report') {
     const source = reports.value.find(i => `report-${i.reportId}` === item.id)
     if (!source) return
-    if (action === 'done') return handleReport(source, '1')
-    if (action === 'reject') return handleReport(source, '2')
+    if (action === 'done') return handleReport(source, '1', templateKey)
+    if (action === 'reject') return handleReport(source, '2', templateKey)
     if (action === 'delete') return deleteReportedTarget(source)
+    if (action === 'view') return viewReviewItem(item)
+  }
+  if (item.type === 'placeContribution') {
+    const source = pendingPlaces.value.find(i => `place-contribution-${i.placeId}` === item.id)
+    if (!source) return
+    if (action === 'approve') return reviewPlaceContribution(source, 'APPROVED')
+    if (action === 'reject') return reviewPlaceContribution(source, 'REJECTED', templateKey)
     if (action === 'view') return viewReviewItem(item)
   }
   if (item.type === 'placeReview') {
@@ -2202,6 +2358,40 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="tab === 'analytics'" class="card analytics-panel">
+        <div class="analytics-grid">
+          <div class="viz-card">
+            <h3>产品健康</h3>
+            <div v-if="!(analytics.productTrend7d || []).length" class="muted">暂无产品事件</div>
+            <div v-else class="mini-row">
+              <div>
+                <strong>{{ analytics.productTrend7d.reduce((sum, item) => sum + Number(item.activeUsers || 0), 0) }}</strong>
+                <p>近 7 天活跃用户触点</p>
+              </div>
+              <div>
+                <strong>{{ analytics.productTrend7d.reduce((sum, item) => sum + Number(item.aiCoachQuestions || 0), 0) }}</strong>
+                <p>AI Coach 提问</p>
+              </div>
+            </div>
+          </div>
+          <div class="viz-card">
+            <h3>活动转化</h3>
+            <div class="mini-row">
+              <div>
+                <strong>{{ analytics.activityConversion?.rate || 0 }}%</strong>
+                <p>浏览到报名 · {{ analytics.activityConversion?.signs || 0 }} / {{ analytics.activityConversion?.views || 0 }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="viz-card">
+            <h3>模块触点</h3>
+            <div v-for="item in analytics.moduleUsage || []" :key="`module-${item.module}`" class="mini-row">
+              <div>
+                <strong>{{ item.module }}</strong>
+                <p>{{ item.value || 0 }} 次</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="viz-card">
           <h3>近 7 天运营趋势</h3>
           <div v-if="!(analytics.trend7d || []).length" class="muted">暂无趋势数据</div>
@@ -2296,6 +2486,7 @@ onBeforeUnmount(() => {
             <option value="activity">活动</option>
             <option value="bulletin">快讯</option>
             <option value="report">举报</option>
+            <option value="placeContribution">场地贡献</option>
             <option value="placeReview">场地评价</option>
           </select>
           <select v-model="reviewTimeFilter">
@@ -2324,6 +2515,10 @@ onBeforeUnmount(() => {
           <div class="review-kpi-card">
             <p>举报（当前结果）</p>
             <strong>{{ pendingCounts.report }}</strong>
+          </div>
+          <div class="review-kpi-card">
+            <p>场地贡献（当前结果）</p>
+            <strong>{{ pendingCounts.placeContribution }}</strong>
           </div>
           <div class="review-kpi-card">
             <p>场地评价（当前结果）</p>
@@ -2408,6 +2603,14 @@ onBeforeUnmount(() => {
                 <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回举报</button>
                 <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除违规内容</button>
               </template>
+              <template v-else-if="item.type === 'placeContribution'">
+                <button class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
+                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
+                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
+                </button>
+                <button class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
+              </template>
               <template v-else-if="item.type === 'placeReview'">
                 <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
                 <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
@@ -2441,6 +2644,20 @@ onBeforeUnmount(() => {
               <div v-if="reviewDrawerItem.historyNote" class="review-drawer-block">
                 <strong>历史处理备注</strong>
                 <p>{{ reviewDrawerItem.historyNote }}</p>
+              </div>
+              <div v-if="reviewDrawerItem.status === '0' && reviewDrawerTemplates.length" class="review-drawer-block">
+                <strong>处理原因模板</strong>
+                <div class="template-chip-row">
+                  <button
+                    v-for="template in reviewDrawerTemplates"
+                    :key="template.key"
+                    type="button"
+                    class="template-chip"
+                    @click="handleReviewCardAction(reviewDrawerItem, template.actions.includes('done') ? 'done' : 'reject', template.key)"
+                  >
+                    {{ template.label }}
+                  </button>
+                </div>
               </div>
               <div v-if="moderationResultKey === reviewDrawerItem.id && moderationResult" class="review-drawer-block moderation-block">
                 <strong>AI 审核建议</strong>
@@ -2847,6 +3064,18 @@ onBeforeUnmount(() => {
           </div>
           <span class="muted">{{ reports.length }} 条记录</span>
         </div>
+        <div class="filter-row report-filter-row">
+          <select v-model="reportFilters.status" @change="applyReportFilters">
+            <option v-for="item in reportStatusOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+          </select>
+          <select v-model="reportFilters.targetType" @change="applyReportFilters">
+            <option v-for="item in reportTargetTypeOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+          </select>
+          <select v-model="reportFilters.timeRange" @change="applyReportFilters">
+            <option v-for="item in reportTimeOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+          </select>
+          <button class="btn-soft" @click="applyReportFilters">刷新举报</button>
+        </div>
         <div v-if="!reports.length" class="muted">暂无举报记录</div>
         <div v-for="item in reports" :key="item.reportId" class="data-row">
           <div>
@@ -2861,6 +3090,7 @@ onBeforeUnmount(() => {
           <div class="row-actions">
             <button v-if="item.status === '0'" class="btn-soft" @click="handleReport(item, '1')">标记已处理</button>
             <button v-if="item.status === '0'" class="btn-soft" @click="handleReport(item, '2')">驳回举报</button>
+            <button v-if="item.status === '0'" class="btn-soft" @click="handleReport(item, '3', 'false-report')">标记误报</button>
             <button class="btn-danger" @click="deleteReportedTarget(item)">删除违规内容</button>
           </div>
         </div>
@@ -4030,6 +4260,27 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 
+.template-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-chip {
+  padding: 7px 10px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 999px;
+  background: rgba(240, 253, 250, 0.86);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.template-chip:hover {
+  background: #ccfbf1;
+}
+
 .review-drawer-actions {
   border-top: 1px solid var(--line);
   padding: 12px 16px;
@@ -4638,6 +4889,18 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px 12px;
   margin-bottom: 12px;
+}
+
+.report-filter-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.report-filter-row select,
+.report-filter-row button {
+  min-height: 40px;
 }
 
 .news-batch-bar {

@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login/user",
                                 "/api/auth/login/admin").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**", "/upload/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/skate/tricks",

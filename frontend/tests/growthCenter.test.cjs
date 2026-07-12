@@ -53,7 +53,7 @@ assert.match(growth, /onBeforeUnmount/, 'outstanding requests are invalidated on
 assert.match(growth, /millisecondsUntilNextShanghaiMidnight/, 'mounted component schedules the next Shanghai midnight')
 assert.match(growth, /clearTimeout\(/, 'midnight timer is cleaned up')
 assert.match(growth, /freshToday[^\n]*!==[^\n]*todayKey\.value/, 'check-in compares a fresh Shanghai date before using status')
-assert.match(growth, /:aria-pressed="boardType === 'total'"/, 'leaderboard toggles expose pressed state')
+assert.match(growth, /:aria-pressed="boardType === item\.key"/, 'leaderboard toggles expose pressed state')
 assert.match(growth, /重试/, 'failed sections expose retry actions')
 assert.match(growth, /暂无[^<]*(排行|徽章)/, 'stable empty state is rendered')
 assert.match(growth, /baseExp|baseExperience/, 'check-in success reports base experience')

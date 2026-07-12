@@ -30,6 +30,18 @@ public class Place {
 
     private Integer reviewCount = 0;
 
+    private Long submittedByUserId;
+
+    @Column(length = 20)
+    private String verificationStatus;
+
+    @Column(length = 200)
+    private String verificationNote;
+
+    private Long verifiedByAdminId;
+
+    private LocalDateTime verifiedTime;
+
     private LocalDateTime createTime;
 
     @PrePersist
@@ -42,6 +54,9 @@ public class Place {
         }
         if (reviewCount == null) {
             reviewCount = 0;
+        }
+        if (verificationStatus == null || verificationStatus.isBlank()) {
+            verificationStatus = "APPROVED";
         }
     }
 }

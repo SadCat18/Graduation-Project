@@ -17,11 +17,15 @@ import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.InputValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +34,10 @@ import java.util.Set;
 public class ReportService {
 
     private static final Set<String> TARGET_TYPES = Set.of("POST", "COMMENT", "BULLETIN");
-    private static final Set<String> REASONS = Set.of("广告", "辱骂", "人身攻击", "虚假信息", "违法违规", "其他");
+    private static final Set<String> REASONS = Set.of(
+            "广告", "辱骂", "人身攻击", "虚假信息", "违法违规", "其他",
+            "spam", "harassment", "unsafe offline activity", "duplicate content", "irrelevant content", "false report"
+    );
 
     private final ReportRecordRepository reportRecordRepository;
     private final PostRepository postRepository;
@@ -60,7 +67,29 @@ public class ReportService {
     }
 
     public List<Map<String, Object>> adminList() {
-        return reportRecordRepository.findAllByOrderByCreateTimeDesc().stream()
+        return adminList(null, null, null, null);
+    }
+
+    public List<Map<String, Object>> adminList(String status, String targetType, LocalDateTime startTime, LocalDateTime endTime) {
+        Specification<ReportRecord> spec = (root, query, builder) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            String normalizedStatus = normalizeAdminStatusFilter(status);
+            if (normalizedStatus != null) {
+                predicates.add(builder.equal(root.get("status"), normalizedStatus));
+            }
+            String normalizedTargetType = normalizeOptionalTargetType(targetType);
+            if (normalizedTargetType != null) {
+                predicates.add(builder.equal(root.get("targetType"), normalizedTargetType));
+            }
+            if (startTime != null) {
+                predicates.add(builder.greaterThanOrEqualTo(root.get("createTime"), startTime));
+            }
+            if (endTime != null) {
+                predicates.add(builder.lessThanOrEqualTo(root.get("createTime"), endTime));
+            }
+            return builder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        return reportRecordRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createTime")).stream()
                 .map(this::toAdminVO)
                 .toList();
     }
@@ -69,7 +98,7 @@ public class ReportService {
         InputValidator.positiveId(reportId, "举报ID");
         ReportRecord record = reportRecordRepository.findById(reportId)
                 .orElseThrow(() -> new BizException("举报记录不存在"));
-        if (!"1".equals(status) && !"2".equals(status)) {
+        if (!"1".equals(status) && !"2".equals(status) && !"3".equals(status)) {
             throw new BizException("处理状态不合法");
         }
         record.setStatus(status);
@@ -186,7 +215,31 @@ public class ReportService {
         if ("2".equals(status)) {
             return "已驳回";
         }
+        if ("3".equals(status)) {
+            return "误报";
+        }
         return "待处理";
+    }
+
+    private String normalizeAdminStatusFilter(String value) {
+        if (!StringUtils.hasText(value) || "all".equalsIgnoreCase(value.trim())) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "0", "pending" -> "0";
+            case "1", "handled", "done" -> "1";
+            case "2", "rejected" -> "2";
+            case "3", "false", "false_report", "false-report" -> "3";
+            default -> throw new BizException("举报状态筛选不合法");
+        };
+    }
+
+    private String normalizeOptionalTargetType(String value) {
+        if (!StringUtils.hasText(value) || "all".equalsIgnoreCase(value.trim())) {
+            return null;
+        }
+        return normalizeTargetType(value);
     }
 
     private String trimToNull(String value) {

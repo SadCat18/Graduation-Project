@@ -18,25 +18,28 @@ public class UserTrainingRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recordId;
 
-    @Column(nullable = false)
+    @Column(name = "user_plan_id", nullable = false)
     private Long userPlanId;
 
-    @Column(nullable = false)
+    @Column(name = "task_id", nullable = false)
     private Long taskId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "practice_minutes")
     private Integer practiceMinutes;
 
-    @Column(columnDefinition = "text")
+    @Column(name = "content", columnDefinition = "text")
     private String content;
 
-    @Column(length = 1000)
+    @Column(name = "media_urls", length = 1000)
     private String mediaUrls;
 
+    @Column(name = "exp_awarded")
     private Integer expAwarded = 0;
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
     @PrePersist

@@ -4,6 +4,7 @@ import com.skatehub.pojo.ai.AiModerationSuggestRequest;
 import com.skatehub.pojo.ai.AiModerationSuggestResponse;
 import com.skatehub.pojo.ai.AiRequest;
 import com.skatehub.pojo.ai.AiResponse;
+import com.skatehub.service.ModerationRuleService;
 import com.skatehub.util.AiUtils;
 import com.skatehub.util.BizException;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,14 @@ public class AiModerationAssistantService {
     private static final List<String> ALLOWED_RISK_LEVELS = List.of("LOW", "MEDIUM", "HIGH");
 
     private final AiGatewayService aiGatewayService;
+    private final ModerationRuleService moderationRuleService;
 
     public AiModerationSuggestResponse suggest(AiModerationSuggestRequest request) {
         validateRequest(request);
+        AiModerationSuggestResponse ruleResult = moderationRuleService.evaluate(request);
+        if ("HIGH".equals(ruleResult.getRiskLevel())) {
+            return ruleResult;
+        }
 
         AiResponse response;
         try {

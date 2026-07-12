@@ -41,6 +41,45 @@ public final class AiUtils {
         return MAPPER.readValue(unwrapJson(content), clazz);
     }
 
+    public static String extractFirstJsonObject(String content) {
+        String text = unwrapJson(content);
+        int start = text.indexOf('{');
+        if (start < 0) {
+            return text.trim();
+        }
+
+        boolean inString = false;
+        boolean escaped = false;
+        int depth = 0;
+        for (int i = start; i < text.length(); i++) {
+            char current = text.charAt(i);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (current == '\\' && inString) {
+                escaped = true;
+                continue;
+            }
+            if (current == '"') {
+                inString = !inString;
+                continue;
+            }
+            if (inString) {
+                continue;
+            }
+            if (current == '{') {
+                depth++;
+            } else if (current == '}') {
+                depth--;
+                if (depth == 0) {
+                    return text.substring(start, i + 1).trim();
+                }
+            }
+        }
+        return text.substring(start).trim();
+    }
+
     public static List<String> normalizeList(List<String> source) {
         if (source == null) return List.of();
         Set<String> normalized = new LinkedHashSet<>();

@@ -166,6 +166,9 @@ CREATE TABLE IF NOT EXISTS tb_video (
   cover VARCHAR(255),
   url VARCHAR(255) NOT NULL,
   intro TEXT,
+  creator_series VARCHAR(100),
+  trick_tags VARCHAR(255),
+  quality_score INT DEFAULT 0,
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -258,6 +261,11 @@ CREATE TABLE IF NOT EXISTS tb_place (
   intro TEXT,
   score DECIMAL(2,1) DEFAULT 0.0,
   review_count INT DEFAULT 0,
+  submitted_by_user_id BIGINT,
+  verification_status VARCHAR(20) DEFAULT 'APPROVED',
+  verification_note VARCHAR(200),
+  verified_by_admin_id BIGINT,
+  verified_time DATETIME,
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -905,3 +913,46 @@ WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '低�
 INSERT INTO tb_skate_equipment (equipment_name, category, brand, cover_url, price_range, suitable_level, spec_params, description, buy_url, status)
 SELECT '碗池训练头盔', '护具', 'SkateHub Safe', 'https://images.pexels.com/photos/27733613/pexels-photo-27733613.jpeg?auto=compress&cs=tinysrgb&w=900', '150-350', '新手/进阶', 'ABS 外壳；EPS 缓冲；可调节头围', '练 Drop In、碗池和坡面时建议佩戴，降低头部受伤风险。', 'https://www.jd.com', '1'
 WHERE NOT EXISTS (SELECT 1 FROM tb_skate_equipment WHERE equipment_name = '碗池训练头盔');
+
+-- 装备库图片修正：使用本地装备棚拍图，避免滑板场景图、坏链或远程防盗链
+UPDATE tb_skate_equipment SET cover_url = '/equipment/maple-deck-80.png'
+WHERE equipment_name = '8.0 英寸枫木板面';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/street-wheels-99a.png'
+WHERE equipment_name = '99A 街式轮子';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/protective-pads-set.png'
+WHERE equipment_name = '基础护具三件套';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/light-deck-775.png'
+WHERE equipment_name = '7.75 英寸轻量板面';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/stable-deck-825.png'
+WHERE equipment_name = '8.25 英寸稳定板面';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/hollow-street-truck.png'
+WHERE equipment_name = '中空街式桥';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/stable-truck.png'
+WHERE equipment_name = '新手稳定桥';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/soft-cruiser-wheels-78a.png'
+WHERE equipment_name = '78A 刷街软轮';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/abec7-bearings.png'
+WHERE equipment_name = 'ABEC-7 轴承';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/ceramic-speed-bearings.png'
+WHERE equipment_name = '陶瓷高速轴承';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/grip-tape.png'
+WHERE equipment_name = '粗砂防滑砂纸';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/skate-tool.png'
+WHERE equipment_name = '滑板专用 T 型工具';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/skate-shoes.png'
+WHERE equipment_name = '低帮耐磨滑板鞋';
+
+UPDATE tb_skate_equipment SET cover_url = '/equipment/helmet.png'
+WHERE equipment_name = '碗池训练头盔';

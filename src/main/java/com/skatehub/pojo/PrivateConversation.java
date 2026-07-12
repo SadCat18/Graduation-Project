@@ -17,21 +17,25 @@ public class PrivateConversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long conversationId;
 
-    @Column(nullable = false)
+    @Column(name = "user_a_id", nullable = false)
     private Long userAId;
 
-    @Column(nullable = false)
+    @Column(name = "user_b_id", nullable = false)
     private Long userBId;
 
+    @Column(name = "last_message_id")
     private Long lastMessageId;
 
-    @Column(length = 200)
+    @Column(name = "last_message_content", length = 200)
     private String lastMessageContent;
 
+    @Column(name = "last_message_time")
     private LocalDateTime lastMessageTime;
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
+    @Column(name = "update_time")
     private LocalDateTime updateTime;
 
     @PrePersist

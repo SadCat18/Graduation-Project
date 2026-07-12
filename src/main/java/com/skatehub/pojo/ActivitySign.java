@@ -30,6 +30,16 @@ public class ActivitySign {
     @Column(length = 1)
     private String isCheckin = "0";
 
+    @Column(length = 1)
+    private String arrivalConfirmed = "0";
+
+    @Column(length = 1)
+    private String returnConfirmed = "0";
+
+    private LocalDateTime arrivalConfirmTime;
+
+    private LocalDateTime returnConfirmTime;
+
     @PrePersist
     public void prePersist() {
         if (signTime == null) {
@@ -40,6 +50,12 @@ public class ActivitySign {
         }
         if (signStatus == null) {
             signStatus = "0";
+        }
+        if (arrivalConfirmed == null) {
+            arrivalConfirmed = "0";
+        }
+        if (returnConfirmed == null) {
+            returnConfirmed = "0";
         }
     }
 }

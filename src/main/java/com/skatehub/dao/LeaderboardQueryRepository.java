@@ -112,6 +112,55 @@ public class LeaderboardQueryRepository {
             ) scored
             """;
 
+    private static final String ACTION_SCORED_SQL = """
+            SELECT u.user_id,
+                   u.username,
+                   u.avatar,
+                   SUM(g.exp_gain) AS action_score,
+                   MAX(g.create_time) AS last_gain_time,
+                   LEAST(10, FLOOR(IFNULL(u.exp, 0) / 100) + 1) AS level
+            FROM tb_user u
+            JOIN tb_user_growth_log g ON g.user_id = u.user_id
+            WHERE u.status = '0'
+              AND g.action_type IN (:actions)
+            GROUP BY u.user_id, u.username, u.avatar, u.exp
+            HAVING SUM(g.exp_gain) > 0
+            """;
+
+    public static final String ACTION_RANKED_SQL = """
+            SELECT ROW_NUMBER() OVER (
+                       ORDER BY action_score DESC, last_gain_time ASC, user_id ASC
+                   ) AS rank_no,
+                   user_id, username, avatar, action_score AS score, level
+            FROM (
+            """ + ACTION_SCORED_SQL + """
+            ) scored
+            """;
+
+    public static final String ACTION_PAGE_SQL = """
+            SELECT rank_no, user_id, username, avatar, score, level
+            FROM (
+            """ + ACTION_RANKED_SQL + """
+            ) ranked
+            ORDER BY rank_no
+            LIMIT :limit OFFSET :offset
+            """;
+
+    public static final String ACTION_USER_SQL = """
+            SELECT rank_no, user_id, username, avatar, score, level
+            FROM (
+            """ + ACTION_RANKED_SQL + """
+            ) ranked
+            WHERE ranked.user_id = :userId
+            """;
+
+    public static final String ACTION_COUNT_SQL = """
+            SELECT COUNT(*)
+            FROM (
+            """ + ACTION_SCORED_SQL + """
+            ) scored
+            """;
+
     private static final RowMapper<LeaderboardEntry> ENTRY_ROW_MAPPER = (resultSet, rowNum) ->
             new LeaderboardEntry(
                     resultSet.getLong("rank_no"),
@@ -156,10 +205,31 @@ public class LeaderboardQueryRepository {
         return first(jdbcTemplate.query(WEEKLY_USER_SQL, parameters, ENTRY_ROW_MAPPER));
     }
 
+    public List<LeaderboardEntry> findByActions(List<String> actions, int offset, int limit) {
+        MapSqlParameterSource parameters = actionParameters(actions)
+                .addValue("offset", offset)
+                .addValue("limit", limit);
+        return jdbcTemplate.query(ACTION_PAGE_SQL, parameters, ENTRY_ROW_MAPPER);
+    }
+
+    public long countByActions(List<String> actions) {
+        return count(ACTION_COUNT_SQL, actionParameters(actions));
+    }
+
+    public Optional<LeaderboardEntry> findUserByActions(Long userId, List<String> actions) {
+        MapSqlParameterSource parameters = actionParameters(actions)
+                .addValue("userId", userId);
+        return first(jdbcTemplate.query(ACTION_USER_SQL, parameters, ENTRY_ROW_MAPPER));
+    }
+
     private MapSqlParameterSource weeklyParameters(LocalDateTime weekStart, LocalDateTime weekEnd) {
         return new MapSqlParameterSource()
                 .addValue("weekStart", weekStart)
                 .addValue("weekEnd", weekEnd);
+    }
+
+    private MapSqlParameterSource actionParameters(List<String> actions) {
+        return new MapSqlParameterSource().addValue("actions", actions);
     }
 
     private long count(String sql, Map<String, ?> parameters) {

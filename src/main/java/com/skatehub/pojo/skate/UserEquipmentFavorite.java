@@ -18,12 +18,13 @@ public class UserEquipmentFavorite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long favoriteId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "equipment_id", nullable = false)
     private Long equipmentId;
 
+    @Column(name = "create_time")
     private LocalDateTime createTime;
 
     @PrePersist

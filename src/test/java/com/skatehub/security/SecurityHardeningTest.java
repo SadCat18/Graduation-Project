@@ -31,6 +31,8 @@ import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -119,6 +121,19 @@ class SecurityHardeningTest {
                 24,
                 environment
         )).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void defaultApplicationConfigDoesNotShipProductionSecretsOrDdlUpdate() throws Exception {
+        String config = Files.readString(Path.of("src/main/resources/application.yml"));
+        String pom = Files.readString(Path.of("pom.xml"));
+
+        assertThat(config).doesNotContain("root@123456");
+        assertThat(config).doesNotContain(JwtTokenService.DEFAULT_SECRET);
+        assertThat(config).doesNotContain("ddl-auto: update");
+        assertThat(config).contains("${DB_URL:}");
+        assertThat(config).contains("${JWT_SECRET:}");
+        assertThat(pom).contains("spring-boot-starter-actuator");
     }
 
     @Test

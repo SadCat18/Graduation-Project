@@ -36,6 +36,10 @@ assert.doesNotMatch(
 )
 assert.match(home, /name="arrow-left"/, 'carousel previous button uses an icon')
 assert.match(home, /name="arrow-right"/, 'carousel next button uses an icon')
+assert.match(home, /home-feed-grid/, 'home feed grid opts out of equal-height stretching')
+assert.match(home, /align-items:\s*start/, 'home feed grid keeps empty cards compact')
+assert.match(home, /feed-item-no-cover/, 'home feed cards collapse the media column when no cover image exists')
+assert.match(home, /home-compact-empty/, 'home feed cards show compact empty states instead of blank panels')
 
 assert.doesNotMatch(styles, /transition:\s*all\b/, 'global CSS avoids transition: all')
 assert.doesNotMatch(styles, /will-change:\s*transform,\s*opacity/, 'card animations avoid permanent will-change hints')

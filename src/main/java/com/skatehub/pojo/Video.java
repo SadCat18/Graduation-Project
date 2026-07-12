@@ -31,12 +31,23 @@ public class Video {
     @Column(columnDefinition = "text")
     private String intro;
 
+    @Column(length = 100)
+    private String creatorSeries;
+
+    @Column(length = 255)
+    private String trickTags;
+
+    private Integer qualityScore = 0;
+
     private LocalDateTime createTime;
 
     @PrePersist
     public void prePersist() {
         if (createTime == null) {
             createTime = LocalDateTime.now();
+        }
+        if (qualityScore == null) {
+            qualityScore = 0;
         }
     }
 }
