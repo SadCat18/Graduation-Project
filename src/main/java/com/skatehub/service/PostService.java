@@ -16,7 +16,7 @@ import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.InputValidator;
 import com.skatehub.util.PageResult;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class PostService {
 
     private static final Set<String> PUBLIC_SORTS = Set.of("latest", "hot", "likes", "comments");
@@ -43,6 +42,25 @@ public class PostService {
     private final UserGrowthService userGrowthService;
     private final ApplicationEventPublisher eventPublisher;
     private final ModerationRuleService moderationRuleService;
+
+    @Autowired
+    public PostService(PostRepository postRepository,
+                       CommentRepository commentRepository,
+                       UserRepository userRepository,
+                       InteractionRepository interactionRepository,
+                       MessageNotifyService messageNotifyService,
+                       UserGrowthService userGrowthService,
+                       ApplicationEventPublisher eventPublisher,
+                       ModerationRuleService moderationRuleService) {
+        this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
+        this.interactionRepository = interactionRepository;
+        this.messageNotifyService = messageNotifyService;
+        this.userGrowthService = userGrowthService;
+        this.eventPublisher = eventPublisher;
+        this.moderationRuleService = moderationRuleService;
+    }
 
     public PostService(PostRepository postRepository,
                        CommentRepository commentRepository,
