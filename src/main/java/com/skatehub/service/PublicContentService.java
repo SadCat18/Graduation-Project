@@ -22,7 +22,7 @@ import com.skatehub.util.BizException;
 import com.skatehub.util.InputValidator;
 import com.skatehub.util.NewsStatus;
 import com.skatehub.util.PlaceVerificationStatus;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 @Service
-@RequiredArgsConstructor
 public class PublicContentService {
 
     private final NoticeRepository noticeRepository;
@@ -48,6 +47,29 @@ public class PublicContentService {
     private final SkateTrickRepository skateTrickRepository;
     private final CommunityBulletinService communityBulletinService;
     private final PlaceReviewService placeReviewService;
+
+    @Autowired
+    public PublicContentService(NoticeRepository noticeRepository,
+                                NewsRepository newsRepository,
+                                PlaceRepository placeRepository,
+                                VideoRepository videoRepository,
+                                BannerRepository bannerRepository,
+                                ActivityRepository activityRepository,
+                                PostRepository postRepository,
+                                SkateTrickRepository skateTrickRepository,
+                                CommunityBulletinService communityBulletinService,
+                                PlaceReviewService placeReviewService) {
+        this.noticeRepository = noticeRepository;
+        this.newsRepository = newsRepository;
+        this.placeRepository = placeRepository;
+        this.videoRepository = videoRepository;
+        this.bannerRepository = bannerRepository;
+        this.activityRepository = activityRepository;
+        this.postRepository = postRepository;
+        this.skateTrickRepository = skateTrickRepository;
+        this.communityBulletinService = communityBulletinService;
+        this.placeReviewService = placeReviewService;
+    }
 
     public PublicContentService(NoticeRepository noticeRepository,
                                 NewsRepository newsRepository,
