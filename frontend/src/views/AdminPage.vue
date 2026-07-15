@@ -1,9 +1,11 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { BULLETIN_TYPES } from '../constants/bulletin'
+
+const AdminReviewPanel = defineAsyncComponent(() => import('./admin/AdminReviewPanel.vue'))
 
 const tab = ref('workbench')
 const reviewCenterTab = ref('all')
@@ -2466,240 +2468,35 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="tab === 'reviewCenter'" class="review-center">
-        <div class="card module-section-head compact">
-          <div>
-            <span class="section-kicker">集中审核</span>
-            <h3>统一处理活动、快讯、举报和场地评价</h3>
-          </div>
-          <span class="muted">待办 {{ pendingReviewTotal }} 条</span>
-        </div>
-        <div class="card review-filter-bar">
-          <select v-model="reviewStatusFilter">
-            <option value="all">状态：全部</option>
-            <option value="pending">状态：待处理</option>
-            <option value="approved">状态：已通过/已处理</option>
-            <option value="rejected">状态：已驳回</option>
-          </select>
-          <select v-model="reviewTypeFilter">
-            <option value="all">类型：全部</option>
-            <option value="activity">活动</option>
-            <option value="bulletin">快讯</option>
-            <option value="report">举报</option>
-            <option value="placeContribution">场地贡献</option>
-            <option value="placeReview">场地评价</option>
-          </select>
-          <select v-model="reviewTimeFilter">
-            <option value="all">时间：全部</option>
-            <option value="today">今天</option>
-            <option value="7d">近 7 天</option>
-            <option value="30d">近 30 天</option>
-          </select>
-          <input
-            v-model="reviewKeyword"
-            type="text"
-            placeholder="关键词：标题/发布人/举报原因"
-          />
-          <button class="btn-soft" @click="resetReviewFilters">重置筛选</button>
-        </div>
-
-        <div class="card review-kpi-grid">
-          <div class="review-kpi-card">
-            <p>活动（当前结果）</p>
-            <strong>{{ pendingCounts.activity }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>快讯（当前结果）</p>
-            <strong>{{ pendingCounts.bulletin }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>举报（当前结果）</p>
-            <strong>{{ pendingCounts.report }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>场地贡献（当前结果）</p>
-            <strong>{{ pendingCounts.placeContribution }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>场地评价（当前结果）</p>
-            <strong>{{ pendingCounts.placeReview }}</strong>
-          </div>
-        </div>
-
-        <div class="card review-tabs">
-          <button
-            v-for="item in reviewCenterTabs"
-            :key="item.key"
-            class="btn-soft"
-            :class="{ active: reviewCenterTab === item.key }"
-            @click="reviewCenterTab = item.key"
-          >
-            {{ item.label }}
-          </button>
-        </div>
-
-        <div class="card content-list">
-          <div class="review-batch-bar">
-            <label class="review-check-all">
-              <input
-                type="checkbox"
-                :checked="allFilteredSelected"
-                @change="toggleSelectAllFiltered($event.target.checked)"
-              />
-              <span>全选当前列表</span>
-            </label>
-            <span class="muted">已选 {{ selectedReviewCards.length }} 条</span>
-            <button class="btn-primary" :disabled="!canBatchApproveOrReject" @click="batchReview('approve')">批量通过</button>
-            <button class="btn-soft" :disabled="!canBatchApproveOrReject" @click="batchReview('reject')">批量驳回</button>
-          </div>
-          <div v-if="!filteredReviewCards.length" class="muted">未找到匹配项，请调整筛选条件或关键词。</div>
-          <div v-for="item in filteredReviewCards" :key="item.id" class="review-card">
-            <div class="review-card-main">
-              <div class="review-card-head">
-                <label class="review-select">
-                  <input
-                    type="checkbox"
-                    :checked="selectedReviewIds.includes(item.id)"
-                    @change="toggleSelectReview(item.id, $event.target.checked)"
-                  />
-                </label>
-                <span class="status-chip">{{ item.typeLabel }}</span>
-                <span class="status-chip">{{ item.statusLabel }}</span>
-              </div>
-              <h3 class="review-title clamp-2">{{ item.title }}</h3>
-              <p class="review-meta">发布人：{{ item.actor }}</p>
-            </div>
-
-            <div class="review-card-judge">
-              <p class="review-meta">发布时间：{{ item.time }}</p>
-              <p class="review-summary clamp-3">{{ item.summary }}</p>
-              <div class="review-facts">
-                <p v-for="fact in item.facts" :key="`${item.id}-${fact.label}`">
-                  <span>{{ fact.label }}：</span>{{ fact.value }}
-                </p>
-              </div>
-            </div>
-
-            <div class="review-card-actions">
-              <template v-if="item.type === 'activity'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'bulletin'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'report'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'done')">标记已处理</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回举报</button>
-                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除违规内容</button>
-              </template>
-              <template v-else-if="item.type === 'placeContribution'">
-                <button class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'placeReview'">
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
-              </template>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="reviewDrawerVisible && reviewDrawerItem" class="review-drawer-mask" @click.self="closeReviewDrawer">
-          <aside class="review-drawer">
-            <div class="review-drawer-head">
-              <h3>审核详情</h3>
-              <button class="btn-soft" @click="closeReviewDrawer">关闭</button>
-            </div>
-            <div class="review-drawer-body">
-              <h4 class="review-drawer-title">{{ reviewDrawerItem.title }}</h4>
-              <p>类型：{{ reviewDrawerItem.typeLabel }} · 状态：{{ reviewDrawerItem.statusLabel }}</p>
-              <p>发布人/举报人：{{ reviewDrawerItem.actor }}</p>
-              <p>发布时间：{{ reviewDrawerItem.time }}</p>
-              <img v-if="reviewDrawerItem.imageUrl" :src="reviewDrawerItem.imageUrl" alt="详情图片" class="review-drawer-image" />
-              <div class="review-drawer-block">
-                <strong>完整正文</strong>
-                <p>{{ reviewDrawerItem.fullContent }}</p>
-              </div>
-              <div class="review-drawer-block">
-                <strong>业务信息</strong>
-                <p v-for="fact in reviewDrawerItem.detailFacts" :key="`drawer-${reviewDrawerItem.id}-${fact.label}`">
-                  <span>{{ fact.label }}：</span>{{ fact.value }}
-                </p>
-              </div>
-              <div v-if="reviewDrawerItem.historyNote" class="review-drawer-block">
-                <strong>历史处理备注</strong>
-                <p>{{ reviewDrawerItem.historyNote }}</p>
-              </div>
-              <div v-if="reviewDrawerItem.status === '0' && reviewDrawerTemplates.length" class="review-drawer-block">
-                <strong>处理原因模板</strong>
-                <div class="template-chip-row">
-                  <button
-                    v-for="template in reviewDrawerTemplates"
-                    :key="template.key"
-                    type="button"
-                    class="template-chip"
-                    @click="handleReviewCardAction(reviewDrawerItem, template.actions.includes('done') ? 'done' : 'reject', template.key)"
-                  >
-                    {{ template.label }}
-                  </button>
-                </div>
-              </div>
-              <div v-if="moderationResultKey === reviewDrawerItem.id && moderationResult" class="review-drawer-block moderation-block">
-                <strong>AI 审核建议</strong>
-                <p><span>风险等级：</span>{{ moderationResult.riskLevel }}</p>
-                <p><span>处理建议：</span>{{ moderationResult.suggestion || '暂无建议' }}</p>
-                <p><span>规范摘要：</span>{{ moderationResult.normalizedSummary || '暂无摘要' }}</p>
-                <div v-if="moderationResult.riskPoints.length" class="moderation-points">
-                  <span>风险点：</span>
-                  <ul>
-                    <li v-for="point in moderationResult.riskPoints" :key="point">{{ point }}</li>
-                  </ul>
-                </div>
-                <p v-else><span>风险点：</span>未发现明显风险点</p>
-              </div>
-            </div>
-            <div class="review-drawer-actions">
-              <template v-if="reviewDrawerItem.type === 'activity'">
-                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
-                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'bulletin'">
-                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
-                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'report'">
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'done')">标记已处理</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回举报</button>
-                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除违规内容</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'placeReview'">
-                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除</button>
-              </template>
-            </div>
-          </aside>
-        </div>
-      </div>
+      <AdminReviewPanel
+        v-if="tab === 'reviewCenter'"
+        v-model:status-filter="reviewStatusFilter"
+        v-model:type-filter="reviewTypeFilter"
+        v-model:time-filter="reviewTimeFilter"
+        v-model:keyword="reviewKeyword"
+        v-model:center-tab="reviewCenterTab"
+        :pending-review-total="pendingReviewTotal"
+        :pending-counts="pendingCounts"
+        :tabs="reviewCenterTabs"
+        :all-filtered-selected="allFilteredSelected"
+        :selected-cards="selectedReviewCards"
+        :can-batch-approve-or-reject="canBatchApproveOrReject"
+        :filtered-cards="filteredReviewCards"
+        :selected-ids="selectedReviewIds"
+        :moderation-loading-key="moderationLoadingKey"
+        :drawer-visible="reviewDrawerVisible"
+        :drawer-item="reviewDrawerItem"
+        :drawer-templates="reviewDrawerTemplates"
+        :moderation-result-key="moderationResultKey"
+        :moderation-result="moderationResult"
+        @reset="resetReviewFilters"
+        @toggle-select-all="toggleSelectAllFiltered"
+        @toggle-select="toggleSelectReview"
+        @batch-review="batchReview"
+        @action="handleReviewCardAction"
+        @moderation="fetchModerationSuggestForReviewItem"
+        @close-drawer="closeReviewDrawer"
+      />
 
       <div v-if="tab === 'users'" class="card content-list">
         <div v-for="u in users" :key="u.userId" class="data-row">
