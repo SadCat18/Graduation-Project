@@ -4,14 +4,15 @@
 
 - 后端：`src/main/java/com/skatehub`
 - 前端：`frontend`
-- 数据库脚本：`database/init.sql`
+- 数据库迁移：`src/main/resources/db/migration`
 - 高德安全代理（Nginx 示例）：`deploy/nginx/amap-security.conf.example`
 - 腾讯云 Docker 部署：`docs/tencent-cloud-deploy.md`
+- 下一阶段优化操作手册：`docs/next-optimization-operation-guide.md`
 
 ## 后端启动
 
-1. 执行建库建表与初始化脚本：`database/init.sql`
-2. 配置数据库连接：`src/main/resources/application.yml`
+1. 创建空数据库，应用启动时由 Flyway 执行 `src/main/resources/db/migration` 下的版本化迁移。
+2. 配置数据库连接与生产安全环境变量：`src/main/resources/application.yml`
 3. 启动后端：
 
 ```bash
@@ -180,8 +181,8 @@ npm run serve
 
 当前项目使用：
 
-- Key：`YOUR_AMAP_KEY`
-- securityJsCode：`YOUR_AMAP_SECURITY_JS_CODE`
+- 浏览器端 Key：`YOUR_AMAP_KEY`（必须配置域名白名单）
+- 服务端代理 securityJsCode：`YOUR_AMAP_SECURITY_JS_CODE`（禁止注入前端构建产物）
 
 ### 1）配置 Nginx 反向代理
 

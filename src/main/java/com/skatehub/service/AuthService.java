@@ -12,6 +12,7 @@ import com.skatehub.util.CaptchaConstants;
 import com.skatehub.util.JwtTokenService;
 import com.skatehub.util.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,9 +24,11 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^1\\d{10}$");
+    private static final String LEGACY_DEFAULT_ADMIN_PASSWORD = "SkateHub@2026";
 
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
@@ -34,7 +37,7 @@ public class AuthService {
     private final StringRedisTemplate stringRedisTemplate;
     private final PasswordPolicy passwordPolicy;
 
-    @Value("${admin.default-password:SkateHub@2026}")
+    @Value("${admin.default-password:}")
     private String defaultAdminPassword;
 
     public void register(RegisterRequest request) {
@@ -112,7 +115,14 @@ public class AuthService {
 
     public void ensureDefaultAdmin() {
         if (adminRepository.count() > 0) {
+            log.info("Admin bootstrap skipped because an administrator already exists.");
             return;
+        }
+        if (defaultAdminPassword == null || defaultAdminPassword.isBlank()) {
+            throw new BizException("ADMIN_DEFAULT_PASSWORD must be provided when admin bootstrap is enabled");
+        }
+        if (LEGACY_DEFAULT_ADMIN_PASSWORD.equals(defaultAdminPassword)) {
+            throw new BizException("Legacy default admin password is not allowed in bootstrap");
         }
         Admin admin = new Admin();
         admin.setAccount("admin");
@@ -121,5 +131,6 @@ public class AuthService {
         admin.setRealName("系统管理员");
         admin.setRole("1");
         adminRepository.save(admin);
+        log.info("Default administrator account has been created.");
     }
 }

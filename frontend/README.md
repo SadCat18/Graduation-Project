@@ -26,8 +26,7 @@ npm run build
 ```bash
 VUE_APP_AMAP_KEY=YOUR_AMAP_KEY
 VUE_APP_AMAP_SERVICE_HOST=http://localhost:5173/_AMapService
-VUE_APP_AMAP_SECURITY_JS_CODE=YOUR_AMAP_SECURITY_JS_CODE
 VUE_APP_AMAP_NGINX=http://127.0.0.1:80
 ```
 
-3. Start nginx with the proxy config (see root `deploy/nginx/amap-security.conf.example`).
+3. Configure the security code only in nginx and start the proxy (see root `deploy/nginx/amap-security.conf.example`). Never inject the security code into the browser bundle.

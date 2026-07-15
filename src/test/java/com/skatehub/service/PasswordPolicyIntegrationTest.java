@@ -117,7 +117,7 @@ class PasswordPolicyIntegrationTest {
     }
 
     @Test
-    void defaultAdminValidatesPolicyAndStoresEncodedStrongPassword() {
+    void defaultAdminValidatesExplicitPolicyAndStoresEncodedStrongPassword() {
         AdminRepository adminRepository = mock(AdminRepository.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
         PasswordPolicy passwordPolicy = mock(PasswordPolicy.class);
@@ -129,16 +129,39 @@ class PasswordPolicyIntegrationTest {
                 mock(StringRedisTemplate.class),
                 passwordPolicy
         );
-        ReflectionTestUtils.setField(authService, "defaultAdminPassword", "SkateHub@2026");
+        ReflectionTestUtils.setField(authService, "defaultAdminPassword", "SaferAdmin@2026#Rotate");
         when(adminRepository.count()).thenReturn(0L);
-        when(passwordEncoder.encode("SkateHub@2026")).thenReturn("$2a$admin");
+        when(passwordEncoder.encode("SaferAdmin@2026#Rotate")).thenReturn("$2a$admin");
         ArgumentCaptor<Admin> adminCaptor = ArgumentCaptor.forClass(Admin.class);
 
         authService.ensureDefaultAdmin();
 
-        verify(passwordPolicy).validateAdminPassword("SkateHub@2026", null);
+        verify(passwordPolicy).validateAdminPassword("SaferAdmin@2026#Rotate", null);
         verify(adminRepository).save(adminCaptor.capture());
         assertThat(adminCaptor.getValue().getPassword()).isEqualTo("$2a$admin");
-        assertThat(adminCaptor.getValue().getPassword()).isNotEqualTo("SkateHub@2026");
+        assertThat(adminCaptor.getValue().getPassword()).isNotEqualTo("SaferAdmin@2026#Rotate");
+    }
+
+    @Test
+    void defaultAdminRejectsLegacyPassword() {
+        AdminRepository adminRepository = mock(AdminRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        AuthService authService = new AuthService(
+                mock(UserRepository.class),
+                adminRepository,
+                passwordEncoder,
+                mock(com.skatehub.util.JwtTokenService.class),
+                mock(StringRedisTemplate.class),
+                new PasswordPolicy()
+        );
+        ReflectionTestUtils.setField(authService, "defaultAdminPassword", "SkateHub@2026");
+        when(adminRepository.count()).thenReturn(0L);
+
+        assertThatThrownBy(authService::ensureDefaultAdmin)
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("Legacy default admin password");
+
+        verify(passwordEncoder, never()).encode("SkateHub@2026");
+        verify(adminRepository, never()).save(org.mockito.ArgumentMatchers.any(Admin.class));
     }
 }

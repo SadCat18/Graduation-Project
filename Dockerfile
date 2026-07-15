@@ -10,6 +10,9 @@ RUN mvn -q -DskipTests package
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.revision=$VCS_REF
+
 COPY --from=builder /workspace/target/*.jar /app/app.jar
 
 EXPOSE 8080

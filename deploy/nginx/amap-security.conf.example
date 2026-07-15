@@ -6,7 +6,7 @@ server {
 
   # Optional: custom map style proxy (keep this rule before /_AMapService/)
   location /_AMapService/v4/map/styles {
-    set $args "$args&jscode=04038403ad1a9bbe9320ee87939b86f2";
+    set $args "$args&jscode=YOUR_AMAP_SECURITY_JS_CODE";
     proxy_ssl_server_name on;
     proxy_set_header Host webapi.amap.com;
     proxy_pass https://webapi.amap.com/v4/map/styles;
@@ -14,7 +14,7 @@ server {
 
   # Required: Web service proxy
   location /_AMapService/ {
-    set $args "$args&jscode=04038403ad1a9bbe9320ee87939b86f2";
+    set $args "$args&jscode=YOUR_AMAP_SECURITY_JS_CODE";
     proxy_ssl_server_name on;
     proxy_set_header Host restapi.amap.com;
     proxy_pass https://restapi.amap.com/;

@@ -4,6 +4,9 @@ target/
 # frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.env.development
+frontend/playwright-report/
+frontend/test-results/
 deploy/docker/.env
 
 # root node
@@ -14,6 +17,8 @@ node_modules/
 frontend/.playwright-cli/
 output/
 tmp/
+backups/
+upload/
 *.log
 
 # isolated feature worktrees
