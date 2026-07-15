@@ -8,6 +8,7 @@ const props = defineProps({
 })
 
 const iconMap = {
+  // Reserved fallback icon. Keep this entry because unknown names resolve here.
   circle: ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0'],
   skateboard: [
     'M4 11c0-2 2-3 4-3h8c2 0 4 1 4 3s-2 3-4 3H8c-2 0-4-1-4-3z',
@@ -42,6 +43,8 @@ const iconMap = {
   comments: ['M4 6h16v10H9l-5 4V6z', 'M8 10h8'],
   activities: ['M6 4h12v4H6z', 'M5 8h14v12H5z', 'M8 12h8', 'M8 16h5'],
   content: ['M4 5h16v14H4z', 'M8 9h8', 'M8 13h6'],
+  // Currently unused reserved asset icon. Do not remove until admin/media flows
+  // are rechecked, because AppIcon names can be supplied through config arrays.
   image: ['M4 5h16v14H4z', 'M8.5 11a1.5 1.5 0 1 0 .01 0', 'M20 15l-4-4l-6 6l-2-2l-4 4'],
   upload: ['M12 16V6', 'M8 10l4-4l4 4', 'M4 18h16'],
   play: ['M8 5v14l11-7z'],

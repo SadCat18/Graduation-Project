@@ -22,6 +22,8 @@ const props = defineProps({
 
 const stageIndex = ref(0)
 const progressValue = ref(12)
+// Deprecated runtime path: kept for rollback context. The progress timer already
+// syncs stageIndex, so the separate stage polling timer is intentionally idle.
 let stageTimer = null
 let progressTimer = null
 
@@ -74,9 +76,11 @@ function startLoadingMotion() {
     syncStageWithProgress()
   }, 520)
 
-  stageTimer = window.setInterval(() => {
-    syncStageWithProgress()
-  }, 180)
+  // Redundant interval intentionally disabled; keep the old shape documented so
+  // future animation work can re-enable it deliberately instead of re-adding one.
+  // stageTimer = window.setInterval(() => {
+  //   syncStageWithProgress()
+  // }, 180)
 }
 
 watch(

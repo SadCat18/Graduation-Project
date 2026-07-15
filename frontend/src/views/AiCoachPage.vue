@@ -455,7 +455,10 @@ function goActivities() {
 
 function openVideo(video) {
   if (video?.videoId) {
-    router.push(`/videos/${video.videoId}`)
+    router.push({
+      path: `/videos/${video.videoId}`,
+      query: { from: 'ai-coach' }
+    })
     return
   }
   const target = normalizeMediaUrl(video?.url)

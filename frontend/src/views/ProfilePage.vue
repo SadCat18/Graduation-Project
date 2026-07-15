@@ -1,6 +1,6 @@
 ﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import GrowthCenterPanel from '../components/growth/GrowthCenterPanel.vue'
 import { api } from '../api'
@@ -28,7 +28,9 @@ const dashboard = ref({})
 const videos = ref([])
 const signedActivities = ref([])
 const role = getRole()
+const route = useRoute()
 const router = useRouter()
+const PROFILE_TAB_KEYS = new Set(['overview', 'content', 'activities', 'community', 'growth', 'notifications', 'creation', 'settings'])
 const SUPPORTED_AVATAR_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
 const SUPPORTED_AVATAR_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/x-ms-bmp']
 
@@ -45,7 +47,7 @@ const selectedCoverFile = ref(null)
 const videoUploading = ref(false)
 
 const myContentLoading = ref(false)
-const profileTab = ref('overview')
+const profileTab = ref(PROFILE_TAB_KEYS.has(String(route.query.tab || '')) ? String(route.query.tab) : 'overview')
 const profileTabHost = ref(null)
 const profileTabSwitching = ref(false)
 const profileTabEntering = ref(false)
@@ -478,7 +480,10 @@ function goPostDetail(postId) {
 
 function goVideoWatch(videoId) {
   if (!videoId) return
-  router.push(`/videos/${videoId}`)
+  router.push({
+    path: `/videos/${videoId}`,
+    query: { from: 'profile-videos' }
+  })
 }
 
 function goActivitiesPage() {
@@ -527,6 +532,11 @@ function goUserProfile(userId) {
 
 async function switchProfileTab(tab) {
   if (tab === profileTab.value) return
+
+  const query = { ...route.query }
+  if (tab === 'overview') delete query.tab
+  else query.tab = tab
+  router.replace({ query, hash: '' })
 
   const sequence = ++profileTabTransitionSequence
   const host = profileTabHost.value
@@ -588,6 +598,10 @@ onMounted(async () => {
   if (role !== 'ADMIN') {
     await loadProfile()
     await Promise.all([loadOthers(), loadMyContent(), loadNotifications(), loadCommunityUtilities()])
+    if (route.hash === '#profile-video-library') {
+      await nextTick()
+      document.getElementById('profile-video-library')?.scrollIntoView({ block: 'start' })
+    }
   }
 })
 
@@ -961,7 +975,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <div class="card">
+        <div id="profile-video-library" class="card">
           <div class="section-head"><h3>我的教学视频</h3></div>
           <div v-if="!myTeachingVideos.length" class="empty-tip">你还没有发布教学视频，上传第一条来沉淀你的创作内容吧。</div>
           <div v-for="v in myTeachingVideos" :key="v.videoId" class="list-item teaching-video-item">
@@ -1132,8 +1146,7 @@ onBeforeUnmount(() => {
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .main-tabs {
@@ -1470,6 +1483,10 @@ onBeforeUnmount(() => {
 .my-content-item p,
 .signed-item p {
   word-break: break-word;
+}
+
+#profile-video-library {
+  scroll-margin-top: 88px;
 }
 
 .teaching-video-item {
