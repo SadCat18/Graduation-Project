@@ -15,12 +15,33 @@
       <aside ref="conversationList" class="conversation-list" aria-label="私信会话列表">
         <div class="list-heading">
           <h2>会话</h2>
-          <span>{{ conversations.length }}</span>
+          <span>{{ conversationTotal }}</span>
         </div>
 
-        <p v-if="loadingConversations" class="muted">加载中...</p>
+        <div class="conversation-tools">
+          <label class="search-box">
+            <AppIcon name="search" :size="15" />
+            <input
+              v-model="conversationKeyword"
+              type="search"
+              placeholder="搜索用户名或最近消息"
+              @input="loadConversations({ keepSelection: true, resetPage: true })"
+            />
+          </label>
+          <label class="unread-filter">
+            <input
+              v-model="unreadOnly"
+              type="checkbox"
+              @change="loadConversations({ keepSelection: true, resetPage: true })"
+            />
+            未读
+          </label>
+        </div>
+
+        <p v-if="conversationError" class="inline-error">{{ conversationError }}</p>
+        <p v-if="loadingConversations && !conversations.length" class="muted">加载中...</p>
         <div v-else-if="!conversations.length" class="empty-tip">
-          暂无私信会话。进入其他用户主页后可以发起私信。
+          暂无匹配会话。进入其他用户主页后可以发起私信。
         </div>
 
         <button
@@ -40,6 +61,16 @@
             <span class="conversation-preview">{{ conversation.lastMessageContent || '还没有消息' }}</span>
           </span>
           <span v-if="conversation.unreadCount" class="unread-dot">{{ conversation.unreadCount }}</span>
+        </button>
+
+        <button
+          v-if="hasMoreConversations"
+          class="load-more"
+          type="button"
+          :disabled="loadingConversations"
+          @click="loadMoreConversations"
+        >
+          加载更多会话
         </button>
       </aside>
 
@@ -62,31 +93,63 @@
             </div>
           </div>
 
-          <div ref="messageScroller" class="message-scroll">
+          <div ref="messageScroller" class="message-scroll" @scroll="handleMessageScroll">
+            <button
+              v-if="hasMoreMessages"
+              class="load-older"
+              type="button"
+              :disabled="loadingMoreMessages"
+              @click="loadOlderMessages"
+            >
+              {{ loadingMoreMessages ? '加载中...' : '加载更早消息' }}
+            </button>
             <p v-if="loadingMessages" class="muted">消息加载中...</p>
+            <p v-else-if="messageError" class="inline-error">{{ messageError }}</p>
             <div v-else-if="!messages.length" class="empty-tip">这段会话还没有消息。</div>
             <div
               v-for="message in messages"
-              :key="message.messageId"
+              :key="message.clientId || message.messageId"
               class="message-row"
-              :class="{ mine: isMine(message) }"
+              :class="{ mine: isMine(message), failed: message.deliveryStatus === 'failed' }"
             >
               <div class="message-bubble">
                 <p>{{ message.content }}</p>
-                <span>{{ formatTime(message.createTime) }}</span>
+                <span>
+                  {{ formatTime(message.createTime) }}
+                  <em v-if="message.deliveryStatus === 'sending'">发送中</em>
+                  <em v-else-if="message.deliveryStatus === 'failed'">发送失败</em>
+                </span>
+                <button
+                  v-if="message.deliveryStatus === 'failed'"
+                  class="retry-link"
+                  type="button"
+                  :disabled="sendingMessage"
+                  @click="retryMessage(message)"
+                >
+                  重试
+                </button>
               </div>
             </div>
+            <button v-if="hasNewMessages" class="new-message-tip" type="button" @click="scrollToBottom">
+              有新消息
+            </button>
           </div>
 
+          <p v-if="sendError" class="composer-error">{{ sendError }}</p>
           <form class="composer" @submit.prevent="sendMessage">
-            <input
-              v-model="messageInput"
-              type="text"
-              maxlength="500"
-              placeholder="输入私信内容"
-              :disabled="sendingMessage"
-            />
-            <button ref="sendButton" class="btn-primary" type="submit" :disabled="sendingMessage || !messageInput.trim()">
+            <label class="composer-input">
+              <textarea
+                v-model="messageInput"
+                maxlength="1000"
+                rows="2"
+                placeholder="输入私信内容，Ctrl / Cmd + Enter 发送"
+                :disabled="sendingMessage"
+                @keydown.ctrl.enter.prevent="sendMessage"
+                @keydown.meta.enter.prevent="sendMessage"
+              ></textarea>
+              <span>{{ remainingChars }} / 1000</span>
+            </label>
+            <button ref="sendButton" class="btn-primary" type="submit" :disabled="sendDisabled">
               <AppIcon name="message" :size="15" />
               {{ sendingMessage ? '发送中...' : '发送' }}
             </button>
@@ -108,6 +171,9 @@ import { normalizeMediaUrl } from '../utils/url'
 const route = useRoute()
 const router = useRouter()
 const defaultAvatar = 'https://api.dicebear.com/7.x/thumbs/svg?seed=skatehub-message'
+const MESSAGE_PAGE_SIZE = 30
+const CONVERSATION_PAGE_SIZE = 20
+const POLL_INTERVAL_MS = 10000
 
 const conversations = ref([])
 const messages = ref([])
@@ -115,23 +181,55 @@ const selectedConversationId = ref(null)
 const currentUserId = ref(null)
 const loadingConversations = ref(false)
 const loadingMessages = ref(false)
+const loadingMoreMessages = ref(false)
 const sendingMessage = ref(false)
+const conversationError = ref('')
+const messageError = ref('')
+const sendError = ref('')
 const messageInput = ref('')
+const conversationKeyword = ref('')
+const unreadOnly = ref(false)
+const conversationPage = ref(1)
+const conversationTotal = ref(0)
+const hasMoreConversations = ref(false)
+const nextBeforeMessageId = ref(null)
+const hasMoreMessages = ref(false)
+const hasNewMessages = ref(false)
 const pageRoot = ref(null)
 const conversationList = ref(null)
 const threadPanel = ref(null)
 const messageScroller = ref(null)
 const sendButton = ref(null)
+let pollTimer = null
 
 const activeConversation = computed(() => {
   const selectedId = Number(selectedConversationId.value)
   return conversations.value.find(item => Number(item.conversationId) === selectedId) || null
 })
 
+const remainingChars = computed(() => messageInput.value.length)
+const sendDisabled = computed(() => sendingMessage.value || !messageInput.value.trim() || messageInput.value.length > 1000)
+
 function normalizeList(value) {
   if (Array.isArray(value)) return value
   if (Array.isArray(value?.list)) return value.list
   return []
+}
+
+function normalizeConversationPage(value) {
+  return {
+    list: normalizeList(value),
+    total: Number(value?.total ?? normalizeList(value).length),
+    totalPages: Number(value?.totalPages ?? 1)
+  }
+}
+
+function normalizeMessagePage(value) {
+  return {
+    list: normalizeList(value),
+    nextBeforeMessageId: value?.nextBeforeMessageId ?? null,
+    hasMore: Boolean(value?.hasMore)
+  }
 }
 
 function normalizeConversationId(value) {
@@ -220,6 +318,42 @@ function isMine(message) {
     : false
 }
 
+function latestVisibleMessageId() {
+  const ids = messages.value
+    .map(item => Number(item.messageId))
+    .filter(id => Number.isFinite(id) && id > 0)
+  return ids.length ? Math.max(...ids) : null
+}
+
+function isNearBottom() {
+  const el = messageScroller.value
+  if (!el) return true
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 96
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (messageScroller.value) {
+      messageScroller.value.scrollTop = messageScroller.value.scrollHeight
+    }
+    hasNewMessages.value = false
+  })
+}
+
+function mergeMessages(incoming) {
+  const existing = new Set(messages.value.map(item => String(item.messageId || item.clientId)))
+  const fresh = incoming.filter(item => !existing.has(String(item.messageId || item.clientId)))
+  if (!fresh.length) return 0
+  messages.value = [...messages.value, ...fresh].sort((a, b) => Number(a.messageId || 0) - Number(b.messageId || 0))
+  return fresh.length
+}
+
+function handleMessageScroll() {
+  if (isNearBottom()) {
+    hasNewMessages.value = false
+  }
+}
+
 async function loadCurrentUser() {
   try {
     const user = await api.profile()
@@ -229,25 +363,53 @@ async function loadCurrentUser() {
   }
 }
 
-async function refreshConversations() {
-  conversations.value = normalizeList(await api.privateConversations())
+async function refreshConversations(options = {}) {
+  const page = options.page || conversationPage.value
+  const result = normalizeConversationPage(await api.privateConversations({
+    page,
+    size: CONVERSATION_PAGE_SIZE,
+    keyword: conversationKeyword.value.trim(),
+    unreadOnly: unreadOnly.value
+  }))
+  conversationTotal.value = result.total
+  hasMoreConversations.value = page < result.totalPages
+  conversations.value = options.append ? [...conversations.value, ...result.list] : result.list
   await nextTick()
   animateUnreadBadges()
 }
 
 async function loadConversations(options = {}) {
+  if (options.resetPage) {
+    conversationPage.value = 1
+  }
   loadingConversations.value = true
+  conversationError.value = ''
   try {
-    await refreshConversations()
+    await refreshConversations({ page: conversationPage.value })
     const routeConversationId = normalizeConversationId(route.params.conversationId)
     const keptConversationId = options.keepSelection ? normalizeConversationId(selectedConversationId.value) : null
     const nextConversationId = routeConversationId || keptConversationId
     if (nextConversationId) {
-      await selectConversation(nextConversationId, { syncRoute: Boolean(routeConversationId) })
+      await selectConversation(nextConversationId, { syncRoute: Boolean(routeConversationId), skipConversationRefresh: true })
     } else {
       selectedConversationId.value = null
       messages.value = []
     }
+  } catch (error) {
+    conversationError.value = error?.message || '会话加载失败，请稍后重试'
+  } finally {
+    loadingConversations.value = false
+  }
+}
+
+async function loadMoreConversations() {
+  if (loadingConversations.value || !hasMoreConversations.value) return
+  loadingConversations.value = true
+  try {
+    conversationPage.value += 1
+    await refreshConversations({ page: conversationPage.value, append: true })
+  } catch (error) {
+    conversationError.value = error?.message || '更多会话加载失败'
   } finally {
     loadingConversations.value = false
   }
@@ -257,6 +419,9 @@ async function selectConversation(conversationId, options = {}) {
   const normalizedId = normalizeConversationId(conversationId)
   if (!normalizedId) return
   selectedConversationId.value = normalizedId
+  messageError.value = ''
+  sendError.value = ''
+  hasNewMessages.value = false
 
   if (options.syncRoute !== false && String(route.params.conversationId || '') !== String(normalizedId)) {
     router.push(`/messages/${normalizedId}`)
@@ -265,38 +430,158 @@ async function selectConversation(conversationId, options = {}) {
   await loadMessages(normalizedId)
 }
 
+async function markVisibleMessagesRead(conversationId) {
+  const lastReadMessageId = latestVisibleMessageId()
+  if (!lastReadMessageId) return
+  await api.readPrivateConversation(conversationId, { lastReadMessageId })
+}
+
 async function loadMessages(conversationId) {
   const normalizedId = normalizeConversationId(conversationId)
   if (!normalizedId) return
   loadingMessages.value = true
+  messageError.value = ''
   try {
-    messages.value = normalizeList(await api.privateMessages(normalizedId))
-    await api.readPrivateConversation(normalizedId)
+    const page = normalizeMessagePage(await api.privateMessages(normalizedId, { size: MESSAGE_PAGE_SIZE }))
+    messages.value = page.list
+    nextBeforeMessageId.value = page.nextBeforeMessageId
+    hasMoreMessages.value = page.hasMore
+    await markVisibleMessagesRead(normalizedId)
     await refreshConversations()
-    await nextTick()
-    if (messageScroller.value) {
-      messageScroller.value.scrollTop = messageScroller.value.scrollHeight
-    }
+    scrollToBottom()
     animateThreadSwitch()
+    await nextTick()
     animateRecentMessages()
+  } catch (error) {
+    messageError.value = error?.message || '消息加载失败，请稍后重试'
   } finally {
     loadingMessages.value = false
   }
 }
 
-async function sendMessage() {
-  const content = messageInput.value.trim()
-  if (!selectedConversationId.value || !content) return
+async function loadOlderMessages() {
+  if (!selectedConversationId.value || !hasMoreMessages.value || loadingMoreMessages.value) return
+  const scroller = messageScroller.value
+  const previousHeight = scroller?.scrollHeight || 0
+  loadingMoreMessages.value = true
+  try {
+    const page = normalizeMessagePage(await api.privateMessages(selectedConversationId.value, {
+      beforeMessageId: nextBeforeMessageId.value,
+      size: MESSAGE_PAGE_SIZE
+    }))
+    messages.value = [...page.list, ...messages.value]
+    nextBeforeMessageId.value = page.nextBeforeMessageId
+    hasMoreMessages.value = page.hasMore
+    await nextTick()
+    if (scroller) {
+      scroller.scrollTop = scroller.scrollHeight - previousHeight
+    }
+  } catch (error) {
+    messageError.value = error?.message || '更早消息加载失败'
+  } finally {
+    loadingMoreMessages.value = false
+  }
+}
+
+function buildOptimisticMessage(content, existingMessage = null) {
+  return {
+    ...(existingMessage || {}),
+    clientId: existingMessage?.clientId || `local-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    messageId: existingMessage?.messageId || null,
+    conversationId: selectedConversationId.value,
+    senderId: currentUserId.value,
+    receiverId: activeConversation.value?.otherUserId,
+    content,
+    readStatus: '0',
+    status: 'NORMAL',
+    deliveryStatus: 'sending',
+    createTime: existingMessage?.createTime || new Date().toISOString()
+  }
+}
+
+async function sendOptimistic(content, existingMessage = null) {
+  const optimistic = buildOptimisticMessage(content, existingMessage)
+  const clientKey = optimistic.clientId
+  if (existingMessage) {
+    messages.value = messages.value.map(item => item.clientId === clientKey ? optimistic : item)
+  } else {
+    messages.value.push(optimistic)
+  }
+  scrollToBottom()
   sendingMessage.value = true
+  sendError.value = ''
   try {
     animateSendPress()
-    await api.sendPrivateMessage(selectedConversationId.value, { content })
-    messageInput.value = ''
-    await loadMessages(selectedConversationId.value)
-  } catch (e) {
-    alert(e?.message || '私信发送失败，请稍后重试')
+    const result = await api.sendPrivateMessage(selectedConversationId.value, { content })
+    const sentMessage = { ...(result?.message || result), deliveryStatus: 'sent' }
+    messages.value = messages.value.map(item => item.clientId === clientKey ? sentMessage : item)
+    await refreshConversations()
+    await nextTick()
+    animateRecentMessages()
+  } catch (error) {
+    messages.value = messages.value.map(item => item.clientId === clientKey
+      ? { ...item, deliveryStatus: 'failed' }
+      : item)
+    sendError.value = error?.message || '发送失败，请重试'
   } finally {
     sendingMessage.value = false
+  }
+}
+
+async function sendMessage() {
+  const content = messageInput.value.trim()
+  if (!selectedConversationId.value || !content || sendDisabled.value) return
+  messageInput.value = ''
+  await sendOptimistic(content)
+}
+
+async function retryMessage(message) {
+  if (!selectedConversationId.value || sendingMessage.value) return
+  await sendOptimistic(message.content, message)
+}
+
+async function pollForUpdates() {
+  if (document.hidden || loadingMessages.value || loadingConversations.value) return
+  try {
+    await refreshConversations()
+    if (!selectedConversationId.value) return
+    const wasAtBottom = isNearBottom()
+    const page = normalizeMessagePage(await api.privateMessages(selectedConversationId.value, { size: MESSAGE_PAGE_SIZE }))
+    const added = mergeMessages(page.list)
+    if (added) {
+      await nextTick()
+      animateRecentMessages()
+      if (wasAtBottom) {
+        await markVisibleMessagesRead(selectedConversationId.value)
+        scrollToBottom()
+        await refreshConversations()
+      } else {
+        hasNewMessages.value = true
+      }
+    }
+  } catch (_) {
+    // Polling is best-effort; manual refresh keeps the explicit recovery path.
+  }
+}
+
+function startPolling() {
+  stopPolling()
+  pollTimer = window.setInterval(pollForUpdates, POLL_INTERVAL_MS)
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    window.clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) {
+    stopPolling()
+  } else {
+    startPolling()
+    pollForUpdates()
   }
 }
 
@@ -309,6 +594,7 @@ watch(
     } else {
       selectedConversationId.value = null
       messages.value = []
+      hasNewMessages.value = false
     }
   }
 )
@@ -318,9 +604,13 @@ onMounted(async () => {
   await loadConversations()
   await nextTick()
   animatePageEnter()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  startPolling()
 })
 
 onBeforeUnmount(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   const targets = scopedElements('.messages-header, .conversation-list, .message-thread, .conversation-item, .thread-header, .message-scroll, .composer, .message-row, .unread-dot')
   if (sendButton.value) targets.push(sendButton.value)
   gsap.killTweensOf(targets)
@@ -404,6 +694,46 @@ onBeforeUnmount(() => {
   font-weight: 800;
 }
 
+.conversation-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.search-box,
+.unread-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .84);
+  color: #475569;
+}
+
+.search-box {
+  padding: 0 10px;
+}
+
+.search-box input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.unread-filter {
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .conversation-item {
   position: relative;
   display: grid;
@@ -470,7 +800,7 @@ onBeforeUnmount(() => {
 
 .message-thread {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   min-width: 0;
   background:
     radial-gradient(circle at 100% 0%, rgba(20, 184, 166, .07), transparent 32%),
@@ -514,6 +844,7 @@ onBeforeUnmount(() => {
 }
 
 .message-scroll {
+  position: relative;
   display: grid;
   align-content: start;
   gap: 10px;
@@ -544,6 +875,12 @@ onBeforeUnmount(() => {
   color: #fff;
 }
 
+.message-row.failed .message-bubble {
+  border-color: rgba(220, 38, 38, .34);
+  background: #fff7f7;
+  color: #111827;
+}
+
 .message-bubble p {
   margin: 0;
   line-height: 1.65;
@@ -551,32 +888,76 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble span {
-  display: block;
+  display: flex;
+  gap: 8px;
   margin-top: 5px;
   color: #94a3b8;
   font-size: 12px;
+}
+
+.message-bubble em {
+  font-style: normal;
+  font-weight: 800;
+}
+
+.retry-link {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #dc2626;
+  cursor: pointer;
+  font-weight: 800;
 }
 
 .composer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 12px 16px 14px;
   border-top: 1px solid rgba(15, 23, 42, .1);
   background: rgba(255, 255, 255, .92);
 }
 
-.composer input {
+.composer-input {
+  display: grid;
+  gap: 4px;
   min-width: 0;
-  min-height: 42px;
+}
+
+.composer textarea {
+  min-width: 0;
+  min-height: 52px;
+  max-height: 150px;
+  resize: vertical;
   border: 1px solid rgba(15, 23, 42, .14);
   border-radius: 8px;
-  padding: 0 12px;
+  padding: 9px 12px;
   font: inherit;
+  line-height: 1.5;
+}
+
+.composer-input span {
+  justify-self: end;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.composer-error {
+  margin: 0;
+  padding: 9px 16px 0;
+  color: #b91c1c;
+  background: rgba(255, 255, 255, .92);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .btn-primary,
-.btn-soft {
+.btn-soft,
+.load-more,
+.load-older,
+.new-message-tip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -589,28 +970,59 @@ onBeforeUnmount(() => {
   font-weight: 800;
 }
 
-.btn-primary {
+.btn-primary,
+.new-message-tip {
   background: #111827;
   color: #fff;
 }
 
-.btn-soft {
+.btn-soft,
+.load-more,
+.load-older {
   background: #fff;
   color: #111827;
 }
 
+.load-more,
+.load-older {
+  width: 100%;
+  min-height: 36px;
+  margin: 6px 0;
+  border-color: rgba(15, 23, 42, .14);
+  font-size: 13px;
+}
+
+.new-message-tip {
+  position: sticky;
+  bottom: 8px;
+  justify-self: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .2);
+}
+
 .btn-primary:disabled,
-.btn-soft:disabled {
+.btn-soft:disabled,
+.load-more:disabled,
+.load-older:disabled,
+.retry-link:disabled {
   cursor: not-allowed;
   opacity: .55;
 }
 
-.empty-tip {
+.empty-tip,
+.inline-error {
   border: 1px dashed rgba(15, 23, 42, .18);
   border-radius: 8px;
   padding: 14px;
   color: #64748b;
   background: rgba(255, 255, 255, .62);
+}
+
+.inline-error {
+  border-color: rgba(220, 38, 38, .28);
+  color: #b91c1c;
+  background: rgba(254, 242, 242, .78);
 }
 
 @media (max-width: 760px) {
@@ -648,7 +1060,8 @@ onBeforeUnmount(() => {
     max-width: 88%;
   }
 
-  .composer {
+  .composer,
+  .conversation-tools {
     grid-template-columns: 1fr;
   }
 }

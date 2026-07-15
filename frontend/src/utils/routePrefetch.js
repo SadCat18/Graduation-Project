@@ -1,32 +1,35 @@
 const warmedChunkKeys = new Set()
 
-const routeWarmers = [
-  {
-    key: 'home',
+const routeWarmers = new Map([
+  ['/', {
+    key: '/',
     load: () => import(/* webpackChunkName: "view-home" */ '../views/HomePage.vue')
-  },
-  {
-    key: 'community',
+  }],
+  ['/community', {
+    key: '/community',
     load: () => import(/* webpackChunkName: "view-community" */ '../views/CommunityPage.vue')
-  },
-  {
-    key: 'activities',
+  }],
+  ['/activities', {
+    key: '/activities',
     load: () => import(/* webpackChunkName: "view-activities" */ '../views/ActivitiesPage.vue')
-  },
-  {
-    key: 'bulletins',
+  }],
+  ['/bulletins', {
+    key: '/bulletins',
     load: () => import(/* webpackChunkName: "view-bulletins" */ '../views/BulletinListPage.vue')
-  }
-]
+  }],
+  ['/skate', {
+    key: '/skate',
+    load: () => import(/* webpackChunkName: "view-skate" */ '../views/SkateProfessionalPage.vue')
+  }],
+  ['/ai-coach', {
+    key: '/ai-coach',
+    load: () => import(/* webpackChunkName: "view-ai-coach" */ '../views/AiCoachPage.vue')
+  }]
+])
 
-export function warmLikelyRouteChunks() {
-  const tasks = []
-
-  for (const warmer of routeWarmers) {
-    if (warmedChunkKeys.has(warmer.key)) continue
-    warmedChunkKeys.add(warmer.key)
-    tasks.push(warmer.load().catch(() => {}))
-  }
-
-  return Promise.allSettled(tasks)
+export function warmRouteChunk(path) {
+  const warmer = routeWarmers.get(path)
+  if (!warmer || warmedChunkKeys.has(warmer.key)) return Promise.resolve()
+  warmedChunkKeys.add(warmer.key)
+  return warmer.load().catch(() => {})
 }

@@ -6,10 +6,10 @@ const source = fs.readFileSync(path.resolve(__dirname, '../src/api/index.js'), '
 
 const requiredSnippets = [
   "createConversation: (data) => http.post('/api/messages/conversations', data)",
-  "privateConversations: () => http.get('/api/messages/conversations')",
-  "privateMessages: (conversationId) => http.get(`/api/messages/conversations/${conversationId}`)",
+  "privateConversations: (params) => http.get('/api/messages/conversations', { params })",
+  "privateMessages: (conversationId, params) => http.get(`/api/messages/conversations/${conversationId}/messages`, { params })",
   "sendPrivateMessage: (conversationId, data) => http.post(`/api/messages/conversations/${conversationId}/send`, data)",
-  "readPrivateConversation: (conversationId) => http.post(`/api/messages/conversations/${conversationId}/read`)",
+  "readPrivateConversation: (conversationId, data) => http.post(`/api/messages/conversations/${conversationId}/read`, data)",
   "privateUnreadCount: () => http.get('/api/messages/unread-count')",
   "followUser: (userId) => http.post(`/api/users/${userId}/follow`)",
   "unfollowUser: (userId) => http.delete(`/api/users/${userId}/follow`)",
