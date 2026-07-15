@@ -42,6 +42,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RecommendationService {
 
+    private static final List<String> RECOMMENDABLE_ACTIVITY_STATUSES = List.of(
+            ActivityStatus.SIGNUP_OPEN,
+            ActivityStatus.FULL,
+            ActivityStatus.CANCELED,
+            ActivityStatus.ENDED
+    );
+
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final ActivityRepository activityRepository;
@@ -62,29 +69,22 @@ public class RecommendationService {
         Set<String> cities = collectCities(userId);
         String style = user == null ? "" : normalize(user.getSkateStyle());
 
-        List<Post> visiblePosts = postRepository.findAll().stream()
-                .filter(post -> !"1".equals(post.getIsTop()) || true)
-                .collect(Collectors.toList());
-        List<Map<String, Object>> postList = scorePosts(visiblePosts, categories, style).stream()
+        List<Post> visiblePosts = postRepository
+                .findTop100ByOrderByIsTopDescLikeCountDescCollectCountDescCreateTimeDesc();
+        List<Post> recommendedPosts = scorePosts(visiblePosts, categories, style).stream()
                 .limit(6)
-                .map(post -> postService.detail(post.getPostId()))
                 .collect(Collectors.toList());
+        List<Map<String, Object>> postList = mapRecommendedPosts(recommendedPosts);
 
-        List<Activity> visibleActivities = activityRepository.findAll().stream()
-                .filter(item -> ActivityReviewStatus.APPROVED.equals(item.getReviewStatus()))
-                .filter(item -> {
-                    String status = item.getActivityStatus();
-                    return ActivityStatus.SIGNUP_OPEN.equals(status)
-                            || ActivityStatus.FULL.equals(status)
-                            || ActivityStatus.CANCELED.equals(status)
-                            || ActivityStatus.ENDED.equals(status);
-                })
-                .collect(Collectors.toList());
-        List<Map<String, Object>> activityList = scoreActivities(visibleActivities, cities, style).stream()
+        List<Activity> visibleActivities = activityRepository
+                .findTop80ByReviewStatusAndActivityStatusInOrderByCreateTimeDesc(
+                        ActivityReviewStatus.APPROVED,
+                        RECOMMENDABLE_ACTIVITY_STATUSES
+                );
+        List<Activity> recommendedActivities = scoreActivities(visibleActivities, cities, style).stream()
                 .limit(4)
-                .map(item -> activityService.list(1, 1, userId, null, null, item.getTitle(), false).getList().stream().findFirst().orElse(null))
-                .filter(item -> item != null)
                 .collect(Collectors.toList());
+        List<Map<String, Object>> activityList = mapRecommendedActivities(recommendedActivities, userId);
 
         List<Map<String, Object>> bulletinList = scoreBulletins(
                 communityBulletinService.listPublicApprovedAll(), cities, style
@@ -242,39 +242,140 @@ public class RecommendationService {
 
     private Set<String> collectPostCategories(Long userId) {
         Set<String> categories = new HashSet<>();
-        List<Interaction> interactions = interactionRepository
-                .findByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(userId, "POST", "LIKE");
-        interactions.addAll(interactionRepository.findByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(userId, "POST", "COLLECT"));
-        for (Interaction interaction : interactions) {
-            postRepository.findById(interaction.getTargetId()).ifPresent(post -> {
-                if (StringUtils.hasText(post.getCategory())) categories.add(post.getCategory().trim());
-            });
-        }
-        List<Comment> myComments = commentRepository.findAll().stream()
-                .filter(item -> userId.equals(item.getUserId()))
-                .limit(50)
-                .toList();
-        for (Comment comment : myComments) {
-            postRepository.findById(comment.getPostId()).ifPresent(post -> {
-                if (StringUtils.hasText(post.getCategory())) categories.add(post.getCategory().trim());
-            });
+        List<Interaction> interactions = new ArrayList<>(interactionRepository
+                .findTop50ByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(userId, "POST", "LIKE"));
+        interactions.addAll(interactionRepository
+                .findTop50ByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(userId, "POST", "COLLECT"));
+        Set<Long> postIds = interactions.stream()
+                .map(Interaction::getTargetId)
+                .filter(id -> id != null && id > 0)
+                .collect(Collectors.toSet());
+        commentRepository.findTop50ByUserIdOrderByCreateTimeDesc(userId).stream()
+                .map(Comment::getPostId)
+                .filter(id -> id != null && id > 0)
+                .forEach(postIds::add);
+        if (!postIds.isEmpty()) {
+            postRepository.findAllById(postIds).stream()
+                    .map(Post::getCategory)
+                    .filter(StringUtils::hasText)
+                    .map(String::trim)
+                    .forEach(categories::add);
         }
         return categories;
     }
 
     private Set<String> collectCities(Long userId) {
         Set<String> cities = new HashSet<>();
-        List<ActivitySign> signs = activitySignRepository.findByUserIdOrderBySignTimeDesc(userId);
-        for (ActivitySign sign : signs.stream().limit(50).toList()) {
-            activityRepository.findById(sign.getActivityId()).ifPresent(activity -> {
-                if (StringUtils.hasText(activity.getCity())) cities.add(activity.getCity().trim());
-            });
+        List<ActivitySign> signs = activitySignRepository.findTop50ByUserIdOrderBySignTimeDesc(userId);
+        Set<Long> signedActivityIds = signs.stream()
+                .map(ActivitySign::getActivityId)
+                .filter(id -> id != null && id > 0)
+                .collect(Collectors.toSet());
+        if (!signedActivityIds.isEmpty()) {
+            activityRepository.findAllById(signedActivityIds).stream()
+                    .map(Activity::getCity)
+                    .filter(StringUtils::hasText)
+                    .map(String::trim)
+                    .forEach(cities::add);
         }
-        List<Activity> published = activityRepository.findByUserIdOrderByCreateTimeDesc(userId);
-        for (Activity activity : published.stream().limit(20).toList()) {
+        List<Activity> published = activityRepository.findTop20ByUserIdOrderByCreateTimeDesc(userId);
+        for (Activity activity : published) {
             if (StringUtils.hasText(activity.getCity())) cities.add(activity.getCity().trim());
         }
         return cities;
+    }
+
+    private List<Map<String, Object>> mapRecommendedPosts(List<Post> posts) {
+        if (posts.isEmpty()) return List.of();
+        List<Long> postIds = posts.stream().map(Post::getPostId).toList();
+        Map<Long, Long> commentCounts = new HashMap<>();
+        for (Object[] row : commentRepository.countByPostIds(postIds)) {
+            if (row.length >= 2 && row[0] instanceof Number postId && row[1] instanceof Number count) {
+                commentCounts.put(postId.longValue(), count.longValue());
+            }
+        }
+        Map<Long, User> authors = usersById(posts.stream().map(Post::getUserId).toList());
+        return posts.stream().map(post -> {
+            User author = authors.get(post.getUserId());
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("postId", post.getPostId());
+            item.put("userId", post.getUserId());
+            item.put("title", post.getTitle());
+            item.put("content", post.getContent());
+            item.put("images", post.getImages());
+            item.put("category", post.getCategory());
+            item.put("likeCount", post.getLikeCount());
+            item.put("collectCount", post.getCollectCount());
+            item.put("isTop", post.getIsTop());
+            item.put("createTime", post.getCreateTime());
+            item.put("commentCount", commentCounts.getOrDefault(post.getPostId(), 0L));
+            item.put("authorName", author == null ? "已注销用户" : author.getUsername());
+            item.put("authorAvatar", author == null ? null : author.getAvatar());
+            item.put("authorLevel", author == null || author.getLevel() == null ? 1 : author.getLevel());
+            return item;
+        }).toList();
+    }
+
+    private List<Map<String, Object>> mapRecommendedActivities(List<Activity> activities, Long userId) {
+        if (activities.isEmpty()) return List.of();
+        List<Long> activityIds = activities.stream().map(Activity::getActivityId).toList();
+        Map<Long, User> publishers = usersById(activities.stream().map(Activity::getUserId).toList());
+        Map<Long, ActivitySign> signs = activitySignRepository
+                .findByUserIdAndActivityIdIn(userId, activityIds).stream()
+                .collect(Collectors.toMap(ActivitySign::getActivityId, sign -> sign, (first, ignored) -> first));
+        return activities.stream().map(activity -> {
+            User publisher = publishers.get(activity.getUserId());
+            ActivitySign sign = signs.get(activity.getActivityId());
+            String activityStatus = activity.getActivityStatus();
+            String signStatus = sign == null ? null : sign.getSignStatus();
+            boolean signed = ActivitySignStatus.PENDING_CONFIRM.equals(signStatus)
+                    || ActivitySignStatus.APPROVED.equals(signStatus);
+            int signNum = safe(activity.getSignNum());
+            Integer maxNum = activity.getMaxNum();
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("activityId", activity.getActivityId());
+            item.put("userId", activity.getUserId());
+            item.put("title", activity.getTitle());
+            item.put("content", activity.getContent());
+            item.put("activityDesc", StringUtils.hasText(activity.getActivityDesc())
+                    ? activity.getActivityDesc() : activity.getContent());
+            item.put("place", activity.getPlace());
+            item.put("placeId", activity.getPlaceId());
+            item.put("address", activity.getAddress());
+            item.put("city", activity.getCity());
+            item.put("district", activity.getDistrict());
+            item.put("longitude", activity.getLongitude());
+            item.put("latitude", activity.getLatitude());
+            item.put("activityTime", activity.getActivityTime());
+            item.put("maxNum", maxNum);
+            item.put("signNum", signNum);
+            item.put("activityType", activity.getActivityType());
+            item.put("reviewStatus", activity.getReviewStatus());
+            item.put("activityStatus", activityStatus);
+            item.put("status", activityStatus);
+            item.put("spotsLeft", maxNum == null ? null : Math.max(0, maxNum - signNum));
+            item.put("full", ActivityStatus.FULL.equals(activityStatus)
+                    || (maxNum != null && signNum >= maxNum));
+            item.put("createTime", activity.getCreateTime());
+            item.put("publisherName", publisher == null ? "已注销用户" : publisher.getUsername());
+            item.put("signed", signed);
+            item.put("signId", sign == null ? null : sign.getSignId());
+            item.put("signStatus", signStatus);
+            item.put("isCheckin", sign == null ? "0" : sign.getIsCheckin());
+            item.put("arrivalConfirmed", sign == null ? "0" : sign.getArrivalConfirmed());
+            item.put("returnConfirmed", sign == null ? "0" : sign.getReturnConfirmed());
+            return item;
+        }).toList();
+    }
+
+    private Map<Long, User> usersById(List<Long> userIds) {
+        List<Long> distinctUserIds = userIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+        if (distinctUserIds.isEmpty()) return Map.of();
+        return userRepository.findAllById(distinctUserIds).stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user));
     }
 
     private List<Post> scorePosts(List<Post> posts, Set<String> categories, String style) {

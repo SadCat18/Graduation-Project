@@ -13,4 +13,10 @@ public interface InteractionRepository extends JpaRepository<Interaction, Long> 
     long countByTargetTypeAndTargetIdAndType(String targetType, Long targetId, String type);
 
     List<Interaction> findByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(Long userId, String targetType, String type);
+
+    List<Interaction> findTop50ByUserIdAndTargetTypeAndTypeOrderByCreateTimeDesc(
+            Long userId,
+            String targetType,
+            String type
+    );
 }
