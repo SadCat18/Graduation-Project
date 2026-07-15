@@ -74,4 +74,3 @@ WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_TRAINING_PLAN');
 INSERT INTO tb_badge (code, name, description, rarity, icon_code, sort_order, enabled)
 SELECT 'FIRST_SKATE_EVENT', '首次参加赛事', '完成第一次赛事现场签到', 'RARE', 'skate-event', 110, '1'
 WHERE NOT EXISTS (SELECT 1 FROM tb_badge WHERE code = 'FIRST_SKATE_EVENT');
-

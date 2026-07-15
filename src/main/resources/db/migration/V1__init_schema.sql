@@ -953,4 +953,3 @@ WHERE equipment_name = '低帮耐磨滑板鞋';
 
 UPDATE tb_skate_equipment SET cover_url = '/equipment/helmet.png'
 WHERE equipment_name = '碗池训练头盔';
-

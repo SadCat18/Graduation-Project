@@ -197,4 +197,3 @@ SET @ddl = (
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-
