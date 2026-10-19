@@ -147,3 +147,52 @@ test('同类型待审内容可批量处理并获得页面内反馈', async ({ pa
   await page.getByRole('button', { name: '批量通过' }).click()
   await expect(page.locator('.admin-toast-item')).toContainText('批量通过完成：成功 1 条')
 })
+
+test('ECharts 6 charts handle hover, legend, period/resize and hostile names without HTML execution', async ({ page }, testInfo) => {
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
+  const hostile = '<img src=x onerror="window.__chartXss=1">'
+  const trend = Array.from({ length:7 }, (_, i) => ({ date:`2026-10-${10+i}`,newUsers:7+i,newPosts:4+i,newActivities:2+i,newSigns:9+i }))
+  await page.route('**/api/admin/analytics', route => route.fulfill({json:ok({
+    trend7d:trend, previousTrend7d:trend, trend30d:[...trend,...trend], previousTrend30d:trend,
+    activityConversion:{views:500,signs:93,rate:18.6},activityConversion30d:{views:1200,signs:270,rate:22.5},
+    bulletinTypeRatio:[{type:hostile,count:18},{type:'赛事',count:12}],hotPosts:[],hotActivities:[]
+  })}))
+  await page.setViewportSize({width:1440,height:1000})
+  await page.goto('/admin')
+  await expect(page.getByRole('heading',{name:'近 7 天运营趋势'})).toBeVisible()
+  for (const selector of ['.trend-chart','.funnel-chart']) {
+    const chart = page.locator(selector), canvas = chart.locator('canvas').first()
+    await expect(canvas).toBeVisible(); await chart.scrollIntoViewIfNeeded()
+    await page.mouse.move(0,0); await page.waitForTimeout(650)
+    const before = await canvas.screenshot()
+    const box = await chart.boundingBox()
+    const point = selector === '.donut-chart' ? {x:box.width*0.34+box.height*0.3,y:box.height*0.5} : {x:box.width*0.5,y:box.height*0.3}
+    await chart.hover({position:point}); await page.waitForTimeout(350)
+    expect((await canvas.screenshot()).equals(before),`${selector} hover should render detail/emphasis`).toBe(false)
+    await chart.screenshot({path:testInfo.outputPath(`${selector.slice(1)}-hover.png`)})
+  }
+  const chart = page.locator('.trend-chart'), canvas = chart.locator('canvas').first()
+  await chart.scrollIntoViewIfNeeded(); await page.mouse.move(0,0); await page.waitForTimeout(500)
+  const beforeLegend = await canvas.screenshot(), box = await chart.boundingBox()
+  await chart.click({position:{x:box.width-35,y:12}}); await page.mouse.move(0,0); await page.waitForTimeout(650)
+  expect((await canvas.screenshot()).equals(beforeLegend),'legend click should toggle a series').toBe(false)
+  await page.getByRole('button',{name:'近 30 天'}).click()
+  await expect(page.getByRole('heading',{name:'近 30 天运营趋势'})).toBeVisible()
+  await expect(page.getByText('22.5%',{exact:true})).toBeVisible()
+  await page.setViewportSize({width:960,height:900}); await page.waitForTimeout(650)
+  for (const selector of ['.trend-chart','.funnel-chart']) await expect(page.locator(`${selector} canvas`).first()).toBeVisible()
+  await page.screenshot({path:testInfo.outputPath('echarts6-resize.png'),fullPage:true})
+  await page.getByRole('button',{name:/运营分析/}).click()
+  const donut = page.locator('.donut-chart'), donutCanvas = donut.locator('canvas').first()
+  await expect(donutCanvas).toBeVisible(); await donut.scrollIntoViewIfNeeded()
+  await page.mouse.move(0,0); await page.waitForTimeout(650)
+  const beforeDonut = await donutCanvas.screenshot(), donutBox = await donut.boundingBox()
+  await donut.hover({position:{x:donutBox.width*0.34+donutBox.height*0.3,y:donutBox.height*0.5}}); await page.waitForTimeout(350)
+  expect((await donutCanvas.screenshot()).equals(beforeDonut),'donut hover should render detail/emphasis').toBe(false)
+  await expect(donut).toHaveAttribute('aria-label',new RegExp('img src=x'))
+  expect(await page.evaluate(()=>window.__chartXss)).toBeUndefined()
+  await expect(page.locator('.donut-chart img')).toHaveCount(0)
+  await donut.screenshot({path:testInfo.outputPath('donut-chart-hostile-hover.png')})
+  expect(errors).toEqual([])
+})

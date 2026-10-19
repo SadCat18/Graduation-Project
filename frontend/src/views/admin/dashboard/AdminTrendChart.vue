@@ -29,7 +29,7 @@ function renderChart() {
   chart.setOption({
     animationDuration: 360,
     color: ['#087A6D', '#2563EB', '#F97316', '#7C3AED'],
-    tooltip: { trigger: 'axis', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
+    tooltip: { renderMode: 'richText', trigger: 'axis', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
     legend: { top: 0, right: 0, itemWidth: 16, itemHeight: 4, textStyle: { color: '#5e6963', fontSize: 11 } },
     grid: { left: 8, right: 8, top: 38, bottom: 4, containLabel: true },
     xAxis: {

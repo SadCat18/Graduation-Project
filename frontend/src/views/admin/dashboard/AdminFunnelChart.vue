@@ -25,7 +25,7 @@ function renderChart() {
   chart.setOption({
     animationDuration: 360,
     color: ['#087A6D', '#F97316'],
-    tooltip: { trigger: 'item', formatter: '{b}<br/>{c}', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
+    tooltip: { renderMode: 'richText', trigger: 'item', formatter: '{b}\n{c}', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
     series: [{
       type: 'funnel',
       left: '8%', top: 8, bottom: 6, width: '84%', minSize: '44%', maxSize: '100%',

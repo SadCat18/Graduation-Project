@@ -2,7 +2,7 @@
 
 Scope: current local implementation of the admin operations dashboard, paginated private messaging/profile UI, deterministic board assistant with reference estimates and saved plans, deployment configuration and the site name 滑板知识网站. This snapshot includes local changes beyond the deployed release; it is not a deployment claim.
 
-## Current checks
+## Baseline implementation checks (before dependency remediation)
 
 - Default Maven: 375 tests, 56 suites, no failures/errors/skips, isolated candidate, no production services.
 - Vitest: 68 tests across 11 files passed; Vue production build passed.
@@ -10,7 +10,15 @@ Scope: current local implementation of the admin operations dashboard, paginated
 - Mock-API browser suite: 23 passed on installed Edge; does not prove server authorization or database behavior.
 - Real HTTP/H2 integration: reference acceptance passed with its one browser flow; exact T07 passed with main and explicitly confirmed linked-adjustment browser flows. Captcha storage and old-schema prerequisites are test substitutes. These are local fixtures, not production writes.
 - Original/reference Python validation controls passed; source/protected hashes retained. Reference catalog is the original 50/114/60/39/3 dataset, 21 recorded domestic reference prices, zero verified exact domestic prices. Unknown prices remain null, partial assembly uses known subtotal; the cheapest plan describes the bounded search scope only.
-- **Draft PR unresolved security gate:** production dependency audit reports six high and one moderate advisory findings. ECharts requires a major-version upgrade; the coordinator explicitly directed submitting the current code as a Draft PR without changing dependencies or the audit threshold. Existing CI audit is expected to fail until remediation. This report does not claim the security/CI gate passes.
+## Production dependency security repair — 2026-10-19
+
+- Vue/compiler/runtime/SSR family3.5.44, Axios1.20.0, ECharts/zrender6.1.0; bounded lock updates for nanoid3.3.20, production PostCSS8.5.31 and source-map-js1.2.2. Eighteen version nodes changed, no overrides or forced broad toolchain upgrade. npm10 also normalizes two official tarball URLs and optional Rollup libc metadata.
+- Three ECharts consumers use richText canvas tooltips rather than HTML; newline formatters, hover, legends, 7/30-day switching and resize remain covered. A mock browser case uses a hostile img/onerror name and asserts no HTML image node, script marker or pageerror.
+- Official Node20.20.2/npm10.8.2, clean independent npm ci passed; installed production audit **0 vulnerabilities / exit0** using the existing CI command. The release reviewer independently reran the installed Node20 audit and chart test successfully.
+- Current Node20 local checks:68 Vitest tests,39 contract scripts,production build45511e914cffdcc0,19 original core mock browser tests and1 added chart interaction test passed. Earlier baseline23 mocks and375 Maven tests above are historical baseline results, not reruns against this dependency repair. Remote Linux/Chromium/Java17/Docker results must be checked for the new PR head before claiming CI pass.
+- Complete dependency audit still reports **44 development-toolchain findings (5critical/22high/17moderate)**. They are outside the production-only audit gate and remain open risks; no CI threshold/suppression was changed. The old production6high/1moderate failure was reproduced then repaired, not waived.
+- The root shared workspace, its dependencies/index and all other632 PR source files remain unchanged. This is a PR-only fix, no merge/deployment/database/provider action.
+
 
 ## Reproduce from a clean checkout
 

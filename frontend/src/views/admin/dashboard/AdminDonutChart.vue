@@ -23,7 +23,7 @@ function renderChart() {
   chart.setOption({
     animationDuration: 360,
     color: ['#087A6D', '#2563EB', '#F97316', '#7C3AED', '#059669', '#687067'],
-    tooltip: { trigger: 'item', formatter: '{b}<br/>{c} 条 · {d}%', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
+    tooltip: { renderMode: 'richText', trigger: 'item', formatter: '{b}\n{c} 条 · {d}%', backgroundColor: '#17211c', borderWidth: 0, textStyle: { color: '#fff' } },
     legend: { type: 'scroll', orient: 'vertical', right: 4, top: 'middle', itemWidth: 10, itemHeight: 10, textStyle: { color: '#56615b', fontSize: 11 } },
     series: [{
       type: 'pie', radius: ['52%', '76%'], center: ['34%', '50%'],
