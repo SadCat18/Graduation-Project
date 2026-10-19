@@ -1,5 +1,11 @@
 const path = require('path')
 const { test, expect } = require('@playwright/test')
+
+// CI diagnostics only: retain every assertion and report the actual failed resource.
+test.beforeEach(async ({ page }) => {
+  page.on('requestfailed', request => console.log('CI_RESOURCE_FAILURE', JSON.stringify({ url:request.url(),error:request.failure()?.errorText })))
+  page.on('console', message => { if (message.type() === 'error') console.log('CI_CONSOLE_LOCATION', JSON.stringify(message.location())) })
+})
 const avatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#d7e8df"/><circle cx="32" cy="24" r="12" fill="#087a6d"/><path d="M12 60a20 20 0 0 1 40 0" fill="#087a6d"/></svg>')
 
 const response = data => ({ code: 200, message: 'ok', data })
