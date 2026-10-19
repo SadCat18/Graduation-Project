@@ -1,5 +1,8 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import AdminEmptyState from './dashboard/AdminEmptyState.vue'
+
+const props = defineProps({
   pendingReviewTotal: { type: Number, default: 0 },
   statusFilter: { type: String, default: 'all' },
   typeFilter: { type: String, default: 'all' },
@@ -19,6 +22,13 @@ defineProps({
   drawerTemplates: { type: Array, default: () => [] },
   moderationResultKey: { type: String, default: '' },
   moderationResult: { type: Object, default: null }
+})
+
+const selectionSummary = computed(() => {
+  if (!props.selectedCards.length) return '未选择内容'
+  const types = [...new Set(props.selectedCards.map(item => item.typeLabel))]
+  const pendingCount = props.selectedCards.filter(item => item.status === '0' || item.type === 'placeContribution' || item.type === 'placeReview').length
+  return `已选 ${props.selectedCards.length} 条 · ${types.join('、')} · 待审核 ${pendingCount} 条`
 })
 
 defineEmits([
@@ -122,13 +132,20 @@ defineEmits([
           />
           <span>全选当前列表</span>
         </label>
-        <span class="muted">已选 {{ selectedCards.length }} 条</span>
+        <span class="batch-selection-summary">{{ selectionSummary }}</span>
         <button class="btn-primary" :disabled="!canBatchApproveOrReject" @click="$emit('batchReview', 'approve')">批量通过</button>
         <button class="btn-soft" :disabled="!canBatchApproveOrReject" @click="$emit('batchReview', 'reject')">批量驳回</button>
       </div>
 
-      <div v-if="!filteredCards.length" class="muted">未找到匹配项，请调整筛选条件或关键词。</div>
-      <div v-for="item in filteredCards" :key="item.id" class="review-card">
+      <AdminEmptyState
+        v-if="!filteredCards.length"
+        icon="search"
+        title="未找到匹配项"
+        description="请调整状态、类型、时间或关键词筛选条件。"
+        action-label="重置筛选"
+        @action="$emit('reset')"
+      />
+      <div v-for="item in filteredCards" :key="item.id" :class="['review-card', `risk-${String(item.riskLevel || 'LOW').toLowerCase()}`]">
         <div class="review-card-main">
           <div class="review-card-head">
             <label class="review-select">
@@ -140,6 +157,8 @@ defineEmits([
             </label>
             <span class="status-chip">{{ item.typeLabel }}</span>
             <span class="status-chip">{{ item.statusLabel }}</span>
+            <span :class="['risk-chip', `risk-${String(item.riskLevel || 'LOW').toLowerCase()}`]">{{ item.riskLabel || '普通' }}</span>
+            <span class="wait-chip">{{ item.waitLabel || '等待时间未知' }}</span>
           </div>
           <h3 class="review-title clamp-2">{{ item.title }}</h3>
           <p class="review-meta">发布人：{{ item.actor }}</p>
@@ -153,6 +172,9 @@ defineEmits([
               <span>{{ fact.label }}：</span>{{ fact.value }}
             </p>
           </div>
+          <p v-if="moderationResultKey === item.id && moderationResult" class="card-ai-summary">
+            <strong>AI 建议：</strong>{{ moderationResult.suggestion || moderationResult.normalizedSummary || '未发现明显风险' }}
+          </p>
         </div>
 
         <div class="review-card-actions">
@@ -358,10 +380,22 @@ defineEmits([
   background: #f8fafc;
 }
 
+.batch-selection-summary {
+  margin-right: auto;
+  color: #45514a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .review-card {
   display: grid;
   gap: 10px;
+  border-left: 4px solid #687067;
 }
+
+.review-card.risk-high { border-left-color: #dc2626; background: #fffafa; }
+.review-card.risk-medium { border-left-color: #f97316; }
+.review-card.risk-low { border-left-color: #059669; }
 
 .review-card-main {
   padding-bottom: 8px;
@@ -399,6 +433,33 @@ defineEmits([
   color: var(--text-soft);
   font-size: 12px;
 }
+
+.risk-chip,
+.wait-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.risk-chip.risk-high { background: #fee2e2; color: #b91c1c; }
+.risk-chip.risk-medium { background: #ffedd5; color: #c2410c; }
+.risk-chip.risk-low { background: #d1fae5; color: #047857; }
+.wait-chip { background: #eef2ef; color: #5c675f; }
+
+.card-ai-summary {
+  margin: 0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #f0fdfa;
+  color: #35584f;
+  font-size: 12px;
+}
+
+.card-ai-summary strong { color: #087a6d; }
 
 .clamp-2,
 .clamp-3 {
@@ -520,6 +581,12 @@ defineEmits([
   .review-kpi-grid,
   .review-filter-bar {
     grid-template-columns: 1fr;
+  }
+
+  .review-card-actions button,
+  .review-batch-bar button,
+  .review-tabs button {
+    min-height: 40px;
   }
 }
 </style>

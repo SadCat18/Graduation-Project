@@ -1,0 +1,3774 @@
+{
+  "evidenceKind" : "ORIGINAL_RECORDED_DATA_REAL_SERVICE_ISOLATED_H2_NOT_HTTP_OR_PRODUCTION",
+  "ACTION" : {
+    "request" : {
+      "purpose" : "ACTION",
+      "preference" : "EASY_START",
+      "recommendationType" : "BOTH",
+      "budgetCents" : 60000
+    },
+    "response" : {
+      "demand" : {
+        "purpose" : "ACTION",
+        "preference" : "EASY_START",
+        "recommendationType" : "BOTH",
+        "budgetCents" : 60000,
+        "shoeSize" : null
+      },
+      "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+      "complete" : {
+        "state" : "OK",
+        "searchTruncated" : false,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-001--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-001--deck-none-complete",
+            "productKey" : "SET-001",
+            "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-001--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 58000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 58000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 58000,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 58000,
+          "budgetDeltaCents" : 2000,
+          "calculationVersion" : "5adc7aacf5437b3d01edef1de7fe46e3826b2ec4f06bfe5aa3c39c6610c8d378",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-002--deck-8-0-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-002--deck-8-0-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-002--deck-8-0-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-002--deck-8-0-complete",
+            "productKey" : "SET-002",
+            "label" : "专业板双翘板 蓝象 8.0英寸（京东自营） / deck-8-0-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : 8,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板专业板初学者儿童成年人男女6-12-18岁四轮双翘板蓝象8.0英寸 - 京东（DBH滑板京东自营旗舰店）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32300,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 32300,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东自营旗舰店零售价（到手价，划线价¥400，限时折上9.5折）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 32300,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 32300,
+          "budgetDeltaCents" : 27700,
+          "calculationVersion" : "8d29b5920ce82b4aaae667e6fed0e2ca32a7525fc01c453f33f51fb365e80da4",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-003--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-003--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-003--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-003--deck-none-complete",
+            "productKey" : "SET-003",
+            "label" : "入门板 1979系列（白色） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "沸点BOILING播零滑板初学者【板入门板】1979系列(白色) - 京东",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-003--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 44600,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 44600,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东零售价（到手价，划线价¥476）",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 44600,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 44600,
+          "budgetDeltaCents" : 15400,
+          "calculationVersion" : "8cf0148c422f8529fc19f2b410b0724773f51d11ff38dafca9aef0ec9c69b18f",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        } ],
+        "excludedCounts" : {
+          "OVER_BUDGET" : 1
+        },
+        "missing" : [ ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 4
+      },
+      "assembly" : {
+        "state" : "DATA_INSUFFICIENT",
+        "searchTruncated" : true,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--action-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-12-7mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--action-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-12-7mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-12-7mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 12.7
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "e55dedcff803c94138f5629dd49e7706662656c8dae667c469d9a3d5d5ea55fe",
+          "templateVersions" : {
+            "TEMPLATE--action-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--action-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-3-175mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--action-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-3-175mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-3-175mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 3.175
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "61065c0d9a785f8f3ec08aad552795271d5c7c63e6615973afb424b5c2d17640",
+          "templateVersions" : {
+            "TEMPLATE--action-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--action-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-6-35mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "ACTION",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--action-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-6-35mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-6-35mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 6.35
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "778ba3d1a42e4b001e56ed6fa05cf171f0e4176be99b77a99aa103cd17e52491",
+          "templateVersions" : {
+            "TEMPLATE--action-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        } ],
+        "excludedCounts" : {
+          "INSUFFICIENT_DATA" : 1996
+        },
+        "missing" : [ "BEARING:VALID_QUOTE_REQUIRED", "GRIP:VALID_QUOTE_REQUIRED", "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 1996
+      },
+      "searchTruncated" : true,
+      "evaluatedCount" : 2000,
+      "evaluationLimit" : 2000
+    }
+  },
+  "CRUISE" : {
+    "request" : {
+      "purpose" : "CRUISE",
+      "preference" : "EASY_START",
+      "recommendationType" : "BOTH",
+      "budgetCents" : 60000
+    },
+    "response" : {
+      "demand" : {
+        "purpose" : "CRUISE",
+        "preference" : "EASY_START",
+        "recommendationType" : "BOTH",
+        "budgetCents" : 60000,
+        "shoeSize" : null
+      },
+      "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+      "complete" : {
+        "state" : "OK",
+        "searchTruncated" : false,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-003--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-003--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-003--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-003--deck-none-complete",
+            "productKey" : "SET-003",
+            "label" : "入门板 1979系列（白色） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "沸点BOILING播零滑板初学者【板入门板】1979系列(白色) - 京东",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-003--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 44600,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 44600,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东零售价（到手价，划线价¥476）",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 44600,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 44600,
+          "budgetDeltaCents" : 15400,
+          "calculationVersion" : "c47a40f0fc60072f56b2e5d113c26803fb91214cf3455df36f0bb81cfc93197c",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-002--deck-8-0-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-002--deck-8-0-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-002--deck-8-0-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-002--deck-8-0-complete",
+            "productKey" : "SET-002",
+            "label" : "专业板双翘板 蓝象 8.0英寸（京东自营） / deck-8-0-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : 8,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板专业板初学者儿童成年人男女6-12-18岁四轮双翘板蓝象8.0英寸 - 京东（DBH滑板京东自营旗舰店）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32300,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 32300,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东自营旗舰店零售价（到手价，划线价¥400，限时折上9.5折）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 32300,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 32300,
+          "budgetDeltaCents" : 27700,
+          "calculationVersion" : "3494f619c0aaf2e7690a1af3c4028414e069ca333487ba6df1ed459a3e0ad4d5",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-001--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-001--deck-none-complete",
+            "productKey" : "SET-001",
+            "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-001--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 58000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 58000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 58000,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 58000,
+          "budgetDeltaCents" : 2000,
+          "calculationVersion" : "11105b7f7af7a5726cb4046ec659ced5965ddb20574cad995f6e0a35c3c71697",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        } ],
+        "excludedCounts" : {
+          "OVER_BUDGET" : 1
+        },
+        "missing" : [ ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 4
+      },
+      "assembly" : {
+        "state" : "DATA_INSUFFICIENT",
+        "searchTruncated" : true,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--cruise-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-12-7mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--cruise-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-12-7mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-12-7mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 12.7
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "c257b02a796ca734831251966fc8c7b8883615d024b6439617478337cf3f8e10",
+          "templateVersions" : {
+            "TEMPLATE--cruise-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--cruise-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-3-175mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--cruise-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-3-175mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-3-175mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 3.175
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "92e6d858b580bc21ef7c6604c4143e25e94c7aeb1b7924d558a23625a7904179",
+          "templateVersions" : {
+            "TEMPLATE--cruise-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--cruise-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-6-35mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "CRUISE",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--cruise-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-6-35mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-6-35mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 6.35
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "b92182fed6c2901726e3d78d3fa104b576ef6b53bc6b510aa60e22749834b219",
+          "templateVersions" : {
+            "TEMPLATE--cruise-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        } ],
+        "excludedCounts" : {
+          "INSUFFICIENT_DATA" : 1996
+        },
+        "missing" : [ "BEARING:VALID_QUOTE_REQUIRED", "GRIP:VALID_QUOTE_REQUIRED", "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 1996
+      },
+      "searchTruncated" : true,
+      "evaluatedCount" : 2000,
+      "evaluationLimit" : 2000
+    }
+  },
+  "BALANCED" : {
+    "request" : {
+      "purpose" : "BALANCED",
+      "preference" : "EASY_START",
+      "recommendationType" : "BOTH",
+      "budgetCents" : 60000
+    },
+    "response" : {
+      "demand" : {
+        "purpose" : "BALANCED",
+        "preference" : "EASY_START",
+        "recommendationType" : "BOTH",
+        "budgetCents" : 60000,
+        "shoeSize" : null
+      },
+      "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+      "complete" : {
+        "state" : "OK",
+        "searchTruncated" : false,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-002--deck-8-0-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-002--deck-8-0-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-002--deck-8-0-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-002--deck-8-0-complete",
+            "productKey" : "SET-002",
+            "label" : "专业板双翘板 蓝象 8.0英寸（京东自营） / deck-8-0-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : 8,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板专业板初学者儿童成年人男女6-12-18岁四轮双翘板蓝象8.0英寸 - 京东（DBH滑板京东自营旗舰店）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32300,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 32300,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东自营旗舰店零售价（到手价，划线价¥400，限时折上9.5折）",
+              "url" : "https://item.jd.com/100019623506.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 32300,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 32300,
+          "budgetDeltaCents" : 27700,
+          "calculationVersion" : "52121134b8d75fde72c14928a496714bdf731a34a199fb35deddb761ca1b536d",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-003--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-003--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-003--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-003--deck-none-complete",
+            "productKey" : "SET-003",
+            "label" : "入门板 1979系列（白色） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "沸点BOILING播零滑板初学者【板入门板】1979系列(白色) - 京东",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-003--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 44600,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 44600,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东零售价（到手价，划线价¥476）",
+              "url" : "https://item.jd.com/10036039740943.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 44600,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 44600,
+          "budgetDeltaCents" : 15400,
+          "calculationVersion" : "aa034154016b89af4e4f1992e92953e7da933680657aec0df44be33a0ba466fe",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SET-001--deck-none-complete"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SET-001--deck-none-complete",
+            "productKey" : "SET-001",
+            "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : null,
+              "manufacturerComplete" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SET-001--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 58000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 58000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 58000,
+          "priceComplete" : true,
+          "validationState" : "REFERENCE_ESTIMATE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 58000,
+          "budgetDeltaCents" : 2000,
+          "calculationVersion" : "d6b527ace53d9c07a58099322589bd1f3a37a924e8dce7875bd48486f42a5b4f",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        } ],
+        "excludedCounts" : {
+          "OVER_BUDGET" : 1
+        },
+        "missing" : [ ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 4
+      },
+      "assembly" : {
+        "state" : "DATA_INSUFFICIENT",
+        "searchTruncated" : true,
+        "plans" : [ {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--balanced-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-12-7mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--balanced-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-12-7mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-12-7mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 12.7
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "f6a9db7c35cb80c6bed42feccf6800dfd05a7da201379052eae2fdde47bed057",
+          "templateVersions" : {
+            "TEMPLATE--balanced-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--balanced-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-3-175mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--balanced-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-3-175mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-3-175mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 3.175
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "b6e5fad4927629dd7c8eea6789c88769d14477900a4de667e0f7cab7adb1d809",
+          "templateVersions" : {
+            "TEMPLATE--balanced-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        }, {
+          "pricingMode" : "REFERENCE",
+          "priceAssumptions" : [ "BRG-008--8-pack: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "BRG-008--8-pack: 按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "DECK-005--width-8-0-length-31-75-wheelbase-14-25: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "GRIP-002--sheet-9-0x33-0: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "GRIP-002--sheet-9-0x33-0: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "TRUCK-006--size-8-0-k5-standard: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "TRUCK-006--size-8-0-k5-standard: 同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "TRUCK-006--size-8-0-k5-standard: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。", "WHEEL-009--diameter-52-hardness-100a-shape-: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "WHEEL-009--diameter-52-hardness-100a-shape-: 零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "TEMPLATE--balanced-beginner",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "BRG-008--8-pack"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "GRIP-002--sheet-9-0x33-0"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "HW-001--purchase-variant-unresolved"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "RSR-001--height-6-35mm"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "TRUCK-006--size-8-0-k5-standard"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-"
+            } ]
+          },
+          "demand" : {
+            "purpose" : "BALANCED",
+            "preference" : "EASY_START",
+            "recommendationType" : "BOTH",
+            "budgetCents" : 60000,
+            "shoeSize" : null
+          },
+          "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "TEMPLATE--balanced-beginner",
+          "templateVersion" : 2,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "BRG-008--8-pack",
+            "productKey" : "BRG-008",
+            "label" : "Bearings 8 pack / 8-pack",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "Skate Rated（品牌称无ABEC虚标）"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Skate One（Mini Logo 为其旗下品牌）",
+              "url" : "https://www.skateone.com",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "BRG-008--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 7650,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 8,
+            "amountCents" : 7650,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原记录每套8件计价；来源为RECORDED，未独立核验零售包装。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=595928553385",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "DECK-005--width-8-0-length-31-75-wheelbase-14-25",
+            "productKey" : "DECK-005",
+            "label" : "Seal / width-8-0-length-31-75-wheelbase-14-25",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 31.75,
+              "wheelbaseInch" : 14.25,
+              "widthInch" : 8
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+              "url" : "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "DECK-005--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 26900,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 26900,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+              "url" : "https://item.taobao.com/item.htm?id=740317741959",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "GRIP-002--sheet-9-0x33-0",
+            "productKey" : "GRIP-002",
+            "label" : "The Original Griptape Sheets / sheet-9-0x33-0",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "lengthInch" : 33,
+              "widthInch" : 9
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Jessup The Original® Griptape Sheets",
+              "url" : "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "GRIP-002--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 3870,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : 1,
+            "amountCents" : 3870,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+              "url" : "https://item.taobao.com/item.htm?id=890046872883",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "HW-001--purchase-variant-unresolved",
+            "productKey" : "HW-001",
+            "label" : "Original Hardware（Phillips/Allen） / purchase-variant-unresolved",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "headType" : null,
+              "lengthMm" : null,
+              "nutsIncluded" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Shorty's Original Allen Hardware – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "RISER",
+            "variantKey" : "RSR-001--height-6-35mm",
+            "productKey" : "RSR-001",
+            "label" : "Dooks Riser Pads / height-6-35mm",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 6.35
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Dooks Riser Pads – Shorty's Inc.",
+              "url" : "https://www.shortysinc.com/products/dooks-riser-pads",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageQuantity" : null,
+            "packageCount" : null,
+            "quoteKey" : null,
+            "quoteVersion" : null,
+            "amountCents" : null,
+            "lineTotalCents" : null,
+            "shippingCents" : null,
+            "taxCents" : null
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "TRUCK-006--size-8-0-k5-standard",
+            "productKey" : "TRUCK-006",
+            "label" : "K5 Standard / size-8-0-k5-standard",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "axleWidthInch" : null,
+              "construction" : "K5 Standard",
+              "deckMaxInch" : null,
+              "deckMinInch" : null,
+              "heightMm" : null,
+              "sizeCode" : "8.0"
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "TRUCK-006--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 32200,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 32200,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "同型号通用展示价用于该型号规格估算；不同规格实际售价需自行查找。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "京东第三方滑板店零售价（到手价，原价¥380）",
+              "url" : "https://item.jd.com/10095340017492.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "WHEEL-009--diameter-52-hardness-100a-shape-",
+            "productKey" : "WHEEL-009",
+            "label" : "官方专业板技巧轮（硬轮） / diameter-52-hardness-100a-shape-",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "contactPatchMm" : null,
+              "diameterMm" : 52,
+              "hardnessScale" : "A",
+              "hardnessValue" : 100,
+              "shape" : "官方专业板技巧轮（硬轮）",
+              "widthMm" : null
+            },
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "DBH滑板官网商城",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "WHEEL-009--cn-price",
+            "quoteVersion" : 2,
+            "lineTotalCents" : 8000,
+            "pricingMode" : "REFERENCE",
+            "packageQuantity" : null,
+            "amountCents" : 8000,
+            "shippingCents" : null,
+            "taxCents" : null,
+            "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "零售包装数量未知，按一套覆盖本类别所需数量估算；实际包装需自行确认。" ],
+            "quoteSources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "品牌官方商城零售价",
+              "url" : "https://www.dobyheart.com/product.html",
+              "verificationStatus" : "RECORDED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "契约必需件数量，条件垫片与物理规则待核实。",
+            "ruleKey" : "COMPLETENESS--assembly-v1",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "冻结契约v1 §3/任务书 §5.1",
+              "url" : null,
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。",
+            "ruleKey" : "FIT--TRUCK-006--size-8-0-k5-standard",
+            "ruleVersion" : 2,
+            "sources" : [ {
+              "collectedAt" : null,
+              "collectedDate" : "2026-10-09",
+              "title" : "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+              "url" : "https://nhsskatedirect.com/collections/krux-trucks-standard",
+              "verificationStatus" : "RECORDED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "INSUFFICIENT_DATA",
+            "explanation" : "缺少适用规则或输入范围依据",
+            "ruleKey" : null,
+            "ruleVersion" : null,
+            "sources" : [ ]
+          } ],
+          "missing" : [ "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+          "reasons" : [ "REFERENCE_ESTIMATE", "COMPATIBILITY_PENDING", "MISSING_PRICE_NOT_ZERO" ],
+          "knownSubtotalCents" : 78620,
+          "priceComplete" : false,
+          "validationState" : "INSUFFICIENT_DATA",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : null,
+          "budgetDeltaCents" : null,
+          "calculationVersion" : "38d65d2d732eeb48172e26866bc9781ec0c3e062fd17609968b9cb6a95b997de",
+          "templateVersions" : {
+            "TEMPLATE--balanced-beginner" : 2
+          },
+          "ruleVersions" : {
+            "COMPLETENESS--assembly-v1" : 2,
+            "FIT--TRUCK-006--size-8-0-k5-standard" : 2
+          }
+        } ],
+        "excludedCounts" : {
+          "INSUFFICIENT_DATA" : 1996
+        },
+        "missing" : [ "BEARING:VALID_QUOTE_REQUIRED", "GRIP:VALID_QUOTE_REQUIRED", "HARDWARE:VALID_QUOTE_REQUIRED", "RISER:VALID_QUOTE_REQUIRED" ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 1996
+      },
+      "searchTruncated" : true,
+      "evaluatedCount" : 2000,
+      "evaluationLimit" : 2000
+    }
+  }
+}

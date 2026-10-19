@@ -56,9 +56,9 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-      DB_USERNAME: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_URL: ${DB_URL:-jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+      DB_USERNAME: ${DB_USERNAME:-${MYSQL_USER}}
+      DB_PASSWORD: ${DB_PASSWORD:-${MYSQL_PASSWORD}}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -72,6 +72,21 @@ services:
       JPA_DDL_AUTO: ${JPA_DDL_AUTO:-none}
       RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
       RATE_LIMIT_REDIS_FAILURE_DENIES_PROTECTED: ${RATE_LIMIT_REDIS_FAILURE_DENIES_PROTECTED:-true}
+      # AI 网关透传；未设置的变量留空即可，后端会按 默认配置 -> 资讯配置 的顺序合并
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-ark}
+      AI_MODEL_DEFAULT: ${AI_MODEL_DEFAULT:-doubao-seed-2-1-lite-260915}
+      AI_BASE_URL_DEFAULT: ${AI_BASE_URL_DEFAULT:-}
+      AI_API_KEY_DEFAULT: ${AI_API_KEY_DEFAULT:-}
+      AI_PROVIDER_NEWS: ${AI_PROVIDER_NEWS:-}
+      AI_MODEL_NEWS: ${AI_MODEL_NEWS:-}
+      AI_BASE_URL_NEWS: ${AI_BASE_URL_NEWS:-}
+      AI_API_KEY_NEWS: ${AI_API_KEY_NEWS:-}
+      AI_PROVIDER_COACH_CHAT: ${AI_PROVIDER_COACH_CHAT:-}
+      AI_MODEL_COACH_CHAT: ${AI_MODEL_COACH_CHAT:-doubao-seed-evolving}
     volumes:
       - ../../upload:/app/upload
 

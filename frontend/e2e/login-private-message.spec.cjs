@@ -111,7 +111,7 @@ test('user logs in, opens private messages, and sends a message', async ({ page 
   await page.getByRole('button', { name: /小林/ }).click()
   await expect(page.getByText('今晚去刷街吗？')).toBeVisible()
 
-  await page.getByPlaceholder('输入私信内容，Ctrl / Cmd + Enter 发送').fill('收到，七点见')
+  await page.getByPlaceholder('输入消息...').fill('收到，七点见')
   await page.getByRole('button', { name: '发送', exact: true }).click()
 
   await expect(page.locator('.message-row.mine .message-bubble p')).toHaveText('收到，七点见')

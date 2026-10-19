@@ -36,8 +36,16 @@ public class ProductAnalyticsService {
     }
 
     public Map<String, Object> summary7d() {
+        return summary(7);
+    }
+
+    public Map<String, Object> summary30d() {
+        return summary(30);
+    }
+
+    private Map<String, Object> summary(int days) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("trend7d", trend7d());
+        result.put("trend" + days + "d", trend(days));
         result.put("recentEvents", productEventRepository.findTop100ByOrderByCreateTimeDesc().stream()
                 .limit(20)
                 .map(this::toMap)
@@ -45,10 +53,10 @@ public class ProductAnalyticsService {
         return result;
     }
 
-    private List<Map<String, Object>> trend7d() {
+    private List<Map<String, Object>> trend(int days) {
         List<Map<String, Object>> rows = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        for (int i = 6; i >= 0; i--) {
+        for (int i = days - 1; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             LocalDateTime start = date.atStartOfDay();
             LocalDateTime end = date.atTime(LocalTime.MAX);

@@ -13,6 +13,7 @@ const router = useRouter()
 
 const isAuthPage = computed(() => ['/login', '/register'].includes(route.path))
 const useWideLayout = computed(() => route.meta.wideLayout === true)
+const isMessagesPage = computed(() => route.path.startsWith('/messages'))
 const authState = ref({
   token: '',
   role: '',
@@ -39,6 +40,7 @@ const navItems = computed(() => {
     { to: '/community', label: '社区帖子', icon: 'community' },
     { to: '/activities', label: '同城约板', icon: 'activity' },
     { to: '/skate', label: '滑板专业', icon: 'target' },
+    { to: '/board-assistant', label: '选板助手', icon: 'skateboard' },
     { to: '/ai-coach', label: 'AI 滑板老师', icon: 'skateboard' },
     { to: '/bulletins', label: '社区快讯', icon: 'news' }
   ]
@@ -117,7 +119,7 @@ watch(() => route.path, () => {
     <header v-if="!isAuthPage" class="topbar">
       <div class="brand" @click="$router.push('/')">
         <span class="brand-icon"><AppIcon name="skateboard" :size="20" /></span>
-        <span>滑板交流网站</span>
+        <span>滑板知识网站</span>
       </div>
 
       <nav class="nav-links">
@@ -155,7 +157,7 @@ watch(() => route.path, () => {
       </div>
     </header>
 
-    <main :class="['main-container', { 'main-container-wide': useWideLayout }]">
+    <main :class="['main-container', { 'main-container-wide': useWideLayout, 'main-container-messages': isMessagesPage }]">
       <RouterView v-slot="{ Component, route: viewRoute }">
         <Transition name="route-glide" mode="out-in">
           <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
@@ -167,7 +169,7 @@ watch(() => route.path, () => {
 
     <nav v-if="!isAuthPage" class="mobile-bottom-nav" aria-label="移动端主导航">
       <router-link
-        v-for="item in navItems.slice(0, 5)"
+        v-for="item in navItems.slice(0, 6)"
         :key="`mobile-${item.to}`"
         :to="item.to"
         class="mobile-bottom-link"
@@ -347,6 +349,11 @@ watch(() => route.path, () => {
   width: 100%;
 }
 
+.main-container-messages {
+  max-width: none;
+  padding: 0;
+}
+
 .site-footer {
   display: flex;
   align-items: center;
@@ -421,6 +428,10 @@ watch(() => route.path, () => {
     padding-bottom: 92px;
   }
 
+  .main-container-messages {
+    padding: 0;
+  }
+
   .mobile-bottom-nav {
     position: fixed;
     left: 12px;
@@ -428,7 +439,7 @@ watch(() => route.path, () => {
     bottom: max(10px, env(safe-area-inset-bottom));
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 4px;
     padding: 7px;
     border: 1px solid rgba(255, 255, 255, 0.72);

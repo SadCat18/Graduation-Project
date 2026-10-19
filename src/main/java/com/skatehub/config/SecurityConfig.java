@@ -65,6 +65,14 @@ public class SecurityConfig {
                                 "/api/skate/events/*",
                                 "/api/skate/equipments",
                                 "/api/skate/equipments/*").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/skate/board-assistant/catalog",
+                                "/api/skate/board-assistant/variants/*").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/skate/board-assistant/recommend",
+                                "/api/skate/board-assistant/evaluate",
+                                "/api/skate/board-assistant/replacements",
+                                "/api/skate/board-assistant/compare").permitAll()
                         .requestMatchers("/api/ai/chat", "/api/ai/execute", "/api/ai/config").hasRole("ADMIN")
                         .requestMatchers("/api/auth/bootstrap-admin", "/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

@@ -614,6 +614,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div v-if="role !== 'ADMIN'" class="page-grid profile-page">
+    <RouterLink class="card" to="/profile/board-plans">我的选板方案 · 查看保存时快照与最新状态</RouterLink>
     <section class="profile-workbench">
       <div class="card identity-card">
         <div class="identity-avatar">

@@ -82,12 +82,12 @@ management:
 
 ai:
   provider: ${AI_PROVIDER:${AI_PROVIDER_DEFAULT:ark}}
-  model: ${AI_MODEL:${AI_MODEL_DEFAULT:doubao-seed-2-0-lite-260428}}
+  model: ${AI_MODEL:${AI_MODEL_DEFAULT:doubao-seed-2-1-lite-260915}}
   base-url: ${AI_BASE_URL:${AI_BASE_URL_DEFAULT:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
   api-key: ${AI_API_KEY:${AI_API_KEY_DEFAULT:${ARK_API_KEY:}}}
   defaults:
     provider: ${AI_PROVIDER_DEFAULT:${AI_PROVIDER:ark}}
-    model: ${AI_MODEL_DEFAULT:${AI_MODEL:doubao-seed-2-0-lite-260428}}
+    model: ${AI_MODEL_DEFAULT:${AI_MODEL:doubao-seed-2-1-lite-260915}}
     base-url: ${AI_BASE_URL_DEFAULT:${AI_BASE_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
     api-key: ${AI_API_KEY_DEFAULT:${AI_API_KEY:${ARK_API_KEY:}}}
   news:
@@ -96,9 +96,12 @@ ai:
     base-url: ${AI_BASE_URL_NEWS:}
     api-key: ${AI_API_KEY_NEWS:}
   scenes:
+    coach_chat:
+      provider: ${AI_PROVIDER_COACH_CHAT:}
+      model: ${AI_MODEL_COACH_CHAT:doubao-seed-evolving}
     news_discovery:
       provider: ${AI_PROVIDER_NEWS_DISCOVERY:${AI_PROVIDER_NEWS:}}
-      model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-0-pro-260215}}
+      model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-1-lite-260915}}
       base-url: ${AI_BASE_URL_NEWS_DISCOVERY:${AI_BASE_URL_NEWS:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
       api-key: ${AI_API_KEY_NEWS_DISCOVERY:${AI_API_KEY_NEWS:}}
     news_summary:

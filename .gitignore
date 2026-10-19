@@ -31,3 +31,11 @@ upload/
 
 # local secrets
 src/main/resources/application-local.yml
+
+# Local agent evidence and build-only settings
+.codex/
+frontend/.env*
+!frontend/.env*.example
+design-qa-assets/
+design-qa.md
+docs/ai-config-update-20260930.md

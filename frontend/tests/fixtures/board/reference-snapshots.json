@@ -1,0 +1,620 @@
+{
+  "evidenceKind" : "ORIGINAL_RECORDED_REFERENCE_SNAPSHOT_H2_WITH_SYNTHETIC_ONE_CENT_CONFLICT_CONTROL",
+  "saveRequest" : {
+    "name" : "原资料参考方案",
+    "expectedCalculationVersion" : "5adc7aacf5437b3d01edef1de7fe46e3826b2ec4f06bfe5aa3c39c6610c8d378",
+    "demand" : {
+      "purpose" : "ACTION",
+      "preference" : "EASY_START",
+      "recommendationType" : "BOTH",
+      "budgetCents" : 60000,
+      "shoeSize" : null
+    },
+    "selection" : {
+      "kind" : "COMPLETE",
+      "templateKey" : null,
+      "items" : [ {
+        "category" : "COMPLETE",
+        "variantKey" : "SET-001--deck-none-complete"
+      } ]
+    }
+  },
+  "saveResponse" : {
+    "budgetDeltaCents" : 2000,
+    "calculationSources" : [ {
+      "active" : true,
+      "key" : "SET-001--deck-none-complete",
+      "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+      "pricingMode" : "REFERENCE",
+      "productKey" : "SET-001",
+      "rawSpec" : {
+        "recordSpec" : {
+          "components" : "专业整板（板面+桥+轮+轴承+砂纸，具体配件品牌官方未标注）",
+          "deck_width_in" : null
+        },
+        "selectedPart" : {
+          "components" : "专业整板（板面+桥+轮+轴承+砂纸，具体配件品牌官方未标注）",
+          "deck_width_in" : null
+        }
+      },
+      "sources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/spec",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "specs" : {
+        "deckWidthInch" : null,
+        "manufacturerComplete" : null
+      },
+      "verificationStatus" : "RECORDED",
+      "version" : 2
+    }, {
+      "active" : true,
+      "brand" : "DBH",
+      "category" : "COMPLETE",
+      "description" : "DBH官方商城专业整板主力套装，图案选择多",
+      "imageLicenseStatus" : "UNAUTHORIZED",
+      "imageSource" : null,
+      "key" : "SET-001",
+      "legacyEquipmentId" : null,
+      "levelTags" : [ "初学可", "进阶" ],
+      "model" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案）",
+      "notes" : "官网另售：FLIP套装¥350、TREFLIP套装¥430、Agan联名¥460、LIMITLESS形象款¥340/经典LOGO¥320、DO BY HEART 5.5系列PRO套装¥550",
+      "pricingMode" : "REFERENCE",
+      "sourceRecordId" : "SET-001",
+      "sources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/spec_source",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "suitabilityTags" : [ "初学", "街式", "滑板场" ],
+      "version" : 2
+    }, {
+      "active" : true,
+      "amountCents" : 58000,
+      "collectedAt" : null,
+      "collectedDate" : "2026-10-09",
+      "currency" : "CNY",
+      "displayPrice" : "580 CNY",
+      "key" : "SET-001--cn-price",
+      "landedPriceConfirmed" : false,
+      "market" : "CN",
+      "packageQuantity" : 1,
+      "packageUnit" : "COMPLETE",
+      "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "priceKind" : "EXACT",
+      "pricingMode" : "REFERENCE",
+      "purchaseScope" : "品牌官方商城零售价",
+      "rawPrice" : {
+        "amount" : 580,
+        "collected_date" : "2026-10-09",
+        "currency" : "CNY",
+        "note" : null,
+        "price_type" : "品牌官方商城零售价",
+        "sales_region" : "CN",
+        "source_url" : "https://www.dobyheart.com"
+      },
+      "shippingCents" : null,
+      "sourceProductKey" : "SET-001",
+      "sources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/cn_price",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "品牌官方商城零售价",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "taxCents" : null,
+      "validUntil" : null,
+      "variantKey" : "SET-001--deck-none-complete",
+      "verificationStatus" : "RECORDED",
+      "version" : 2
+    } ],
+    "calculationVersion" : "5adc7aacf5437b3d01edef1de7fe46e3826b2ec4f06bfe5aa3c39c6610c8d378",
+    "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+    "checks" : [ ],
+    "demand" : {
+      "budgetCents" : 60000,
+      "preference" : "EASY_START",
+      "purpose" : "ACTION",
+      "recommendationType" : "BOTH",
+      "shoeSize" : null
+    },
+    "items" : [ {
+      "amountCents" : 58000,
+      "category" : "COMPLETE",
+      "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+      "lineTotalCents" : 58000,
+      "packageCount" : 1,
+      "packageQuantity" : 1,
+      "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "pricingMode" : "REFERENCE",
+      "productKey" : "SET-001",
+      "quoteKey" : "SET-001--cn-price",
+      "quoteSources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/cn_price",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "品牌官方商城零售价",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "quoteVersion" : 2,
+      "requiredQuantity" : 1,
+      "shippingCents" : null,
+      "sources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/spec",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "specs" : {
+        "deckWidthInch" : null,
+        "manufacturerComplete" : null
+      },
+      "taxCents" : null,
+      "variantKey" : "SET-001--deck-none-complete"
+    } ],
+    "kind" : "COMPLETE",
+    "knownSubtotalCents" : 58000,
+    "missing" : [ ],
+    "preferenceScore" : 1,
+    "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+    "priceComplete" : true,
+    "pricingMode" : "REFERENCE",
+    "proposedAdjustments" : [ ],
+    "purposeScore" : 1,
+    "quoteSnapshots" : [ {
+      "active" : true,
+      "amountCents" : 58000,
+      "collectedAt" : null,
+      "collectedDate" : "2026-10-09",
+      "currency" : "CNY",
+      "displayPrice" : "580 CNY",
+      "key" : "SET-001--cn-price",
+      "landedPriceConfirmed" : false,
+      "market" : "CN",
+      "packageQuantity" : 1,
+      "packageUnit" : "COMPLETE",
+      "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "priceKind" : "EXACT",
+      "pricingMode" : "REFERENCE",
+      "purchaseScope" : "品牌官方商城零售价",
+      "rawPrice" : {
+        "amount" : 580,
+        "collected_date" : "2026-10-09",
+        "currency" : "CNY",
+        "note" : null,
+        "price_type" : "品牌官方商城零售价",
+        "sales_region" : "CN",
+        "source_url" : "https://www.dobyheart.com"
+      },
+      "shippingCents" : null,
+      "sourceProductKey" : "SET-001",
+      "sources" : [ {
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "evidenceRef" : "equipment.json#/records/41/cn_price",
+        "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+        "title" : "品牌官方商城零售价",
+        "url" : "https://www.dobyheart.com",
+        "verificationStatus" : "RECORDED"
+      } ],
+      "taxCents" : null,
+      "validUntil" : null,
+      "variantKey" : "SET-001--deck-none-complete",
+      "verificationStatus" : "RECORDED",
+      "version" : 2
+    } ],
+    "reasons" : [ ],
+    "requiresConfirmation" : false,
+    "ruleVersions" : { },
+    "selection" : {
+      "items" : [ {
+        "category" : "COMPLETE",
+        "variantKey" : "SET-001--deck-none-complete"
+      } ],
+      "kind" : "COMPLETE",
+      "templateKey" : null
+    },
+    "snapshotState" : "REFERENCE_ESTIMATE",
+    "templateKey" : null,
+    "templateVersion" : null,
+    "templateVersions" : { },
+    "totalCents" : 58000,
+    "validationState" : "REFERENCE_ESTIMATE",
+    "key" : "bfcfa7f4-1c01-4c22-8a0a-1991ce29065d",
+    "ownerId" : 101,
+    "name" : "原资料参考方案",
+    "note" : null,
+    "createdAt" : "2026-10-10T12:46:59.021876200Z",
+    "updatedAt" : "2026-10-10T12:46:59.021876200Z",
+    "copiedFromKey" : null
+  },
+  "detailAfterSyntheticRevision" : {
+    "snapshot" : {
+      "budgetDeltaCents" : 2000,
+      "calculationSources" : [ {
+        "active" : true,
+        "key" : "SET-001--deck-none-complete",
+        "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+        "pricingMode" : "REFERENCE",
+        "productKey" : "SET-001",
+        "rawSpec" : {
+          "recordSpec" : {
+            "components" : "专业整板（板面+桥+轮+轴承+砂纸，具体配件品牌官方未标注）",
+            "deck_width_in" : null
+          },
+          "selectedPart" : {
+            "components" : "专业整板（板面+桥+轮+轴承+砂纸，具体配件品牌官方未标注）",
+            "deck_width_in" : null
+          }
+        },
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/spec",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "specs" : {
+          "deckWidthInch" : null,
+          "manufacturerComplete" : null
+        },
+        "verificationStatus" : "RECORDED",
+        "version" : 2
+      }, {
+        "active" : true,
+        "brand" : "DBH",
+        "category" : "COMPLETE",
+        "description" : "DBH官方商城专业整板主力套装，图案选择多",
+        "imageLicenseStatus" : "UNAUTHORIZED",
+        "imageSource" : null,
+        "key" : "SET-001",
+        "legacyEquipmentId" : null,
+        "levelTags" : [ "初学可", "进阶" ],
+        "model" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案）",
+        "notes" : "官网另售：FLIP套装¥350、TREFLIP套装¥430、Agan联名¥460、LIMITLESS形象款¥340/经典LOGO¥320、DO BY HEART 5.5系列PRO套装¥550",
+        "pricingMode" : "REFERENCE",
+        "sourceRecordId" : "SET-001",
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/spec_source",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "suitabilityTags" : [ "初学", "街式", "滑板场" ],
+        "version" : 2
+      }, {
+        "active" : true,
+        "amountCents" : 58000,
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "currency" : "CNY",
+        "displayPrice" : "580 CNY",
+        "key" : "SET-001--cn-price",
+        "landedPriceConfirmed" : false,
+        "market" : "CN",
+        "packageQuantity" : 1,
+        "packageUnit" : "COMPLETE",
+        "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+        "priceKind" : "EXACT",
+        "pricingMode" : "REFERENCE",
+        "purchaseScope" : "品牌官方商城零售价",
+        "rawPrice" : {
+          "amount" : 580,
+          "collected_date" : "2026-10-09",
+          "currency" : "CNY",
+          "note" : null,
+          "price_type" : "品牌官方商城零售价",
+          "sales_region" : "CN",
+          "source_url" : "https://www.dobyheart.com"
+        },
+        "shippingCents" : null,
+        "sourceProductKey" : "SET-001",
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/cn_price",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "品牌官方商城零售价",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "taxCents" : null,
+        "validUntil" : null,
+        "variantKey" : "SET-001--deck-none-complete",
+        "verificationStatus" : "RECORDED",
+        "version" : 2
+      } ],
+      "calculationVersion" : "5adc7aacf5437b3d01edef1de7fe46e3826b2ec4f06bfe5aa3c39c6610c8d378",
+      "catalogVersion" : "b02057918430d294f8a7356a1adefe40ad2d3aa28a9d8ce1131b597d0ba9c160",
+      "checks" : [ ],
+      "demand" : {
+        "budgetCents" : 60000,
+        "preference" : "EASY_START",
+        "purpose" : "ACTION",
+        "recommendationType" : "BOTH",
+        "shoeSize" : null
+      },
+      "items" : [ {
+        "amountCents" : 58000,
+        "category" : "COMPLETE",
+        "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+        "lineTotalCents" : 58000,
+        "packageCount" : 1,
+        "packageQuantity" : 1,
+        "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+        "pricingMode" : "REFERENCE",
+        "productKey" : "SET-001",
+        "quoteKey" : "SET-001--cn-price",
+        "quoteSources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/cn_price",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "品牌官方商城零售价",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "quoteVersion" : 2,
+        "requiredQuantity" : 1,
+        "shippingCents" : null,
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/spec",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "specs" : {
+          "deckWidthInch" : null,
+          "manufacturerComplete" : null
+        },
+        "taxCents" : null,
+        "variantKey" : "SET-001--deck-none-complete"
+      } ],
+      "kind" : "COMPLETE",
+      "knownSubtotalCents" : 58000,
+      "missing" : [ ],
+      "preferenceScore" : 1,
+      "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "priceComplete" : true,
+      "pricingMode" : "REFERENCE",
+      "proposedAdjustments" : [ ],
+      "purposeScore" : 1,
+      "quoteSnapshots" : [ {
+        "active" : true,
+        "amountCents" : 58000,
+        "collectedAt" : null,
+        "collectedDate" : "2026-10-09",
+        "currency" : "CNY",
+        "displayPrice" : "580 CNY",
+        "key" : "SET-001--cn-price",
+        "landedPriceConfirmed" : false,
+        "market" : "CN",
+        "packageQuantity" : 1,
+        "packageUnit" : "COMPLETE",
+        "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+        "priceKind" : "EXACT",
+        "pricingMode" : "REFERENCE",
+        "purchaseScope" : "品牌官方商城零售价",
+        "rawPrice" : {
+          "amount" : 580,
+          "collected_date" : "2026-10-09",
+          "currency" : "CNY",
+          "note" : null,
+          "price_type" : "品牌官方商城零售价",
+          "sales_region" : "CN",
+          "source_url" : "https://www.dobyheart.com"
+        },
+        "shippingCents" : null,
+        "sourceProductKey" : "SET-001",
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "evidenceRef" : "equipment.json#/records/41/cn_price",
+          "note" : "仅转写已有资料，本轮未独立复核页面或字段截图。",
+          "title" : "品牌官方商城零售价",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "taxCents" : null,
+        "validUntil" : null,
+        "variantKey" : "SET-001--deck-none-complete",
+        "verificationStatus" : "RECORDED",
+        "version" : 2
+      } ],
+      "reasons" : [ ],
+      "requiresConfirmation" : false,
+      "ruleVersions" : { },
+      "selection" : {
+        "items" : [ {
+          "category" : "COMPLETE",
+          "variantKey" : "SET-001--deck-none-complete"
+        } ],
+        "kind" : "COMPLETE",
+        "templateKey" : null
+      },
+      "snapshotState" : "REFERENCE_ESTIMATE",
+      "templateKey" : null,
+      "templateVersion" : null,
+      "templateVersions" : { },
+      "totalCents" : 58000,
+      "validationState" : "REFERENCE_ESTIMATE",
+      "key" : "bfcfa7f4-1c01-4c22-8a0a-1991ce29065d",
+      "ownerId" : 101,
+      "name" : "原资料参考方案",
+      "note" : null,
+      "createdAt" : "2026-10-10T12:46:59.021876Z",
+      "updatedAt" : "2026-10-10T12:46:59.021876Z",
+      "copiedFromKey" : null
+    },
+    "latestEvaluation" : {
+      "pricingMode" : "REFERENCE",
+      "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "selection" : {
+        "kind" : "COMPLETE",
+        "templateKey" : null,
+        "items" : [ {
+          "category" : "COMPLETE",
+          "variantKey" : "SET-001--deck-none-complete"
+        } ]
+      },
+      "demand" : {
+        "budgetCents" : 60000,
+        "preference" : "EASY_START",
+        "purpose" : "ACTION",
+        "recommendationType" : "BOTH",
+        "shoeSize" : null
+      },
+      "catalogVersion" : "be9171786521861cfbbf6f773b440960035b487faf250143f03533c528fd4639",
+      "kind" : "COMPLETE",
+      "templateKey" : null,
+      "templateVersion" : null,
+      "items" : [ {
+        "category" : "COMPLETE",
+        "variantKey" : "SET-001--deck-none-complete",
+        "productKey" : "SET-001",
+        "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+        "requiredQuantity" : 1,
+        "specs" : {
+          "deckWidthInch" : null,
+          "manufacturerComplete" : null
+        },
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "packageCount" : 1,
+        "quoteKey" : "SET-001--cn-price",
+        "quoteVersion" : 3,
+        "lineTotalCents" : 58001,
+        "pricingMode" : "REFERENCE",
+        "packageQuantity" : 1,
+        "amountCents" : 58001,
+        "shippingCents" : null,
+        "taxCents" : null,
+        "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+        "quoteSources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "title" : "品牌官方商城零售价",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ]
+      } ],
+      "checks" : [ ],
+      "missing" : [ ],
+      "reasons" : [ ],
+      "knownSubtotalCents" : 58001,
+      "priceComplete" : true,
+      "validationState" : "REFERENCE_ESTIMATE",
+      "requiresConfirmation" : false,
+      "proposedAdjustments" : [ ],
+      "totalCents" : 58001,
+      "budgetDeltaCents" : 1999,
+      "calculationVersion" : "71b374f26b9be76f168582f53ee4c7c9d9384daa8110dbe6a561b62edb17d59a",
+      "templateVersions" : { },
+      "ruleVersions" : { }
+    }
+  },
+  "staleSaveAfterSyntheticRevision" : {
+    "errorCode" : "PRICE_CHANGED",
+    "requiresConfirmation" : true,
+    "evaluation" : {
+      "pricingMode" : "REFERENCE",
+      "priceAssumptions" : [ "SET-001--deck-none-complete: 按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "SET-001--deck-none-complete: 按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+      "selection" : {
+        "kind" : "COMPLETE",
+        "templateKey" : null,
+        "items" : [ {
+          "category" : "COMPLETE",
+          "variantKey" : "SET-001--deck-none-complete"
+        } ]
+      },
+      "demand" : {
+        "purpose" : "ACTION",
+        "preference" : "EASY_START",
+        "recommendationType" : "BOTH",
+        "budgetCents" : 60000,
+        "shoeSize" : null
+      },
+      "catalogVersion" : "be9171786521861cfbbf6f773b440960035b487faf250143f03533c528fd4639",
+      "kind" : "COMPLETE",
+      "templateKey" : null,
+      "templateVersion" : null,
+      "items" : [ {
+        "category" : "COMPLETE",
+        "variantKey" : "SET-001--deck-none-complete",
+        "productKey" : "SET-001",
+        "label" : "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案） / deck-none-complete",
+        "requiredQuantity" : 1,
+        "specs" : {
+          "deckWidthInch" : null,
+          "manufacturerComplete" : null
+        },
+        "sources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "title" : "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ],
+        "packageCount" : 1,
+        "quoteKey" : "SET-001--cn-price",
+        "quoteVersion" : 3,
+        "lineTotalCents" : 58001,
+        "pricingMode" : "REFERENCE",
+        "packageQuantity" : 1,
+        "amountCents" : 58001,
+        "shippingCents" : null,
+        "taxCents" : null,
+        "priceAssumptions" : [ "按2026-10-09已采集资料作参考估价；不代表当前可购或含运税到手价。", "按原资料分类的一块整板估算，内部配件与包装未独立核验。" ],
+        "quoteSources" : [ {
+          "collectedAt" : null,
+          "collectedDate" : "2026-10-09",
+          "title" : "品牌官方商城零售价",
+          "url" : "https://www.dobyheart.com",
+          "verificationStatus" : "RECORDED"
+        } ]
+      } ],
+      "checks" : [ ],
+      "missing" : [ ],
+      "reasons" : [ ],
+      "knownSubtotalCents" : 58001,
+      "priceComplete" : true,
+      "validationState" : "REFERENCE_ESTIMATE",
+      "requiresConfirmation" : false,
+      "proposedAdjustments" : [ ],
+      "totalCents" : 58001,
+      "budgetDeltaCents" : 1999,
+      "calculationVersion" : "71b374f26b9be76f168582f53ee4c7c9d9384daa8110dbe6a561b62edb17d59a",
+      "templateVersions" : { },
+      "ruleVersions" : { }
+    }
+  }
+}

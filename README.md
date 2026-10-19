@@ -34,7 +34,7 @@ mvn spring-boot:run
 
 统一 AI 接口层使用以下环境变量：
 
-- `AI_PROVIDER`：默认模型提供方，当前已接入 `ark`，并预留 `openai`、`deepseek`、`qwen`
+- `AI_PROVIDER`：默认模型提供方，当前已接入 `ark`（OpenAI 兼容协议）；`openai`、`deepseek`、`qwen` 为预留命名，尚未注册实现，配置后会运行时报“不支持的 AI provider”。如需接入其他 OpenAI 兼容厂商（DeepSeek、智谱、Kimi 等），保持 `provider: ark` 并改 `AI_BASE_URL` / `AI_MODEL` / `AI_API_KEY` 即可
 - `AI_MODEL`：默认模型名
 - `AI_BASE_URL`：模型接口地址
 - `AI_API_KEY`：模型访问密钥
@@ -70,18 +70,20 @@ mvn spring-boot:run
 
 ```env
 AI_PROVIDER_DEFAULT=ark
-AI_MODEL_DEFAULT=Doubao-Seed-2.0-mini
+AI_MODEL_DEFAULT=doubao-seed-2-1-lite-260915
 AI_BASE_URL_DEFAULT=https://ark.cn-beijing.volces.com/api/v3/chat/completions
 AI_API_KEY_DEFAULT=你的ARK_API_KEY
 
 AI_PROVIDER_NEWS=ark
-AI_MODEL_NEWS=Doubao-Seed-2.0-mini
+AI_MODEL_NEWS=doubao-seed-2-1-lite-260915
 
-AI_MODEL_NEWS_SUMMARY=Doubao-Seed-2.0-mini
-AI_MODEL_NEWS_TRANSLATE=Doubao-Seed-Translation
-AI_MODEL_NEWS_CLASSIFY=Doubao-Seed-2.0-mini
-AI_MODEL_NEWS_TITLE_POLISH=Doubao-Seed-2.0-mini
+AI_MODEL_NEWS_SUMMARY=doubao-seed-2-1-lite-260915
+AI_MODEL_NEWS_TRANSLATE=doubao-seed-2-1-lite-260915
+AI_MODEL_NEWS_CLASSIFY=doubao-seed-2-1-lite-260915
+AI_MODEL_NEWS_TITLE_POLISH=doubao-seed-2-1-lite-260915
 ```
+
+资讯 AI 抓取（news_discovery）场景默认同样使用 `doubao-seed-2-1-lite-260915`；如需更强的抓取效果，可通过 `AI_MODEL_NEWS_DISCOVERY` 单独换成 `doubao-seed-2-1-pro-260915`。
 
 当前资讯 AI scene 路由如下：
 

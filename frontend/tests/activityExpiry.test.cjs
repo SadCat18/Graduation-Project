@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 const sourcePath = path.resolve(__dirname, '../src/utils/activityExpiry.js')
-let source = fs.readFileSync(sourcePath, 'utf8')
+let source = fs.readFileSync(sourcePath, 'utf8').replace(/\r\n/g, '\n')
 source = source
   .replace(/import \{ ACTIVITY_STATUS, normalizeActivityStatus \} from '..\/constants\/activity'\n/, '')
   .replace(/export const /g, 'const ')

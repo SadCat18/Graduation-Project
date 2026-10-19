@@ -53,8 +53,8 @@ describe('AdminReviewPanel', () => {
     expect(wrapper.emitted('update:centerTab')[0]).toEqual(['activity'])
   })
 
-  it('emits selection and enabled batch actions', async () => {
-    const wrapper = mountPanel({ canBatchApproveOrReject: true })
+  it('emits selection and shows the complete batch summary', async () => {
+    const wrapper = mountPanel({ canBatchApproveOrReject: true, selectedCards: [reviewItem] })
     const checkboxes = wrapper.findAll('input[type="checkbox"]')
 
     await checkboxes[0].setValue(true)
@@ -64,6 +64,7 @@ describe('AdminReviewPanel', () => {
     expect(wrapper.emitted('toggleSelectAll')[0]).toEqual([true])
     expect(wrapper.emitted('toggleSelect')[0]).toEqual(['activity-1', true])
     expect(wrapper.emitted('batchReview')[0]).toEqual(['approve'])
+    expect(wrapper.text()).toContain('已选 1 条 · 活动 · 待审核 1 条')
   })
 
   it('delegates card decisions and AI moderation to the parent', async () => {

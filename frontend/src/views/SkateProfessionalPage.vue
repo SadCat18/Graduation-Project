@@ -442,6 +442,7 @@ onMounted(loadAll)
         <p class="eyebrow">SkateHub Training Lab</p>
         <h1>滑板专业</h1>
         <p class="hero-copy">把动作练习、计划推进、赛事参与和装备选择放进同一个成长闭环。</p>
+        <RouterLink to="/board-assistant">进入选板助手 · 预算、搭配检查与方案对比</RouterLink>
       </div>
       <div class="hero-stats">
         <span><strong>{{ tricks.length }}</strong> 动作</span>
