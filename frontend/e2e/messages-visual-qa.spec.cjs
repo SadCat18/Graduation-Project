@@ -1,16 +1,17 @@
 const path = require('path')
 const { test, expect } = require('@playwright/test')
+const avatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#d7e8df"/><circle cx="32" cy="24" r="12" fill="#087a6d"/><path d="M12 60a20 20 0 0 1 40 0" fill="#087a6d"/></svg>')
 
 const apiResponse = data => ({ code: 200, message: 'ok', data })
 
 const conversations = [
-  { conversationId: 1, otherUserId: 9, otherUsername: '阿拓', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=atuo', lastMessageContent: '明天下午一点没问题，我到时候带上板。', lastMessageTime: '2026-07-16T14:32:00', unreadCount: 2 },
-  { conversationId: 2, otherUserId: 10, otherUsername: '阿K', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=ak', lastMessageContent: '收到，到时候见！', lastMessageTime: '2026-07-16T13:18:00', unreadCount: 1 },
-  { conversationId: 3, otherUserId: 11, otherUsername: '板仔', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=banzi', lastMessageContent: '新视频太帅了，学到了', lastMessageTime: '2026-07-15T18:20:00', unreadCount: 0 },
-  { conversationId: 4, otherUserId: 12, otherUsername: '南城滑手', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=nancheng', lastMessageContent: '下周六有比赛，一起去吗？', lastMessageTime: '2026-07-15T17:04:00', unreadCount: 0 },
-  { conversationId: 5, otherUserId: 13, otherUsername: '小川', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=xiaochuan', lastMessageContent: '哈哈哈，太狠了', lastMessageTime: '2026-07-14T21:42:00', unreadCount: 0 },
-  { conversationId: 6, otherUserId: 14, otherUsername: '滑板思思', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=sisi', lastMessageContent: '谢谢你的建议！', lastMessageTime: '2026-07-14T19:11:00', unreadCount: 0 },
-  { conversationId: 7, otherUserId: 15, otherUsername: '阿诺', otherAvatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=anuo', lastMessageContent: '你发的那个板场在哪里？', lastMessageTime: '2026-07-12T16:30:00', unreadCount: 0 }
+  { conversationId: 1, otherUserId: 9, otherUsername: '阿拓', otherAvatar: avatar, lastMessageContent: '明天下午一点没问题，我到时候带上板。', lastMessageTime: '2026-07-16T14:32:00', unreadCount: 2 },
+  { conversationId: 2, otherUserId: 10, otherUsername: '阿K', otherAvatar: avatar, lastMessageContent: '收到，到时候见！', lastMessageTime: '2026-07-16T13:18:00', unreadCount: 1 },
+  { conversationId: 3, otherUserId: 11, otherUsername: '板仔', otherAvatar: avatar, lastMessageContent: '新视频太帅了，学到了', lastMessageTime: '2026-07-15T18:20:00', unreadCount: 0 },
+  { conversationId: 4, otherUserId: 12, otherUsername: '南城滑手', otherAvatar: avatar, lastMessageContent: '下周六有比赛，一起去吗？', lastMessageTime: '2026-07-15T17:04:00', unreadCount: 0 },
+  { conversationId: 5, otherUserId: 13, otherUsername: '小川', otherAvatar: avatar, lastMessageContent: '哈哈哈，太狠了', lastMessageTime: '2026-07-14T21:42:00', unreadCount: 0 },
+  { conversationId: 6, otherUserId: 14, otherUsername: '滑板思思', otherAvatar: avatar, lastMessageContent: '谢谢你的建议！', lastMessageTime: '2026-07-14T19:11:00', unreadCount: 0 },
+  { conversationId: 7, otherUserId: 15, otherUsername: '阿诺', otherAvatar: avatar, lastMessageContent: '你发的那个板场在哪里？', lastMessageTime: '2026-07-12T16:30:00', unreadCount: 0 }
 ]
 
 let messages = [

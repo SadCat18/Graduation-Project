@@ -20,6 +20,14 @@ Scope: current local implementation of the admin operations dashboard, paginated
 - The root shared workspace, its dependencies/index and all other632 PR source files remain unchanged. This is a PR-only fix, no merge/deployment/database/provider action.
 
 
+## Deterministic mock avatars and remote CI follow-up
+
+The dependency-repair head de5710e completed remote CI run39213129800: backend passed; frontend npm ci/production audit/unit/build/contracts passed; E2E21passed/3failed; Docker skipped. The failing message/profile visual specs still fetched external DiceBear avatars. CI logs reported connection refusal without a request URL; a separate controlled local refusal reproduced the same assertion, not a direct CI network trace.
+
+The two mock visual specs now use64x64 inline SVG data URIs (eight fixture values). Existing strict console/business assertions, production avatar code, CI thresholds and test selection are unchanged. Node20 default browser suite24/24 passed locally; all four affected visual cases passed while refusing the external avatar domain, with zero avatar requests, valid image decoding and zero console/pageerrors. The independent reviewer repeated this four-case control successfully.
+
+Production audit remains0; complete development-toolchain audit remains44 as disclosed above. A new exact-head remote frontend/backend/docker-build run must complete successfully before marking the PR ready. The prior failed run remains historical evidence and is not reported as green.
+
 ## Reproduce from a clean checkout
 
 Use JDK17, Python3 and Node20+ with npm. From the repository root:

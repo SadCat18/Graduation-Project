@@ -1,5 +1,6 @@
 const path = require('path')
 const { test, expect } = require('@playwright/test')
+const avatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="#d7e8df"/><circle cx="32" cy="24" r="12" fill="#087a6d"/><path d="M12 60a20 20 0 0 1 40 0" fill="#087a6d"/></svg>')
 
 const response = data => ({ code: 200, message: 'ok', data })
 
@@ -21,7 +22,7 @@ async function mockProfileApi(page) {
     const profile = {
       userId: 9,
       username: '阿拓',
-      avatar: 'https://api.dicebear.com/7.x/thumbs/svg?seed=atuo',
+      avatar: avatar,
       bio: '热爱街式滑板，分享每一次落地与灵感。',
       level: 12,
       skateStyle: '街式滑板',
