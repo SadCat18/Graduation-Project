@@ -99,8 +99,12 @@ class GrowthActionEventPublishingTest {
         when(posts.save(any(Post.class))).thenReturn(saved);
         PostService service = new PostService(posts, mock(CommentRepository.class), mock(UserRepository.class),
                 mock(InteractionRepository.class), mock(MessageNotifyService.class), growth, publisher);
+        PostCreateRequest request = new PostCreateRequest();
+        request.setTitle("Stable ollie training review");
+        request.setContent("Practiced ollie pop timing, shoulder alignment, and landing balance for the next session.");
+        request.setCategory("Training");
 
-        service.create(CURRENT_USER, new PostCreateRequest());
+        service.create(CURRENT_USER, request);
 
         var order = inOrder(posts, growth, publisher);
         order.verify(posts).save(any(Post.class));

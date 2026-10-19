@@ -1,7 +1,5 @@
 const AMAP_JS_URL = 'https://webapi.amap.com/maps'
-const DEFAULT_KEY = '6003345b78ed25b126a76cb9caf08a7b'
-const AMAP_KEY = (process.env.VUE_APP_AMAP_KEY || DEFAULT_KEY).trim()
-const AMAP_SECURITY_JS_CODE = (process.env.VUE_APP_AMAP_SECURITY_JS_CODE || '').trim()
+const AMAP_KEY = (process.env.VUE_APP_AMAP_KEY || '').trim()
 
 let mapLoaderPromise = null
 let amapErrorGuard = null
@@ -32,13 +30,6 @@ function resolveServiceHost() {
 function ensureSecurityConfig() {
   const serviceHost = resolveServiceHost()
   const base = { ...(window._AMapSecurityConfig || {}) }
-  if (AMAP_SECURITY_JS_CODE) {
-    window._AMapSecurityConfig = {
-      ...base,
-      securityJsCode: AMAP_SECURITY_JS_CODE
-    }
-    return
-  }
   window._AMapSecurityConfig = {
     ...base,
     serviceHost
@@ -48,6 +39,9 @@ function ensureSecurityConfig() {
 export function loadAMap() {
   if (window.AMap) {
     return Promise.resolve(window.AMap)
+  }
+  if (!AMAP_KEY) {
+    return Promise.reject(new Error('高德地图 Key 未配置'))
   }
   if (mapLoaderPromise) {
     return mapLoaderPromise

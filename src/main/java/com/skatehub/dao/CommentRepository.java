@@ -49,4 +49,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findTop20ByPostIdOrderByCreateTimeAsc(Long postId);
 
     List<Comment> findTop5ByPostIdOrderByCreateTimeDesc(Long postId);
+
+    List<Comment> findTop50ByUserIdOrderByCreateTimeDesc(Long userId);
+
+    @Query("""
+            SELECT c.postId, COUNT(c)
+            FROM Comment c
+            WHERE c.postId IN :postIds
+            GROUP BY c.postId
+            """)
+    List<Object[]> countByPostIds(@Param("postIds") List<Long> postIds);
 }

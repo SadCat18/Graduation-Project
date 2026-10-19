@@ -8,6 +8,7 @@ const props = defineProps({
 })
 
 const iconMap = {
+  // Reserved fallback icon. Keep this entry because unknown names resolve here.
   circle: ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0'],
   skateboard: [
     'M4 11c0-2 2-3 4-3h8c2 0 4 1 4 3s-2 3-4 3H8c-2 0-4-1-4-3z',
@@ -42,15 +43,19 @@ const iconMap = {
   comments: ['M4 6h16v10H9l-5 4V6z', 'M8 10h8'],
   activities: ['M6 4h12v4H6z', 'M5 8h14v12H5z', 'M8 12h8', 'M8 16h5'],
   content: ['M4 5h16v14H4z', 'M8 9h8', 'M8 13h6'],
+  // Currently unused reserved asset icon. Do not remove until admin/media flows
+  // are rechecked, because AppIcon names can be supplied through config arrays.
   image: ['M4 5h16v14H4z', 'M8.5 11a1.5 1.5 0 1 0 .01 0', 'M20 15l-4-4l-6 6l-2-2l-4 4'],
   upload: ['M12 16V6', 'M8 10l4-4l4 4', 'M4 18h16'],
   play: ['M8 5v14l11-7z'],
   copy: ['M8 8h11v11H8z', 'M5 16H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v1'],
   link: ['M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1', 'M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1'],
+  more: ['M5.5 12a.8.8 0 1 0 0 .01', 'M12 12a.8.8 0 1 0 0 .01', 'M18.5 12a.8.8 0 1 0 0 .01'],
   share: ['M18 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6z', 'M6 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6z', 'M18 22a3 3 0 1 0 0-6a3 3 0 0 0 0 6z', 'M8.6 13.5l6.8 3.8', 'M15.4 6.7l-6.8 3.8'],
   'arrow-left': ['M19 12H5', 'M12 19l-7-7l7-7'],
   'arrow-right': ['M5 12h14', 'M12 5l7 7l-7 7'],
-  x: ['M18 6l-12 12', 'M6 6l12 12']
+  x: ['M18 6l-12 12', 'M6 6l12 12'],
+  check: ['M5 12.5l4.2 4.2L19 7']
 }
 
 const paths = computed(() => iconMap[props.name] || iconMap.circle)

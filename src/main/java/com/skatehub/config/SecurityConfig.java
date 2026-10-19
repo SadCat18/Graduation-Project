@@ -1,8 +1,11 @@
 package com.skatehub.config;
 
 import com.skatehub.util.JwtAuthenticationFilter;
+import com.skatehub.util.RateLimitFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,7 +22,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableMethodSecurity
@@ -27,6 +32,10 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectProvider<RateLimitFilter> rateLimitFilterProvider;
+
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -56,10 +65,22 @@ public class SecurityConfig {
                                 "/api/skate/events/*",
                                 "/api/skate/equipments",
                                 "/api/skate/equipments/*").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/skate/board-assistant/catalog",
+                                "/api/skate/board-assistant/variants/*").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/skate/board-assistant/recommend",
+                                "/api/skate/board-assistant/evaluate",
+                                "/api/skate/board-assistant/replacements",
+                                "/api/skate/board-assistant/compare").permitAll()
                         .requestMatchers("/api/ai/chat", "/api/ai/execute", "/api/ai/config").hasRole("ADMIN")
                         .requestMatchers("/api/auth/bootstrap-admin", "/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        RateLimitFilter rateLimitFilter = rateLimitFilterProvider.getIfAvailable();
+        if (rateLimitFilter != null) {
+            http.addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
+        }
         return http.build();
     }
 
@@ -81,11 +102,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*"));
+        config.setAllowedOrigins(parseAllowedOrigins());
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private List<String> parseAllowedOrigins() {
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .filter(origin -> !"*".equals(origin))
+                .collect(Collectors.toList());
+        return origins.isEmpty() ? List.of("http://localhost:5173") : origins;
     }
 }

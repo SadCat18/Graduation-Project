@@ -55,6 +55,40 @@ const tabs = [
   { key: 'events', label: '赛事活动', icon: 'trophy' },
   { key: 'equipment', label: '装备库', icon: 'box' }
 ]
+const loadedModules = reactive({
+  tricks: false,
+  training: false,
+  events: false,
+  equipment: false
+})
+
+const trickChineseNames = {
+  Ollie: '豚跳',
+  Shuvit: '横转',
+  Kickflip: '尖翻',
+  'Hippy Jump': '人板分离跳',
+  Manual: '后轮平衡',
+  'Nose Manual': '前轮平衡',
+  'Tic Tac': '摆板滑行',
+  'No Comply 180': '单脚下地 180',
+  Carving: '压弯',
+  Powerslide: '甩尾刹停',
+  'Fakie Shuvit': '倒滑横转',
+  'Fakie Ollie': '倒滑豚跳',
+  'Mini Ramp Pump': '小 U 池泵速',
+  Nollie: '前脚豚跳',
+  'Frontside 180': '正脚 180',
+  'Backside 180': '背脚 180',
+  'Pop Shuvit': '豚跳横转',
+  Heelflip: '跟翻',
+  'Varial Kickflip': '变向尖翻',
+  '50-50 Grind': '双桥磨',
+  Boardslide: '横板滑杆',
+  '5-0 Grind': '后桥磨',
+  'Drop In': '压板入池',
+  'Rock to Fakie': '岩回倒滑',
+  Pump: '泵速'
+}
 
 const selectedTrick = computed(() => tricks.value.find(item => item.trickId === selectedTrickId.value))
 const currentTasks = computed(() => currentTraining.value?.tasks || [])
@@ -63,6 +97,26 @@ const completedTaskIds = computed(() => new Set(currentRecords.value.map(item =>
 const todayTask = computed(() => currentTasks.value.find(item => !completedTaskIds.value.has(item.taskId)) || currentTasks.value[0])
 const isLoggedIn = computed(() => !!getToken())
 const learningStages = computed(() => buildLearningStages())
+
+function splitTrickName(name) {
+  const text = String(name || '').trim()
+  const chineseStart = text.search(/[\u4e00-\u9fff]/)
+  if (chineseStart === -1) {
+    return { english: text, chinese: trickChineseNames[text] || '' }
+  }
+  return {
+    english: text.slice(0, chineseStart).trim() || text,
+    chinese: text.slice(chineseStart).trim()
+  }
+}
+
+function trickEnglishName(name) {
+  return splitTrickName(name).english
+}
+
+function trickChineseName(name) {
+  return splitTrickName(name).chinese
+}
 
 function showSuccess(message) {
   success.value = message
@@ -78,13 +132,45 @@ function requireLogin() {
   return false
 }
 
+function useEquipmentImageFallback(event) {
+  const image = event.currentTarget
+  image.onerror = null
+  image.src = '/equipment/maple-deck-80.png'
+}
+
 async function loadAll() {
   loading.value = true
   error.value = ''
   try {
-    await Promise.all([loadTricks(), loadPlans(), loadEvents(), loadEquipments(), loadVideos(), loadCurrentTraining()])
+    await Promise.all([loadTricks(), loadVideos(), loadCurrentTraining()])
+    loadedModules.tricks = true
   } catch (e) {
     error.value = e?.message || '滑板专业模块加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function activateTab(tabKey) {
+  if (!tabs.some(tab => tab.key === tabKey)) return
+  activeTab.value = tabKey
+  if (loadedModules[tabKey]) return
+
+  const loaders = {
+    training: loadPlans,
+    events: loadEvents,
+    equipment: loadEquipments
+  }
+  const loader = loaders[tabKey]
+  if (!loader) return
+
+  loading.value = true
+  error.value = ''
+  try {
+    await loader()
+    loadedModules[tabKey] = true
+  } catch (e) {
+    error.value = e?.message || '模块加载失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -304,7 +390,11 @@ function askCoachForStage(stage) {
 }
 
 function openStageVideo(video) {
-  if (video?.videoId) router.push(`/videos/${video.videoId}`)
+  if (!video?.videoId) return
+  router.push({
+    path: `/videos/${video.videoId}`,
+    query: { from: 'skate' }
+  })
 }
 
 async function toggleFavorite(item) {
@@ -352,12 +442,13 @@ onMounted(loadAll)
         <p class="eyebrow">SkateHub Training Lab</p>
         <h1>滑板专业</h1>
         <p class="hero-copy">把动作练习、计划推进、赛事参与和装备选择放进同一个成长闭环。</p>
+        <RouterLink to="/board-assistant">进入选板助手 · 预算、搭配检查与方案对比</RouterLink>
       </div>
       <div class="hero-stats">
         <span><strong>{{ tricks.length }}</strong> 动作</span>
-        <span><strong>{{ plans.length }}</strong> 计划</span>
-        <span><strong>{{ events.length }}</strong> 活动</span>
-        <span><strong>{{ equipments.length }}</strong> 装备</span>
+        <span><strong>{{ loadedModules.training ? plans.length : '—' }}</strong> 计划</span>
+        <span><strong>{{ loadedModules.events ? events.length : '—' }}</strong> 活动</span>
+        <span><strong>{{ loadedModules.equipment ? equipments.length : '—' }}</strong> 装备</span>
       </div>
     </div>
 
@@ -379,7 +470,10 @@ onMounted(loadAll)
             <small>{{ stage.progress }}% 任务进度</small>
           </div>
           <div class="stage-links">
-            <button v-for="trick in stage.tricks" :key="trick.trickId" class="btn-soft" @click="chooseTrick(trick.trickId); activeTab = 'tricks'">{{ trick.trickName }}</button>
+            <button v-for="trick in stage.tricks" :key="trick.trickId" class="btn-soft trick-name-chip" @click="chooseTrick(trick.trickId); activeTab = 'tricks'">
+              <span>{{ trickEnglishName(trick.trickName) }}</span>
+              <small v-if="trickChineseName(trick.trickName)">{{ trickChineseName(trick.trickName) }}</small>
+            </button>
             <button v-for="video in stage.videos" :key="video.videoId" class="btn-soft" @click="openStageVideo(video)">{{ video.title }}</button>
             <span v-if="!stage.tricks.length && !stage.videos.length" class="muted">暂无匹配内容，可先按任务练习。</span>
           </div>
@@ -394,7 +488,7 @@ onMounted(loadAll)
         :key="tab.key"
         type="button"
         :class="['tab-button', { active: activeTab === tab.key }]"
-        @click="activeTab = tab.key"
+        @click="activateTab(tab.key)"
       >
         <AppIcon :name="tab.icon" :size="17" />
         {{ tab.label }}
@@ -405,7 +499,7 @@ onMounted(loadAll)
     <p v-if="success" class="success">{{ success }}</p>
     <p v-if="loading" class="muted">正在加载滑板专业模块...</p>
 
-    <div v-show="activeTab === 'tricks'" class="module-grid">
+    <div v-if="activeTab === 'tricks'" class="module-grid">
       <aside class="module-list">
         <button
           v-for="trick in tricks"
@@ -414,14 +508,20 @@ onMounted(loadAll)
           :class="['list-row', { selected: trick.trickId === selectedTrickId }]"
           @click="chooseTrick(trick.trickId)"
         >
-          <span>{{ trick.trickName }}</span>
+          <span class="trick-name-stack">
+            <strong>{{ trickEnglishName(trick.trickName) }}</strong>
+            <small v-if="trickChineseName(trick.trickName)">{{ trickChineseName(trick.trickName) }}</small>
+          </span>
           <em>{{ trick.category }} · Lv.{{ trick.difficultyLevel }}</em>
         </button>
       </aside>
 
       <article class="module-panel">
-        <img v-if="selectedTrick?.coverUrl" class="panel-image" :src="selectedTrick.coverUrl" alt="">
-        <h2>{{ selectedTrick?.trickName || '选择一个动作' }}</h2>
+        <img v-if="selectedTrick?.coverUrl" class="panel-image" :src="selectedTrick.coverUrl" alt="" loading="lazy" decoding="async">
+        <h2>
+          {{ trickEnglishName(selectedTrick?.trickName) || '选择一个动作' }}
+          <small v-if="selectedTrick && trickChineseName(selectedTrick.trickName)" class="trick-heading-cn">{{ trickChineseName(selectedTrick.trickName) }}</small>
+        </h2>
         <p class="muted">{{ selectedTrick?.description || '从左侧动作列表开始记录你的练习。' }}</p>
 
         <div class="form-grid">
@@ -464,7 +564,7 @@ onMounted(loadAll)
       </article>
     </div>
 
-    <div v-show="activeTab === 'training'" class="module-grid">
+    <div v-if="activeTab === 'training'" class="module-grid">
       <aside class="module-list">
         <button
           v-for="plan in plans"
@@ -519,7 +619,7 @@ onMounted(loadAll)
       </article>
     </div>
 
-    <div v-show="activeTab === 'events'" class="stack-panel">
+    <div v-if="activeTab === 'events'" class="stack-panel">
       <div class="filter-bar">
         <input v-model="eventFilter.city" placeholder="城市">
         <select v-model="eventFilter.eventType">
@@ -540,7 +640,7 @@ onMounted(loadAll)
 
       <div class="card-grid">
         <article v-for="item in events" :key="item.event.eventId" class="feature-card">
-          <img v-if="item.event.coverUrl" :src="item.event.coverUrl" alt="">
+          <img v-if="item.event.coverUrl" :src="item.event.coverUrl" alt="" loading="lazy" decoding="async">
           <div>
             <span class="pill">{{ statusLabel(item.event.status) }}</span>
             <h3>{{ item.event.eventTitle }}</h3>
@@ -556,7 +656,7 @@ onMounted(loadAll)
       </div>
     </div>
 
-    <div v-show="activeTab === 'equipment'" class="stack-panel">
+    <div v-if="activeTab === 'equipment'" class="stack-panel">
       <div class="filter-bar">
         <select v-model="equipmentFilter.category">
           <option value="">全部分类</option>
@@ -578,7 +678,14 @@ onMounted(loadAll)
 
       <div class="card-grid">
         <article v-for="item in equipments" :key="item.equipment.equipmentId" class="feature-card equipment-card">
-          <img v-if="item.equipment.coverUrl" :src="item.equipment.coverUrl" alt="">
+          <img
+            v-if="item.equipment.coverUrl"
+            :src="item.equipment.coverUrl"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            @error="useEquipmentImageFallback"
+          >
           <div>
             <span class="pill">{{ item.equipment.category }} · {{ item.equipment.priceRange }}</span>
             <h3>{{ item.equipment.equipmentName }}</h3>
@@ -649,8 +756,7 @@ onMounted(loadAll)
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .hero-stats strong {
@@ -674,11 +780,11 @@ onMounted(loadAll)
 }
 
 .learning-stage-card {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  min-height: 260px;
-  padding: 14px;
+  min-height: 300px;
+  padding: 16px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 12px;
   background: #f8fafc;
@@ -687,6 +793,27 @@ onMounted(loadAll)
 .learning-stage-card h3,
 .learning-stage-card p {
   margin: 0;
+}
+
+.learning-stage-card h3 {
+  min-height: 58px;
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.learning-stage-card > p {
+  min-height: 62px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.learning-stage-card > .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  margin-top: auto;
 }
 
 .stage-index {
@@ -721,13 +848,34 @@ onMounted(loadAll)
 .stage-links {
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  min-height: 80px;
+  margin-bottom: 2px;
 }
 
 .stage-links .btn-soft {
   min-height: 30px;
   padding: 4px 8px;
   font-size: 12px;
+}
+
+.stage-links .trick-name-chip {
+  display: inline-grid;
+  gap: 2px;
+  justify-items: start;
+  min-height: 40px;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.trick-name-chip small,
+.trick-name-stack small,
+.trick-heading-cn {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .tab-strip {
@@ -767,6 +915,7 @@ onMounted(loadAll)
   display: grid;
   align-content: start;
   gap: 8px;
+  contain: layout style;
 }
 
 .list-row {
@@ -776,6 +925,22 @@ onMounted(loadAll)
   text-align: left;
   border-radius: 12px;
   background: #fff;
+}
+
+.trick-name-stack {
+  display: grid;
+  gap: 2px;
+}
+
+.trick-name-stack strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.trick-heading-cn {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
 .list-row.selected {

@@ -18,3 +18,6 @@ assert.match(viewSource, /<video[\s\S]*controls/, 'renders a real video player w
 assert.match(viewSource, /watch-action-bar/, 'adds a mobile action bar for watching actions')
 assert.match(viewSource, /copyVideoLink/, 'supports copying the video link from the fallback action')
 assert.match(viewSource, /goCoach/, 'keeps a path back to the AI coach context')
+assert.match(viewSource, /'profile-videos':\s*\{\s*path:\s*'\/profile'/, 'returns profile videos to the creation center')
+assert.match(viewSource, /query:\s*sourceKey\.value\s*\?\s*\{\s*from:\s*sourceKey\.value\s*\}/, 'related videos preserve the original source')
+assert.match(viewSource, /window\.open\(videoUrl\.value,\s*'_blank'/, 'opens the original external video without replacing the app')

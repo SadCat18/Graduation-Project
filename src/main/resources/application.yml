@@ -36,6 +36,9 @@ spring:
     multipart:
       max-file-size: 300MB
       max-request-size: 300MB
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:none}
@@ -49,11 +52,29 @@ jwt:
   secret: ${JWT_SECRET:}
   expiration-hours: ${JWT_EXPIRATION_HOURS:24}
 
+admin:
+  bootstrap:
+    enabled: ${ADMIN_BOOTSTRAP_ENABLED:false}
+  default-password: ${ADMIN_DEFAULT_PASSWORD:}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:false}
+    redis-failure-denies-protected: ${RATE_LIMIT_REDIS_FAILURE_DENIES_PROTECTED:true}
+    login-ip-per-minute: ${RATE_LIMIT_LOGIN_IP_PER_MINUTE:10}
+    login-account-per-five-minutes: ${RATE_LIMIT_LOGIN_ACCOUNT_PER_FIVE_MINUTES:10}
+    register-ip-per-hour: ${RATE_LIMIT_REGISTER_IP_PER_HOUR:20}
+    ai-user-per-minute: ${RATE_LIMIT_AI_USER_PER_MINUTE:10}
+    upload-user-per-minute: ${RATE_LIMIT_UPLOAD_USER_PER_MINUTE:5}
+    write-user-per-minute: ${RATE_LIMIT_WRITE_USER_PER_MINUTE:10}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       probes:
@@ -61,12 +82,12 @@ management:
 
 ai:
   provider: ${AI_PROVIDER:${AI_PROVIDER_DEFAULT:ark}}
-  model: ${AI_MODEL:${AI_MODEL_DEFAULT:doubao-seed-2-0-lite-260428}}
+  model: ${AI_MODEL:${AI_MODEL_DEFAULT:doubao-seed-2-1-lite-260915}}
   base-url: ${AI_BASE_URL:${AI_BASE_URL_DEFAULT:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
   api-key: ${AI_API_KEY:${AI_API_KEY_DEFAULT:${ARK_API_KEY:}}}
   defaults:
     provider: ${AI_PROVIDER_DEFAULT:${AI_PROVIDER:ark}}
-    model: ${AI_MODEL_DEFAULT:${AI_MODEL:doubao-seed-2-0-lite-260428}}
+    model: ${AI_MODEL_DEFAULT:${AI_MODEL:doubao-seed-2-1-lite-260915}}
     base-url: ${AI_BASE_URL_DEFAULT:${AI_BASE_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
     api-key: ${AI_API_KEY_DEFAULT:${AI_API_KEY:${ARK_API_KEY:}}}
   news:
@@ -75,9 +96,12 @@ ai:
     base-url: ${AI_BASE_URL_NEWS:}
     api-key: ${AI_API_KEY_NEWS:}
   scenes:
+    coach_chat:
+      provider: ${AI_PROVIDER_COACH_CHAT:}
+      model: ${AI_MODEL_COACH_CHAT:doubao-seed-evolving}
     news_discovery:
       provider: ${AI_PROVIDER_NEWS_DISCOVERY:${AI_PROVIDER_NEWS:}}
-      model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-0-pro-260215}}
+      model: ${AI_MODEL_NEWS_DISCOVERY:${AI_MODEL_NEWS:doubao-seed-2-1-lite-260915}}
       base-url: ${AI_BASE_URL_NEWS_DISCOVERY:${AI_BASE_URL_NEWS:https://ark.cn-beijing.volces.com/api/v3/chat/completions}}
       api-key: ${AI_API_KEY_NEWS_DISCOVERY:${AI_API_KEY_NEWS:}}
     news_summary:

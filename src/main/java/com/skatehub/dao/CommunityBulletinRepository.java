@@ -3,6 +3,7 @@ package com.skatehub.dao;
 import com.skatehub.pojo.CommunityBulletin;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CommunityBulletinRepository extends JpaRepository<CommunityBulletin, Long> {
@@ -10,4 +11,6 @@ public interface CommunityBulletinRepository extends JpaRepository<CommunityBull
     List<CommunityBulletin> findAllByOrderByCreateTimeDesc();
 
     List<CommunityBulletin> findByStatusOrderByCreateTimeDesc(String status);
+
+    List<CommunityBulletin> findByReviewTimeGreaterThanEqual(LocalDateTime since);
 }

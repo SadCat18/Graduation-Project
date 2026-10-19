@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getRole, getToken } from '../utils/auth'
+import { safeBoardReturn } from '../board/state'
 
 const LoginPage = () => import(/* webpackChunkName: "view-login" */ '../views/LoginPage.vue')
 const HomePage = () => import(/* webpackChunkName: "view-home" */ '../views/HomePage.vue')
@@ -23,6 +24,8 @@ const VideoWatchPage = () => import(/* webpackChunkName: "view-videos" */ '../vi
 const SkateProfessionalPage = () => import(/* webpackChunkName: "view-skate" */ '../views/SkateProfessionalPage.vue')
 
 const routes = [
+  { path: '/board-assistant', component: () => import('../views/BoardAssistantPage.vue') },
+  { path: '/profile/board-plans', component: () => import('../views/BoardPlansPage.vue'), meta: { requiresAuth: true } },
   { path: '/login', component: LoginPage },
   { path: '/register', component: LoginPage },
   { path: '/', component: HomePage },
@@ -40,8 +43,8 @@ const routes = [
   { path: '/news/:id', component: NewsDetailPage },
   { path: '/videos/:id', component: VideoWatchPage },
   { path: '/users/:id', component: UserProfilePage },
-  { path: '/messages', component: MessagesPage, meta: { requiresAuth: true } },
-  { path: '/messages/:conversationId', component: MessagesPage, meta: { requiresAuth: true } },
+  { path: '/messages', component: MessagesPage, meta: { requiresAuth: true, wideLayout: true } },
+  { path: '/messages/:conversationId', component: MessagesPage, meta: { requiresAuth: true, wideLayout: true } },
   { path: '/ai-coach', component: AiCoachPage, meta: { requiresAuth: true } },
   { path: '/profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/admin', component: AdminPage, meta: { requiresAuth: true, adminOnly: true, wideLayout: true } }
@@ -58,6 +61,8 @@ router.beforeEach((to) => {
     return '/'
   }
   if (to.meta.requiresAuth && !token) {
+    const returnTo = safeBoardReturn(to.path)
+    if (returnTo) return { path: '/login', query: { returnTo } }
     return '/login'
   }
   if (to.meta.adminOnly && getRole() !== 'ADMIN') {

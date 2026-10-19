@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -427,19 +428,34 @@ public class AdminService {
     public Map<String, Object> operationAnalytics() {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("trend7d", buildTrend7d());
-        Map<String, Object> productSummary = productAnalyticsService.summary7d();
-        result.put("productTrend7d", productSummary.get("trend7d"));
-        result.put("recentProductEvents", productSummary.get("recentEvents"));
-        result.put("activityConversion", buildActivityConversion(productSummary));
-        result.put("moduleUsage", buildModuleUsage(productSummary));
+        result.put("previousTrend7d", buildTrendWindow(7, 7));
+        result.put("trend30d", buildTrendWindow(30, 0));
+        result.put("previousTrend30d", buildTrendWindow(30, 30));
+        Map<String, Object> productSummary7d = productAnalyticsService.summary7d();
+        Map<String, Object> productSummary30d = productAnalyticsService.summary30d();
+        List<Map<String, Object>> productTrend7d = analyticsRows(productSummary7d, "trend7d");
+        List<Map<String, Object>> productTrend30d = analyticsRows(productSummary30d, "trend30d");
+        result.put("productTrend7d", productTrend7d);
+        result.put("productTrend30d", productTrend30d);
+        result.put("recentProductEvents", productSummary7d.get("recentEvents"));
+        result.put("activityConversion", buildActivityConversion(productTrend7d));
+        result.put("activityConversion30d", buildActivityConversion(productTrend30d));
+        result.put("moduleUsage", buildModuleUsage(productTrend7d));
+        result.put("moduleUsage30d", buildModuleUsage(productTrend30d));
         result.put("hotPosts", buildHotPosts());
         result.put("hotActivities", buildHotActivities());
         result.put("bulletinTypeRatio", communityBulletinService.adminTypeStats());
+        result.put("handlingEfficiency", buildHandlingEfficiency());
         return result;
     }
 
-    private Map<String, Object> buildActivityConversion(Map<String, Object> productSummary) {
-        List<Map<String, Object>> rows = (List<Map<String, Object>>) productSummary.getOrDefault("trend7d", List.of());
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> analyticsRows(Map<String, Object> summary, String key) {
+        Object rows = summary.get(key);
+        return rows instanceof List<?> ? (List<Map<String, Object>>) rows : List.of();
+    }
+
+    private Map<String, Object> buildActivityConversion(List<Map<String, Object>> rows) {
         long views = rows.stream().mapToLong(row -> number(row.get("activityViews"))).sum();
         long signs = rows.stream().mapToLong(row -> number(row.get("activitySigns"))).sum();
         Map<String, Object> map = new LinkedHashMap<>();
@@ -449,8 +465,7 @@ public class AdminService {
         return map;
     }
 
-    private List<Map<String, Object>> buildModuleUsage(Map<String, Object> productSummary) {
-        List<Map<String, Object>> rows = (List<Map<String, Object>>) productSummary.getOrDefault("trend7d", List.of());
+    private List<Map<String, Object>> buildModuleUsage(List<Map<String, Object>> rows) {
         long aiCoach = rows.stream().mapToLong(row -> number(row.get("aiCoachQuestions"))).sum();
         long training = rows.stream().mapToLong(row -> number(row.get("trainingCompletions"))).sum();
         long creation = rows.stream().mapToLong(row -> number(row.get("contentCreates"))).sum();
@@ -475,10 +490,14 @@ public class AdminService {
     }
 
     private List<Map<String, Object>> buildTrend7d() {
+        return buildTrendWindow(7, 0);
+    }
+
+    private List<Map<String, Object>> buildTrendWindow(int days, int offsetDays) {
         List<Map<String, Object>> rows = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = today.minusDays(i);
+        for (int i = days - 1; i >= 0; i--) {
+            LocalDate date = today.minusDays(i + offsetDays);
             LocalDateTime start = date.atStartOfDay();
             LocalDateTime end = date.atTime(LocalTime.MAX);
             Map<String, Object> row = new LinkedHashMap<>();
@@ -490,6 +509,32 @@ public class AdminService {
             rows.add(row);
         }
         return rows;
+    }
+
+    private Map<String, Object> buildHandlingEfficiency() {
+        LocalDateTime since = LocalDateTime.now().minusDays(30);
+        List<Long> handlingMinutes = new ArrayList<>();
+
+        reportRecordRepository.findByHandleTimeGreaterThanEqual(since).stream()
+                .filter(item -> item.getCreateTime() != null && item.getHandleTime() != null)
+                .mapToLong(item -> Duration.between(item.getCreateTime(), item.getHandleTime()).toMinutes())
+                .filter(minutes -> minutes >= 0)
+                .forEach(handlingMinutes::add);
+
+        communityBulletinRepository.findByReviewTimeGreaterThanEqual(since).stream()
+                .filter(item -> item.getCreateTime() != null && item.getReviewTime() != null)
+                .mapToLong(item -> Duration.between(item.getCreateTime(), item.getReviewTime()).toMinutes())
+                .filter(minutes -> minutes >= 0)
+                .forEach(handlingMinutes::add);
+
+        double averageHours = handlingMinutes.isEmpty()
+                ? 0D
+                : handlingMinutes.stream().mapToLong(Long::longValue).average().orElse(0D) / 60D;
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("averageHours", Math.round(averageHours * 10D) / 10D);
+        result.put("sampleSize", handlingMinutes.size());
+        result.put("windowDays", 30);
+        return result;
     }
 
     private List<Map<String, Object>> buildHotPosts() {

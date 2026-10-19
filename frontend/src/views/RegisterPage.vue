@@ -34,7 +34,7 @@ async function submit() {
   <div class="auth-shell">
     <div class="auth-card card">
       <section class="brand-panel">
-        <p class="brand-sub">加入滑板交流网站</p>
+        <p class="brand-sub">加入滑板知识网站</p>
         <h1>创建账号</h1>
         <p class="brand-desc">注册后可发布帖子、参加活动、完善你的滑板档案。</p>
         <div class="brand-points">

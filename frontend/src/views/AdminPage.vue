@@ -1,9 +1,16 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
 import { BULLETIN_TYPES } from '../constants/bulletin'
+
+const AdminReviewPanel = defineAsyncComponent(() => import('./admin/AdminReviewPanel.vue'))
+const BoardAssistantPanel = defineAsyncComponent(() => import('./admin/BoardAssistantPanel.vue'))
+const AdminDashboard = defineAsyncComponent(() => import('./admin/dashboard/AdminDashboard.vue'))
+const AdminTrendChart = defineAsyncComponent(() => import('./admin/dashboard/AdminTrendChart.vue'))
+const AdminFunnelChart = defineAsyncComponent(() => import('./admin/dashboard/AdminFunnelChart.vue'))
+const AdminDonutChart = defineAsyncComponent(() => import('./admin/dashboard/AdminDonutChart.vue'))
 
 const tab = ref('workbench')
 const reviewCenterTab = ref('all')
@@ -68,9 +75,15 @@ const REVIEW_DECISION_TEMPLATES = [
 const stats = ref({})
 const analytics = ref({
   trend7d: [],
+  previousTrend7d: [],
+  trend30d: [],
+  previousTrend30d: [],
+  activityConversion: {},
+  activityConversion30d: {},
   hotPosts: [],
   hotActivities: [],
-  bulletinTypeRatio: []
+  bulletinTypeRatio: [],
+  handlingEfficiency: { averageHours: 0, sampleSize: 0, windowDays: 30 }
 })
 const users = ref([])
 const posts = ref([])
@@ -80,6 +93,11 @@ const commentContextVisible = ref(false)
 const commentContextLoading = ref(false)
 const activeCommentContext = ref(null)
 const adminLoadError = ref('')
+const dashboardUpdatedAt = ref('')
+const dashboardLoading = ref(false)
+const adminToasts = ref([])
+let toastSequence = 0
+const toastTimers = new Set()
 const activities = ref([])
 const activityReviewFilter = ref('0')
 const notices = ref([])
@@ -256,7 +274,8 @@ const navGroups = [
     label: '内容配置',
     hint: '维护站内展示',
     items: [
-      { key: 'content', label: '内容管理', icon: 'content', desc: '公告、资讯、场地、轮播和视频' }
+      { key: 'content', label: '内容管理', icon: 'content', desc: '公告、资讯、场地、轮播和视频' },
+      { key: 'boardAssistant', label: '选板数据维护', icon: 'skateboard', desc: '产品、规格、报价、搭配规则与模板' }
     ]
   }
 ]
@@ -293,23 +312,6 @@ const statBarData = computed(() => statCards.value.map(item => ({
   ...item,
   width: `${Math.round((item.value / maxStatValue.value) * 100)}%`
 })))
-const trendBarMax = computed(() => {
-  const rows = analytics.value?.trend7d || []
-  const maxValue = rows.reduce((acc, item) => {
-    const values = [
-      Number(item.newUsers || 0),
-      Number(item.newPosts || 0),
-      Number(item.newActivities || 0),
-      Number(item.newSigns || 0)
-    ]
-    return Math.max(acc, ...values)
-  }, 1)
-  return Math.max(1, maxValue)
-})
-const bulletinRatioMax = computed(() => {
-  const rows = analytics.value?.bulletinTypeRatio || []
-  return Math.max(1, ...rows.map(item => Number(item.count || 0)))
-})
 const usersTotalPages = computed(() => Math.max(1, Math.ceil((pageState.users.total || 0) / ADMIN_PAGE_SIZE)))
 const postsTotalPages = computed(() => Math.max(1, Math.ceil((pageState.posts.total || 0) / ADMIN_PAGE_SIZE)))
 const selectedPosts = computed(() => {
@@ -387,46 +389,6 @@ const pendingPlaceCount = computed(() => pendingPlaces.value.length)
 const pendingReviewTotal = computed(() => {
   return pendingActivityCount.value + pendingBulletinCount.value + pendingPlaceCount.value + reports.value.length + placeReviews.value.length
 })
-const workbenchTodoCards = computed(() => [
-  {
-    key: 'review',
-    label: '审核待办',
-    value: pendingReviewTotal.value,
-    detail: `活动 ${pendingActivityCount.value} / 快讯 ${pendingBulletinCount.value} / 场地 ${pendingPlaceCount.value} / 举报 ${reports.value.length}`,
-    priority: pendingReviewTotal.value ? 'high' : 'normal',
-    action: quickAdminActions[0]
-  },
-  {
-    key: 'news',
-    label: '资讯待审',
-    value: newsAuditStats.value.pending,
-    detail: `资讯库 ${newsList.value.length} 条，AI 结果需人工确认`,
-    priority: newsAuditStats.value.pending ? 'medium' : 'normal',
-    action: quickAdminActions[3]
-  },
-  {
-    key: 'posts',
-    label: '帖子治理',
-    value: pageState.posts.total || stats.value.postTotal || 0,
-    detail: '筛选、查看详情、AI 建议、批量置顶或删除',
-    priority: selectedPostIds.value.length ? 'medium' : 'normal',
-    action: quickAdminActions[1]
-  },
-  {
-    key: 'comments',
-    label: '评论巡检',
-    value: pageState.comments.total || stats.value.commentTotal || 0,
-    detail: '按帖子上下文处理评论和回复',
-    priority: selectedCommentIds.value.length ? 'medium' : 'normal',
-    action: quickAdminActions[2]
-  }
-])
-const workbenchStats = computed(() => [
-  { label: '用户', value: Number(stats.value.userTotal || 0), icon: 'users' },
-  { label: '帖子', value: Number(stats.value.postTotal || 0), icon: 'posts' },
-  { label: '评论', value: Number(stats.value.commentTotal || 0), icon: 'comments' },
-  { label: '活动', value: Number(stats.value.activityTotal || 0), icon: 'activities' }
-])
 const currentPrimaryAction = computed(() => {
   const map = {
     workbench: { label: '刷新工作台', icon: 'refresh', handler: refreshCurrentTab },
@@ -534,6 +496,8 @@ function switchAdminTab(key) {
 function runQuickAdminAction(action) {
   if (action.reviewTab) reviewCenterTab.value = action.reviewTab
   if (action.contentTab) contentTab.value = action.contentTab
+  if (action.statusFilter) reviewStatusFilter.value = action.statusFilter
+  if (action.reportStatus) reportFilters.status = action.reportStatus
   switchAdminTab(action.tab)
 }
 
@@ -562,6 +526,44 @@ function quickActionBadge(action) {
 
 function fmtTime(value) {
   return String(value || '').replace('T', ' ') || '-'
+}
+
+function showToast(message, tone = '') {
+  const text = String(message || '操作完成')
+  const resolvedTone = tone || (/失败|错误|无法/.test(text) ? 'danger' : /请选择|请先|仅支持|缺少/.test(text) ? 'warning' : 'success')
+  const id = ++toastSequence
+  adminToasts.value.push({ id, message: text, tone: resolvedTone })
+  const timer = setTimeout(() => {
+    adminToasts.value = adminToasts.value.filter(item => item.id !== id)
+    toastTimers.delete(timer)
+  }, 3600)
+  toastTimers.add(timer)
+}
+
+function dismissToast(id) {
+  adminToasts.value = adminToasts.value.filter(item => item.id !== id)
+}
+
+function enrichReviewCard(item) {
+  const timestamp = new Date(String(item.time || '').replace(' ', 'T')).getTime()
+  const waitingMinutes = Number.isFinite(timestamp) ? Math.max(0, Math.round((Date.now() - timestamp) / 60000)) : 0
+  const pending = item.status === '0' || item.type === 'placeContribution' || item.type === 'placeReview'
+  const riskText = `${item.searchText || ''} ${item.summary || ''}`.toLowerCase()
+  const hasRiskKeyword = ['违法违规', '人身攻击', '安全', '暴力', 'harassment', 'unsafe'].some(word => riskText.includes(word))
+  const highRisk = pending && (waitingMinutes >= 24 * 60 || hasRiskKeyword || Number(item.duplicateCount || 0) > 1)
+  return {
+    ...item,
+    waitingMinutes,
+    waitLabel: pending ? `已等待 ${formatWaitingMinutes(waitingMinutes)}` : '已完成处理',
+    riskLevel: highRisk ? 'HIGH' : pending ? 'MEDIUM' : 'LOW',
+    riskLabel: highRisk ? '高风险' : pending ? '待处理' : '已完成'
+  }
+}
+
+function formatWaitingMinutes(minutes) {
+  if (minutes >= 1440) return `${Math.floor(minutes / 1440)} 天`
+  if (minutes >= 60) return `${Math.floor(minutes / 60)} 小时`
+  return `${Math.max(1, minutes)} 分钟`
 }
 
 function cleanNewsText(value) {
@@ -756,6 +758,7 @@ const reviewCards = computed(() => {
     fullContent: item.detail || item.targetContent || item.handleNote || '暂无正文',
     imageUrl: item.targetCover || '',
     historyNote: item.handleNote || '',
+    duplicateCount: reports.value.filter(report => report.targetType === item.targetType && report.targetId === item.targetId).length,
     searchText: `${item.reason || ''} ${item.detail || ''} ${item.reporterName || ''} ${item.targetTitle || ''}`,
     facts: [
       { label: '举报对象', value: `${item.targetType || '未知'} / ${item.targetTitle || '内容已删除'}` },
@@ -832,6 +835,7 @@ const reviewCards = computed(() => {
     ]
   }))
   return [...activityCards, ...bulletinCards, ...reportCards, ...placeContributionCards, ...placeReviewCards]
+    .map(enrichReviewCard)
 })
 
 const filteredReviewCards = computed(() => {
@@ -891,12 +895,20 @@ const filteredReviewCards = computed(() => {
   }
 
   list = list.filter(item => keywordMatch(item, reviewKeyword.value))
-  if (selectedReviewIds.value.length) {
-    const ids = new Set(list.map(item => item.id))
-    selectedReviewIds.value = selectedReviewIds.value.filter(id => ids.has(id))
-  }
   return list
 })
+
+watch(
+  () => filteredReviewCards.value.map(item => item.id),
+  visibleIds => {
+    if (!selectedReviewIds.value.length) return
+    const visibleIdSet = new Set(visibleIds)
+    const nextSelectedIds = selectedReviewIds.value.filter(id => visibleIdSet.has(id))
+    if (nextSelectedIds.length !== selectedReviewIds.value.length) {
+      selectedReviewIds.value = nextSelectedIds
+    }
+  }
+)
 
 const selectedReviewCards = computed(() => {
   const ids = new Set(selectedReviewIds.value)
@@ -984,7 +996,7 @@ function closeReviewDrawer() {
 
 async function fetchModerationSuggestForReviewItem(item) {
   if (!item?.moderationPayload) {
-    alert('当前内容暂不支持 AI 审核建议')
+    showToast('当前内容暂不支持 AI 审核建议')
     return
   }
   moderationLoadingKey.value = item.id
@@ -998,7 +1010,7 @@ async function fetchModerationSuggestForReviewItem(item) {
       normalizedSummary: result?.normalizedSummary || ''
     }
   } catch (e) {
-    alert(e?.message || 'AI 审核建议获取失败，请稍后重试')
+    showToast(e?.message || 'AI 审核建议获取失败，请稍后重试')
   } finally {
     moderationLoadingKey.value = ''
   }
@@ -1051,7 +1063,7 @@ async function fetchModerationSuggestForPost(post) {
       [post.postId]: postModerationResult.value
     }
   } catch (e) {
-    alert(e?.message || 'AI 审核建议获取失败，请稍后重试')
+    showToast(e?.message || 'AI 审核建议获取失败，请稍后重试')
   } finally {
     postModerationLoadingId.value = null
   }
@@ -1059,11 +1071,11 @@ async function fetchModerationSuggestForPost(post) {
 
 async function batchReview(action) {
   if (!selectedReviewCards.value.length) {
-    alert('请先勾选要批量处理的内容')
+    showToast('请先勾选要批量处理的内容')
     return
   }
   if (!canBatchApproveOrReject.value) {
-    alert('仅支持同类型（活动或快讯）且待审核内容的批量处理，请重新选择')
+    showToast('仅支持同类型（活动或快讯）且待审核内容的批量处理，请重新选择')
     return
   }
   const isApprove = action === 'approve'
@@ -1072,20 +1084,39 @@ async function batchReview(action) {
   if (!confirm(`确认批量${actionLabel}${selectedReviewCards.value.length}条${typeLabel}吗？`)) return
 
   const targets = [...selectedReviewCards.value]
+  let successCount = 0
+  let failedCount = 0
+  let untouchedCount = 0
   for (const item of targets) {
-    if (item.type === 'activity') {
-      const source = reviewActivities.value.find(i => `activity-${i.activityId}` === item.id)
-      if (source) await api.adminReviewActivity(source.activityId, { status: isApprove ? '1' : '2' })
-    } else if (item.type === 'bulletin') {
-      const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
-      if (source) await api.adminReviewBulletin(source.bulletinId, {
-        status: isApprove ? '1' : '2',
-        rejectReason: isApprove ? '' : resolveReviewNote(item, 'reject')
-      })
+    try {
+      if (item.type === 'activity') {
+        const source = reviewActivities.value.find(i => `activity-${i.activityId}` === item.id)
+        if (!source) untouchedCount += 1
+        else {
+          await api.adminReviewActivity(source.activityId, { status: isApprove ? '1' : '2' })
+          successCount += 1
+        }
+      } else if (item.type === 'bulletin') {
+        const source = reviewBulletins.value.find(i => `bulletin-${i.bulletinId}` === item.id)
+        if (!source) untouchedCount += 1
+        else {
+          await api.adminReviewBulletin(source.bulletinId, {
+            status: isApprove ? '1' : '2',
+            rejectReason: isApprove ? '' : resolveReviewNote(item, 'reject')
+          })
+          successCount += 1
+        }
+      }
+    } catch {
+      failedCount += 1
     }
   }
   selectedReviewIds.value = []
   await Promise.all([loadActivities(), loadContentData(), loadReviewCenterData()])
+  showToast(
+    `批量${actionLabel}完成：成功 ${successCount} 条，失败 ${failedCount} 条，未处理 ${untouchedCount} 条。`,
+    failedCount || untouchedCount ? 'warning' : 'success'
+  )
 }
 
 function sliceByPage(list, page) {
@@ -1247,7 +1278,7 @@ async function topPost(item) {
 
 async function batchTopPosts(top) {
   if (!selectedPosts.value.length) {
-    alert('请先选择要处理的帖子')
+    showToast('请先选择要处理的帖子')
     return
   }
   const label = top === '1' ? '置顶' : '取消置顶'
@@ -1255,12 +1286,12 @@ async function batchTopPosts(top) {
   const result = await api.adminBatchTopPosts({ postIds: selectedPostIds.value, top })
   selectedPostIds.value = []
   await loadPosts()
-  alert(`已${label} ${result?.updatedCount || 0} 篇帖子`)
+  showToast(`已${label} ${result?.updatedCount || 0} 篇帖子`)
 }
 
 async function batchDeletePosts() {
   if (!selectedPosts.value.length) {
-    alert('请先选择要删除的帖子')
+    showToast('请先选择要删除的帖子')
     return
   }
   const commentCount = selectedPosts.value.reduce((sum, item) => sum + Number(item.commentCount || 0), 0)
@@ -1268,7 +1299,7 @@ async function batchDeletePosts() {
   const result = await api.adminBatchDeletePosts({ postIds: selectedPostIds.value })
   selectedPostIds.value = []
   await loadPosts()
-  alert(`已删除 ${result?.deletedCount || 0} 篇帖子`)
+  showToast(`已删除 ${result?.deletedCount || 0} 篇帖子`)
 }
 
 function closePostDetailDrawer() {
@@ -1286,7 +1317,7 @@ async function openPostDetailDrawer(item, showDrawer = true) {
   try {
     activePostDetail.value = await api.adminPostDetail(item.postId)
   } catch (error) {
-    alert(error?.message || '帖子详情加载失败')
+    showToast(error?.message || '帖子详情加载失败')
     if (showDrawer) closePostDetailDrawer()
   } finally {
     postDetailLoading.value = false
@@ -1409,7 +1440,7 @@ async function openCommentContext(item) {
   try {
     activeCommentContext.value = await api.adminCommentContext(item.commentId)
   } catch (error) {
-    alert(error?.message || '评论上下文加载失败')
+    showToast(error?.message || '评论上下文加载失败')
     closeCommentContext()
   } finally {
     commentContextLoading.value = false
@@ -1425,7 +1456,7 @@ async function deleteComment(id) {
 
 async function batchDeleteComments() {
   if (!selectedComments.value.length) {
-    alert('请先选择要删除的评论')
+    showToast('请先选择要删除的评论')
     return
   }
   const postCount = new Set(selectedComments.value.map(item => item.postId)).size
@@ -1434,7 +1465,7 @@ async function batchDeleteComments() {
   const result = await api.adminBatchDeleteComments({ commentIds: selectedCommentIds.value })
   selectedCommentIds.value = []
   await loadComments()
-  alert(`已删除 ${result?.deletedCount || 0} 条评论`)
+  showToast(`已删除 ${result?.deletedCount || 0} 条评论`)
 }
 
 async function loadActivities() {
@@ -1535,13 +1566,20 @@ async function applyReportFilters() {
 }
 
 async function loadWorkbench() {
-  await Promise.all([
-    loadStats(),
-    loadReviewCenterData(),
-    loadContentData(),
-    loadPosts(),
-    loadComments()
-  ])
+  dashboardLoading.value = true
+  try {
+    const [, , , newsData] = await Promise.all([
+      loadStats(),
+      loadAnalytics(),
+      loadReviewCenterData(),
+      api.adminNews()
+    ])
+    newsList.value = newsData || []
+    pruneSelectedNewsIds()
+    dashboardUpdatedAt.value = new Date().toISOString()
+  } finally {
+    dashboardLoading.value = false
+  }
 }
 
 async function loadReviewCenterData() {
@@ -1702,7 +1740,7 @@ async function openNewsDetail(item) {
     activeNewsDetail.value = detail
     fillNewsEditForm(detail)
   } catch (error) {
-    alert(error?.message || '资讯详情加载失败')
+    showToast(error?.message || '资讯详情加载失败')
     closeNewsDetail()
   } finally {
     newsDetailLoading.value = false
@@ -1719,9 +1757,9 @@ async function reprocessNewsAi() {
     activeNewsDetail.value = detail
     fillNewsEditForm(detail)
     await loadContentData()
-    alert('资讯 AI 重跑完成，已刷新最新结果')
+    showToast('资讯 AI 重跑完成，已刷新最新结果')
   } catch (error) {
-    alert(error?.message || '资讯 AI 重跑失败')
+    showToast(error?.message || '资讯 AI 重跑失败')
   } finally {
     newsReprocessLoading.value = false
   }
@@ -1741,10 +1779,10 @@ async function syncNewsOnce() {
       newsSyncLoading.value = false
       newsSyncMode.value = ''
       await loadContentData()
-      alert(result?.message || '资讯拉取完成')
+      showToast(result?.message || '资讯拉取完成')
     }
   } catch (error) {
-    alert(error?.message || '资讯拉取失败')
+    showToast(error?.message || '资讯拉取失败')
     newsSyncLoading.value = false
     newsSyncMode.value = ''
   }
@@ -1764,10 +1802,10 @@ async function syncNewsAiOnly() {
       newsSyncLoading.value = false
       newsSyncMode.value = ''
       await loadContentData()
-      alert(result?.message || 'AI 全网抓取完成')
+      showToast(result?.message || 'AI 全网抓取完成')
     }
   } catch (error) {
-    alert(error?.message || 'AI 全网抓取失败')
+    showToast(error?.message || 'AI 全网抓取失败')
     newsSyncLoading.value = false
     newsSyncMode.value = ''
   }
@@ -1807,7 +1845,7 @@ function startNewsSyncPolling() {
 async function saveNewsDetail() {
   clearGroupErrors('news')
   if (!newsEditForm.newsId) {
-    alert('当前资讯缺少有效 ID，暂时无法保存')
+    showToast('当前资讯缺少有效 ID，暂时无法保存')
     return
   }
   if (!String(newsEditForm.title || '').trim()) setError('news', 'title', '请填写展示标题')
@@ -1849,9 +1887,9 @@ async function reviewNews(status) {
     const detail = await api.adminNewsDetail(newsEditForm.newsId)
     activeNewsDetail.value = detail
     fillNewsEditForm(detail)
-    alert(status === '1' ? '资讯已审核通过' : '资讯已驳回')
+    showToast(status === '1' ? '资讯已审核通过' : '资讯已驳回')
   } catch (error) {
-    alert(error?.message || '资讯审核失败')
+    showToast(error?.message || '资讯审核失败')
   } finally {
     newsReviewLoading.value = false
   }
@@ -1869,7 +1907,7 @@ async function reviewNewsItem(item, status) {
       fillNewsEditForm(detail)
     }
   } catch (error) {
-    alert(error?.message || '资讯审核失败')
+    showToast(error?.message || '资讯审核失败')
   } finally {
     newsQuickReviewId.value = ''
   }
@@ -1877,11 +1915,11 @@ async function reviewNewsItem(item, status) {
 
 async function batchReviewNews(status) {
   if (!selectedNewsItems.value.length) {
-    alert('请先勾选要审核的资讯')
+    showToast('请先勾选要审核的资讯')
     return
   }
   if (!canBatchReviewNews.value) {
-    alert('批量审核仅处理待审核资讯，请清空后重新选择，或点击“仅选本页待审”。')
+    showToast('批量审核仅处理待审核资讯，请清空后重新选择，或点击“仅选本页待审”。')
     return
   }
   const actionLabel = status === '1' ? '通过' : '驳回'
@@ -1897,7 +1935,7 @@ async function batchReviewNews(status) {
     const failedCount = results.length - successCount
     selectedNewsIds.value = []
     await loadContentData()
-    alert(failedCount ? `已处理 ${successCount} 条，失败 ${failedCount} 条。` : `已批量${actionLabel} ${successCount} 条资讯。`)
+    showToast(failedCount ? `已处理 ${successCount} 条，失败 ${failedCount} 条。` : `已批量${actionLabel} ${successCount} 条资讯。`)
   } finally {
     newsBatchReviewLoading.value = false
   }
@@ -2037,7 +2075,7 @@ async function uploadBannerImage(event) {
   const file = (event.target.files || [])[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    alert('请选择图片文件')
+    showToast('请选择图片文件')
     return
   }
   bannerUploading.value = true
@@ -2046,7 +2084,7 @@ async function uploadBannerImage(event) {
     bannerForm.imageUrl = imageUrl
     clearError('banner', 'imageUrl')
   } catch (e) {
-    alert(e?.message || '上传失败')
+    showToast(e?.message || '上传失败')
   } finally {
     bannerUploading.value = false
     if (bannerFileInputRef.value) {
@@ -2179,11 +2217,20 @@ watch(newsStatusFilter, () => {
 
 onBeforeUnmount(() => {
   clearNewsSyncPolling()
+  toastTimers.forEach(timer => clearTimeout(timer))
+  toastTimers.clear()
 })
 </script>
 
 <template>
   <div class="admin-layout">
+    <TransitionGroup name="admin-toast" tag="div" class="admin-toast-stack" aria-live="polite" aria-atomic="true">
+      <div v-for="toast in adminToasts" :key="toast.id" :class="['admin-toast-item', `tone-${toast.tone}`]" role="status">
+        <span><AppIcon :name="toast.tone === 'danger' ? 'x' : toast.tone === 'warning' ? 'notice' : 'check'" :size="16" /></span>
+        <p>{{ toast.message }}</p>
+        <button type="button" aria-label="关闭提示" @click="dismissToast(toast.id)"><AppIcon name="x" :size="13" /></button>
+      </div>
+    </TransitionGroup>
     <AiLoadingOverlay
       :visible="moderationOverlayVisible"
       :title="moderationOverlayTitle"
@@ -2244,7 +2291,7 @@ onBeforeUnmount(() => {
             </span>
           </div>
         </div>
-        <div class="admin-head-actions">
+        <div v-if="tab !== 'boardAssistant'" class="admin-head-actions">
           <button class="btn-primary module-primary-action" @click="currentPrimaryAction.handler">
             <AppIcon :name="currentPrimaryAction.icon" :size="15" />
             {{ currentPrimaryAction.label }}
@@ -2253,74 +2300,23 @@ onBeforeUnmount(() => {
       </div>
       <p v-if="adminLoadError" class="error admin-load-error">{{ adminLoadError }}</p>
 
-      <div v-if="tab === 'workbench'" class="workbench-grid">
-        <section class="card workbench-priority">
-          <div class="module-section-head">
-            <div>
-              <span class="section-kicker">今日优先</span>
-              <h3>先处理会影响前台体验的事项</h3>
-            </div>
-            <button class="btn-soft" @click="refreshCurrentTab">刷新工作台</button>
-          </div>
-          <div class="todo-card-grid">
-            <button
-              v-for="item in workbenchTodoCards"
-              :key="item.key"
-              type="button"
-              :class="['todo-card', `priority-${item.priority}`]"
-              @click="runQuickAdminAction(item.action)"
-            >
-              <span>
-                <strong>{{ item.label }}</strong>
-                <small>{{ item.detail }}</small>
-              </span>
-              <em>{{ item.value }}</em>
-            </button>
-          </div>
-        </section>
-
-        <section class="card workbench-shortcuts">
-          <div class="module-section-head">
-            <div>
-              <span class="section-kicker">快捷处理</span>
-              <h3>常用后台任务</h3>
-            </div>
-          </div>
-          <div class="quick-admin-actions workbench-actions">
-            <button
-              v-for="action in quickAdminActions"
-              :key="action.key"
-              type="button"
-              class="quick-admin-btn"
-              @click="runQuickAdminAction(action)"
-            >
-              <AppIcon :name="action.icon" :size="15" />
-              <span>
-                <strong>{{ action.label }}</strong>
-                <small>{{ action.desc }}</small>
-              </span>
-              <em v-if="quickActionBadge(action)">{{ quickActionBadge(action) }}</em>
-            </button>
-          </div>
-        </section>
-
-        <section class="card workbench-stats">
-          <div class="module-section-head">
-            <div>
-              <span class="section-kicker">轻量概览</span>
-              <h3>社区规模</h3>
-            </div>
-            <button class="btn-soft" @click="switchAdminTab('stats')">查看统计</button>
-          </div>
-          <div class="workbench-stat-grid">
-            <div v-for="item in workbenchStats" :key="item.label" class="workbench-stat-card">
-              <span class="icon-chip"><AppIcon :name="item.icon" :size="14" /></span>
-              <strong>{{ item.value }}</strong>
-              <small>{{ item.label }}</small>
-            </div>
-          </div>
-        </section>
-      </div>
+      <AdminDashboard
+        v-if="tab === 'workbench'"
+        :stats="stats"
+        :analytics="analytics"
+        :review-activities="reviewActivities"
+        :review-bulletins="reviewBulletins"
+        :reports="reports"
+        :pending-places="pendingPlaces"
+        :place-reviews="placeReviews"
+        :quick-actions="quickAdminActions"
+        :news-pending-count="newsAuditStats.pending"
+        :updated-at="dashboardUpdatedAt"
+        :loading="dashboardLoading"
+        :error="adminLoadError"
+        @navigate="runQuickAdminAction"
+        @refresh="refreshCurrentTab"
+      />
 
       <div v-if="tab === 'stats'" class="card">
         <div class="stat-grid">
@@ -2373,15 +2369,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
-          <div class="viz-card">
-            <h3>活动转化</h3>
-            <div class="mini-row">
-              <div>
-                <strong>{{ analytics.activityConversion?.rate || 0 }}%</strong>
-                <p>浏览到报名 · {{ analytics.activityConversion?.signs || 0 }} / {{ analytics.activityConversion?.views || 0 }}</p>
-              </div>
-            </div>
-          </div>
+          <AdminFunnelChart :conversion="analytics.activityConversion || {}" :error="adminLoadError" @refresh="refreshCurrentTab" />
           <div class="viz-card">
             <h3>模块触点</h3>
             <div v-for="item in analytics.moduleUsage || []" :key="`module-${item.module}`" class="mini-row">
@@ -2392,10 +2380,10 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-        <div class="viz-card">
-          <h3>近 7 天运营趋势</h3>
-          <div v-if="!(analytics.trend7d || []).length" class="muted">暂无趋势数据</div>
-          <div v-else class="trend-table-wrap">
+        <AdminTrendChart :rows="analytics.trend7d || []" :error="adminLoadError" @refresh="refreshCurrentTab" />
+        <details v-if="(analytics.trend7d || []).length" class="analytics-details card">
+          <summary>查看 7 天趋势明细表</summary>
+          <div class="trend-table-wrap">
             <table class="simple-table">
               <thead>
                 <tr>
@@ -2416,18 +2404,8 @@ onBeforeUnmount(() => {
                 </tr>
               </tbody>
             </table>
-            <div v-for="item in analytics.trend7d" :key="`bar-${item.date}`" class="bar-row multi">
-              <span class="bar-label">{{ item.date }}</span>
-              <div class="multi-track">
-                <div class="multi-fill users" :style="{ width: `${Math.round((Number(item.newUsers || 0) / trendBarMax) * 100)}%` }"></div>
-                <div class="multi-fill posts" :style="{ width: `${Math.round((Number(item.newPosts || 0) / trendBarMax) * 100)}%` }"></div>
-                <div class="multi-fill acts" :style="{ width: `${Math.round((Number(item.newActivities || 0) / trendBarMax) * 100)}%` }"></div>
-                <div class="multi-fill signs" :style="{ width: `${Math.round((Number(item.newSigns || 0) / trendBarMax) * 100)}%` }"></div>
-              </div>
-            </div>
-            <p class="muted">条形颜色：用户 / 帖子 / 活动 / 报名</p>
           </div>
-        </div>
+        </details>
 
         <div class="analytics-grid">
           <div class="viz-card">
@@ -2453,253 +2431,39 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="viz-card">
-          <h3>快讯分类占比</h3>
-          <div v-if="!(analytics.bulletinTypeRatio || []).length" class="muted">暂无分类数据</div>
-          <div v-for="item in analytics.bulletinTypeRatio" :key="`ratio-${item.type}`" class="bar-row">
-            <span class="bar-label">{{ item.type }}</span>
-            <div class="bar-track">
-              <div class="bar-fill" :style="{ width: `${Math.round((Number(item.count || 0) / bulletinRatioMax) * 100)}%` }" />
-            </div>
-            <strong>{{ item.count || 0 }}</strong>
-          </div>
-        </div>
+        <AdminDonutChart :items="analytics.bulletinTypeRatio || []" :error="adminLoadError" @refresh="refreshCurrentTab" />
       </div>
 
-      <div v-if="tab === 'reviewCenter'" class="review-center">
-        <div class="card module-section-head compact">
-          <div>
-            <span class="section-kicker">集中审核</span>
-            <h3>统一处理活动、快讯、举报和场地评价</h3>
-          </div>
-          <span class="muted">待办 {{ pendingReviewTotal }} 条</span>
-        </div>
-        <div class="card review-filter-bar">
-          <select v-model="reviewStatusFilter">
-            <option value="all">状态：全部</option>
-            <option value="pending">状态：待处理</option>
-            <option value="approved">状态：已通过/已处理</option>
-            <option value="rejected">状态：已驳回</option>
-          </select>
-          <select v-model="reviewTypeFilter">
-            <option value="all">类型：全部</option>
-            <option value="activity">活动</option>
-            <option value="bulletin">快讯</option>
-            <option value="report">举报</option>
-            <option value="placeContribution">场地贡献</option>
-            <option value="placeReview">场地评价</option>
-          </select>
-          <select v-model="reviewTimeFilter">
-            <option value="all">时间：全部</option>
-            <option value="today">今天</option>
-            <option value="7d">近 7 天</option>
-            <option value="30d">近 30 天</option>
-          </select>
-          <input
-            v-model="reviewKeyword"
-            type="text"
-            placeholder="关键词：标题/发布人/举报原因"
-          />
-          <button class="btn-soft" @click="resetReviewFilters">重置筛选</button>
-        </div>
-
-        <div class="card review-kpi-grid">
-          <div class="review-kpi-card">
-            <p>活动（当前结果）</p>
-            <strong>{{ pendingCounts.activity }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>快讯（当前结果）</p>
-            <strong>{{ pendingCounts.bulletin }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>举报（当前结果）</p>
-            <strong>{{ pendingCounts.report }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>场地贡献（当前结果）</p>
-            <strong>{{ pendingCounts.placeContribution }}</strong>
-          </div>
-          <div class="review-kpi-card">
-            <p>场地评价（当前结果）</p>
-            <strong>{{ pendingCounts.placeReview }}</strong>
-          </div>
-        </div>
-
-        <div class="card review-tabs">
-          <button
-            v-for="item in reviewCenterTabs"
-            :key="item.key"
-            class="btn-soft"
-            :class="{ active: reviewCenterTab === item.key }"
-            @click="reviewCenterTab = item.key"
-          >
-            {{ item.label }}
-          </button>
-        </div>
-
-        <div class="card content-list">
-          <div class="review-batch-bar">
-            <label class="review-check-all">
-              <input
-                type="checkbox"
-                :checked="allFilteredSelected"
-                @change="toggleSelectAllFiltered($event.target.checked)"
-              />
-              <span>全选当前列表</span>
-            </label>
-            <span class="muted">已选 {{ selectedReviewCards.length }} 条</span>
-            <button class="btn-primary" :disabled="!canBatchApproveOrReject" @click="batchReview('approve')">批量通过</button>
-            <button class="btn-soft" :disabled="!canBatchApproveOrReject" @click="batchReview('reject')">批量驳回</button>
-          </div>
-          <div v-if="!filteredReviewCards.length" class="muted">未找到匹配项，请调整筛选条件或关键词。</div>
-          <div v-for="item in filteredReviewCards" :key="item.id" class="review-card">
-            <div class="review-card-main">
-              <div class="review-card-head">
-                <label class="review-select">
-                  <input
-                    type="checkbox"
-                    :checked="selectedReviewIds.includes(item.id)"
-                    @change="toggleSelectReview(item.id, $event.target.checked)"
-                  />
-                </label>
-                <span class="status-chip">{{ item.typeLabel }}</span>
-                <span class="status-chip">{{ item.statusLabel }}</span>
-              </div>
-              <h3 class="review-title clamp-2">{{ item.title }}</h3>
-              <p class="review-meta">发布人：{{ item.actor }}</p>
-            </div>
-
-            <div class="review-card-judge">
-              <p class="review-meta">发布时间：{{ item.time }}</p>
-              <p class="review-summary clamp-3">{{ item.summary }}</p>
-              <div class="review-facts">
-                <p v-for="fact in item.facts" :key="`${item.id}-${fact.label}`">
-                  <span>{{ fact.label }}：</span>{{ fact.value }}
-                </p>
-              </div>
-            </div>
-
-            <div class="review-card-actions">
-              <template v-if="item.type === 'activity'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'bulletin'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'report'">
-                <button v-if="item.status === '0'" class="btn-primary" @click="handleReviewCardAction(item, 'done')">标记已处理</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button v-if="item.status === '0'" class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回举报</button>
-                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除违规内容</button>
-              </template>
-              <template v-else-if="item.type === 'placeContribution'">
-                <button class="btn-primary" @click="handleReviewCardAction(item, 'approve')">通过</button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-soft" :disabled="moderationLoadingKey === item.id" @click="fetchModerationSuggestForReviewItem(item)">
-                  {{ moderationLoadingKey === item.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="item.type === 'placeReview'">
-                <button class="btn-soft" @click="handleReviewCardAction(item, 'view')">查看</button>
-                <button class="btn-danger" @click="handleReviewCardAction(item, 'delete')">删除</button>
-              </template>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="reviewDrawerVisible && reviewDrawerItem" class="review-drawer-mask" @click.self="closeReviewDrawer">
-          <aside class="review-drawer">
-            <div class="review-drawer-head">
-              <h3>审核详情</h3>
-              <button class="btn-soft" @click="closeReviewDrawer">关闭</button>
-            </div>
-            <div class="review-drawer-body">
-              <h4 class="review-drawer-title">{{ reviewDrawerItem.title }}</h4>
-              <p>类型：{{ reviewDrawerItem.typeLabel }} · 状态：{{ reviewDrawerItem.statusLabel }}</p>
-              <p>发布人/举报人：{{ reviewDrawerItem.actor }}</p>
-              <p>发布时间：{{ reviewDrawerItem.time }}</p>
-              <img v-if="reviewDrawerItem.imageUrl" :src="reviewDrawerItem.imageUrl" alt="详情图片" class="review-drawer-image" />
-              <div class="review-drawer-block">
-                <strong>完整正文</strong>
-                <p>{{ reviewDrawerItem.fullContent }}</p>
-              </div>
-              <div class="review-drawer-block">
-                <strong>业务信息</strong>
-                <p v-for="fact in reviewDrawerItem.detailFacts" :key="`drawer-${reviewDrawerItem.id}-${fact.label}`">
-                  <span>{{ fact.label }}：</span>{{ fact.value }}
-                </p>
-              </div>
-              <div v-if="reviewDrawerItem.historyNote" class="review-drawer-block">
-                <strong>历史处理备注</strong>
-                <p>{{ reviewDrawerItem.historyNote }}</p>
-              </div>
-              <div v-if="reviewDrawerItem.status === '0' && reviewDrawerTemplates.length" class="review-drawer-block">
-                <strong>处理原因模板</strong>
-                <div class="template-chip-row">
-                  <button
-                    v-for="template in reviewDrawerTemplates"
-                    :key="template.key"
-                    type="button"
-                    class="template-chip"
-                    @click="handleReviewCardAction(reviewDrawerItem, template.actions.includes('done') ? 'done' : 'reject', template.key)"
-                  >
-                    {{ template.label }}
-                  </button>
-                </div>
-              </div>
-              <div v-if="moderationResultKey === reviewDrawerItem.id && moderationResult" class="review-drawer-block moderation-block">
-                <strong>AI 审核建议</strong>
-                <p><span>风险等级：</span>{{ moderationResult.riskLevel }}</p>
-                <p><span>处理建议：</span>{{ moderationResult.suggestion || '暂无建议' }}</p>
-                <p><span>规范摘要：</span>{{ moderationResult.normalizedSummary || '暂无摘要' }}</p>
-                <div v-if="moderationResult.riskPoints.length" class="moderation-points">
-                  <span>风险点：</span>
-                  <ul>
-                    <li v-for="point in moderationResult.riskPoints" :key="point">{{ point }}</li>
-                  </ul>
-                </div>
-                <p v-else><span>风险点：</span>未发现明显风险点</p>
-              </div>
-            </div>
-            <div class="review-drawer-actions">
-              <template v-if="reviewDrawerItem.type === 'activity'">
-                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
-                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'bulletin'">
-                <button class="btn-soft" :disabled="moderationLoadingKey === reviewDrawerItem.id" @click="fetchModerationSuggestForReviewItem(reviewDrawerItem)">
-                  {{ moderationLoadingKey === reviewDrawerItem.id ? '分析中...' : 'AI 审核建议' }}
-                </button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'approve')">通过</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'report'">
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-primary" @click="handleReviewCardAction(reviewDrawerItem, 'done')">标记已处理</button>
-                <button v-if="reviewDrawerItem.status === '0'" class="btn-soft" @click="handleReviewCardAction(reviewDrawerItem, 'reject')">驳回举报</button>
-                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除违规内容</button>
-              </template>
-              <template v-else-if="reviewDrawerItem.type === 'placeReview'">
-                <button class="btn-danger" @click="handleReviewCardAction(reviewDrawerItem, 'delete')">删除</button>
-              </template>
-            </div>
-          </aside>
-        </div>
-      </div>
+      <BoardAssistantPanel v-if="tab === 'boardAssistant'" />
+      <AdminReviewPanel
+        v-if="tab === 'reviewCenter'"
+        v-model:status-filter="reviewStatusFilter"
+        v-model:type-filter="reviewTypeFilter"
+        v-model:time-filter="reviewTimeFilter"
+        v-model:keyword="reviewKeyword"
+        v-model:center-tab="reviewCenterTab"
+        :pending-review-total="pendingReviewTotal"
+        :pending-counts="pendingCounts"
+        :tabs="reviewCenterTabs"
+        :all-filtered-selected="allFilteredSelected"
+        :selected-cards="selectedReviewCards"
+        :can-batch-approve-or-reject="canBatchApproveOrReject"
+        :filtered-cards="filteredReviewCards"
+        :selected-ids="selectedReviewIds"
+        :moderation-loading-key="moderationLoadingKey"
+        :drawer-visible="reviewDrawerVisible"
+        :drawer-item="reviewDrawerItem"
+        :drawer-templates="reviewDrawerTemplates"
+        :moderation-result-key="moderationResultKey"
+        :moderation-result="moderationResult"
+        @reset="resetReviewFilters"
+        @toggle-select-all="toggleSelectAllFiltered"
+        @toggle-select="toggleSelectReview"
+        @batch-review="batchReview"
+        @action="handleReviewCardAction"
+        @moderation="fetchModerationSuggestForReviewItem"
+        @close-drawer="closeReviewDrawer"
+      />
 
       <div v-if="tab === 'users'" class="card content-list">
         <div v-for="u in users" :key="u.userId" class="data-row">
@@ -3544,6 +3308,42 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.admin-toast-stack {
+  position: fixed;
+  top: 82px;
+  right: 18px;
+  z-index: 80;
+  width: min(380px, calc(100vw - 32px));
+  display: grid;
+  gap: 9px;
+  pointer-events: none;
+}
+
+.admin-toast-item {
+  --toast-tone: #087a6d;
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--toast-tone) 30%, #dce3df);
+  border-radius: 14px;
+  padding: 10px 11px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(23, 33, 28, .16);
+  color: #2b3630;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  pointer-events: auto;
+}
+
+.admin-toast-item.tone-danger { --toast-tone: #dc2626; }
+.admin-toast-item.tone-warning { --toast-tone: #f97316; }
+.admin-toast-item.tone-success { --toast-tone: #059669; }
+.admin-toast-item > span { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--toast-tone); color: #fff; }
+.admin-toast-item p { margin: 0; font-size: 13px; line-height: 1.4; }
+.admin-toast-item button { width: 32px; height: 32px; border: 0; border-radius: 9px; background: transparent; color: #687067; display: grid; place-items: center; }
+.admin-toast-enter-active, .admin-toast-leave-active { transition: 180ms ease; }
+.admin-toast-enter-from, .admin-toast-leave-to { opacity: 0; transform: translateY(-8px) scale(.98); }
+
 .admin-layout {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
@@ -3798,17 +3598,6 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
 }
 
-.workbench-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
-  gap: 14px;
-  align-items: start;
-}
-
-.workbench-priority {
-  grid-row: span 2;
-}
-
 .module-section-head {
   display: flex;
   align-items: flex-start;
@@ -3827,105 +3616,10 @@ onBeforeUnmount(() => {
   color: #111827;
 }
 
-.todo-card-grid {
-  display: grid;
-  gap: 10px;
-}
-
-.todo-card {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  padding: 14px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  box-shadow: var(--shadow-sm);
-}
-
-.todo-card:hover {
-  border-color: #94a3b8;
-  transform: translateY(-1px);
-}
-
-.todo-card span {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-}
-
-.todo-card strong {
-  color: #111827;
-  font-size: 16px;
-}
-
-.todo-card small {
+.module-section-head p {
+  margin: 6px 0 0;
   color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.todo-card em {
-  min-width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: #f1f5f9;
-  color: #111827;
-  display: inline-grid;
-  place-items: center;
-  font-style: normal;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.todo-card.priority-high {
-  border-color: #fecaca;
-  background: #fff7f7;
-}
-
-.todo-card.priority-high em {
-  background: #dc2626;
-  color: #fff;
-}
-
-.todo-card.priority-medium {
-  border-color: #fde68a;
-  background: #fffdf3;
-}
-
-.todo-card.priority-medium em {
-  background: #f59e0b;
-  color: #111827;
-}
-
-.workbench-actions {
-  grid-template-columns: 1fr;
-}
-
-.workbench-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.workbench-stat-card {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
-  background: #f8fafc;
-  display: grid;
-  gap: 7px;
-}
-
-.workbench-stat-card strong {
-  color: #111827;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.workbench-stat-card small {
-  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .stat-grid {
@@ -4010,21 +3704,6 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #111827;
 }
-
-.multi-track {
-  display: grid;
-  gap: 5px;
-}
-
-.multi-fill {
-  height: 7px;
-  border-radius: 999px;
-}
-
-.multi-fill.users { background: #2563eb; }
-.multi-fill.posts { background: #16a34a; }
-.multi-fill.acts { background: #d97706; }
-.multi-fill.signs { background: #7c3aed; }
 
 .analytics-panel {
   display: grid;
@@ -4364,7 +4043,25 @@ onBeforeUnmount(() => {
 .trend-table-wrap {
   display: grid;
   gap: 8px;
+  overflow-x: auto;
 }
+
+.analytics-details {
+  padding: 0;
+  overflow: hidden;
+}
+
+.analytics-details summary {
+  min-height: 44px;
+  padding: 12px 14px;
+  color: #45514a;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.analytics-details[open] summary { border-bottom: 1px solid var(--line); }
+.analytics-details .trend-table-wrap { padding: 10px 14px 14px; }
 
 .simple-table {
   width: 100%;
@@ -5235,14 +4932,6 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .workbench-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .workbench-priority {
-    grid-row: auto;
-  }
-
   .stat-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
@@ -5362,7 +5051,48 @@ onBeforeUnmount(() => {
   }
 }
 
+@media (max-width: 980px) {
+  .left-nav {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .brand-block {
+    flex: 0 0 170px;
+    margin: 0;
+    padding: 6px 12px 6px 2px;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+  }
+
+  .nav-group {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 6px;
+    padding: 0 8px 0 0;
+    border: 0;
+  }
+
+  .nav-group-head { display: none; }
+  .nav-btn { width: auto; min-width: 48px; min-height: 44px; margin: 0; }
+  .nav-btn-text small,
+  .nav-btn:hover .nav-btn-text small,
+  .nav-btn.active .nav-btn-text small { display: none; }
+}
+
 @media (max-width: 680px) {
+  .brand-block { display: none; }
+  .left-nav { padding: 9px; }
+  .nav-btn { justify-content: center; padding: 9px; }
+  .nav-btn-text { display: none; }
+  .nav-badge { min-width: 19px; height: 19px; padding: 0 5px; font-size: 10px; }
+
   .quick-admin-actions {
     grid-template-columns: 1fr;
   }
@@ -5370,18 +5100,6 @@ onBeforeUnmount(() => {
   .module-section-head {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .todo-card {
-    grid-template-columns: 1fr;
-  }
-
-  .todo-card em {
-    width: fit-content;
-  }
-
-  .workbench-stat-grid {
-    grid-template-columns: 1fr;
   }
 
   .nav-group-head {

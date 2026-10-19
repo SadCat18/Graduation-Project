@@ -18,6 +18,13 @@ public interface ActivityRepository extends JpaRepository<Activity, Long>, JpaSp
 
     List<Activity> findByUserIdOrderByCreateTimeDesc(Long userId);
 
+    List<Activity> findTop20ByUserIdOrderByCreateTimeDesc(Long userId);
+
+    List<Activity> findTop80ByReviewStatusAndActivityStatusInOrderByCreateTimeDesc(
+            String reviewStatus,
+            List<String> activityStatuses
+    );
+
     long countByCreateTimeBetween(LocalDateTime start, LocalDateTime end);
 
     List<Activity> findTop10ByOrderBySignNumDescCreateTimeDesc();

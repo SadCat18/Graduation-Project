@@ -93,4 +93,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     long countByCreateTimeBetween(LocalDateTime start, LocalDateTime end);
 
     List<Post> findTop10ByOrderByLikeCountDescCreateTimeDesc();
+
+    List<Post> findTop100ByOrderByIsTopDescLikeCountDescCollectCountDescCreateTimeDesc();
 }

@@ -7,6 +7,9 @@ import com.skatehub.pojo.PrivateConversation;
 import com.skatehub.pojo.PrivateMessage;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.message.MessageSendRequest;
+import com.skatehub.pojo.message.PrivateConversationPageResponse;
+import com.skatehub.pojo.message.PrivateMessagePageResponse;
+import com.skatehub.pojo.message.PrivateMessageSendResponse;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.SliceImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -75,11 +81,11 @@ class PrivateMessageServiceTest {
             return message;
         });
 
-        PrivateMessage sent = service.sendMessage(currentUser, 5L, request);
+        PrivateMessageSendResponse response = service.sendMessage(currentUser, 5L, request);
 
-        assertThat(sent.getSenderId()).isEqualTo(9L);
-        assertThat(sent.getReceiverId()).isEqualTo(2L);
-        assertThat(sent.getContent()).isEqualTo("周末去练板吗");
+        assertThat(response.getMessage().getSenderId()).isEqualTo(9L);
+        assertThat(response.getMessage().getReceiverId()).isEqualTo(2L);
+        assertThat(response.getMessage().getContent()).isEqualTo("周末去练板吗");
         assertThat(conversation.getLastMessageId()).isEqualTo(88L);
         assertThat(conversation.getLastMessageContent()).isEqualTo("周末去练板吗");
         verify(conversationRepository).save(conversation);
@@ -99,9 +105,9 @@ class PrivateMessageServiceTest {
         PrivateConversation conversation = conversation(5L, 2L, 9L);
         when(conversationRepository.findById(5L)).thenReturn(Optional.of(conversation));
 
-        service.markRead(currentUser, 5L);
+        service.markRead(currentUser, 5L, 81L);
 
-        verify(messageRepository).markConversationMessagesRead(5L, 9L);
+        verify(messageRepository).markConversationMessagesRead(5L, 9L, 81L);
     }
 
     @Test
@@ -109,28 +115,48 @@ class PrivateMessageServiceTest {
         PrivateConversation conversation = conversation(5L, 2L, 3L);
         when(conversationRepository.findById(5L)).thenReturn(Optional.of(conversation));
 
-        assertThatThrownBy(() -> service.listMessages(currentUser, 5L))
+        assertThatThrownBy(() -> service.listMessages(currentUser, 5L, null, 30))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("无权");
     }
 
     @Test
-    void listConversationsReturnsOtherUserAndUnreadCount() {
+    void listConversationsReturnsPagedOtherUserAndUnreadCount() {
         PrivateConversation conversation = conversation(5L, 2L, 9L);
         conversation.setLastMessageContent("到场地了");
         conversation.setLastMessageTime(LocalDateTime.parse("2026-06-27T10:00:00"));
         User other = user(2L, "bowl_rider");
-        when(conversationRepository.findByUserIdOrderByLastMessageTimeDesc(9L)).thenReturn(List.of(conversation));
+        PrivateMessageRepository.ConversationUnreadCount unread = unread(5L, 2L);
+        when(conversationRepository.searchByUserId(9L, "", false, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(conversation), PageRequest.of(0, 20), 1));
         when(userRepository.findAllById(List.of(2L))).thenReturn(List.of(other));
-        when(messageRepository.countByConversationIdAndReceiverIdAndReadStatus(5L, 9L, "0")).thenReturn(2L);
+        when(messageRepository.countUnreadByConversationIds(List.of(5L), 9L)).thenReturn(List.of(unread));
 
-        List<java.util.Map<String, Object>> rows = service.listConversations(currentUser);
+        PrivateConversationPageResponse response = service.listConversations(currentUser, 1, 20, "", false);
 
-        assertThat(rows).hasSize(1);
-        assertThat(rows.get(0)).containsEntry("conversationId", 5L)
-                .containsEntry("otherUserId", 2L)
-                .containsEntry("otherUsername", "bowl_rider")
-                .containsEntry("unreadCount", 2L);
+        assertThat(response.getTotal()).isEqualTo(1);
+        assertThat(response.getList()).hasSize(1);
+        assertThat(response.getList().get(0).getConversationId()).isEqualTo(5L);
+        assertThat(response.getList().get(0).getOtherUserId()).isEqualTo(2L);
+        assertThat(response.getList().get(0).getOtherUsername()).isEqualTo("bowl_rider");
+        assertThat(response.getList().get(0).getUnreadCount()).isEqualTo(2L);
+    }
+
+    @Test
+    void listMessagesReturnsCursorPageInAscendingDisplayOrder() {
+        PrivateConversation conversation = conversation(5L, 2L, 9L);
+        PrivateMessage older = message(80L, 5L, 2L, 9L, "先到");
+        PrivateMessage newer = message(81L, 5L, 9L, 2L, "马上");
+        when(conversationRepository.findById(5L)).thenReturn(Optional.of(conversation));
+        when(messageRepository.findByConversationIdAndMessageIdLessThanOrderByMessageIdDesc(
+                5L, 90L, PageRequest.of(0, 2)))
+                .thenReturn(new SliceImpl<>(List.of(newer, older), PageRequest.of(0, 2), true));
+
+        PrivateMessagePageResponse response = service.listMessages(currentUser, 5L, 90L, 2);
+
+        assertThat(response.isHasMore()).isTrue();
+        assertThat(response.getNextBeforeMessageId()).isEqualTo(80L);
+        assertThat(response.getList()).extracting("messageId").containsExactly(80L, 81L);
     }
 
     @Test
@@ -160,5 +186,30 @@ class PrivateMessageServiceTest {
         user.setUserId(id);
         user.setUsername(username);
         return user;
+    }
+
+    private PrivateMessage message(Long id, Long conversationId, Long senderId, Long receiverId, String content) {
+        PrivateMessage message = new PrivateMessage();
+        message.setMessageId(id);
+        message.setConversationId(conversationId);
+        message.setSenderId(senderId);
+        message.setReceiverId(receiverId);
+        message.setContent(content);
+        message.setCreateTime(LocalDateTime.parse("2026-06-27T10:00:00"));
+        return message;
+    }
+
+    private PrivateMessageRepository.ConversationUnreadCount unread(Long conversationId, long count) {
+        return new PrivateMessageRepository.ConversationUnreadCount() {
+            @Override
+            public Long getConversationId() {
+                return conversationId;
+            }
+
+            @Override
+            public long getUnreadCount() {
+                return count;
+            }
+        };
     }
 }

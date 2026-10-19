@@ -1,10 +1,11 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import AppToast from './components/AppToast.vue'
+import { api } from './api'
 import { clearAuth, getAuthChangedEventName, getName, getRole, getToken } from './utils/auth'
-import { warmLikelyRouteChunks } from './utils/routePrefetch'
+import { warmRouteChunk } from './utils/routePrefetch'
 import { installToastAlertBridge, restoreToastAlertBridge } from './utils/toast'
 
 const route = useRoute()
@@ -12,11 +13,14 @@ const router = useRouter()
 
 const isAuthPage = computed(() => ['/login', '/register'].includes(route.path))
 const useWideLayout = computed(() => route.meta.wideLayout === true)
+const isMessagesPage = computed(() => route.path.startsWith('/messages'))
 const authState = ref({
   token: '',
   role: '',
   name: ''
 })
+const privateUnreadCount = ref(0)
+let unreadTimer = null
 
 function syncAuthState() {
   authState.value = {
@@ -36,11 +40,12 @@ const navItems = computed(() => {
     { to: '/community', label: '社区帖子', icon: 'community' },
     { to: '/activities', label: '同城约板', icon: 'activity' },
     { to: '/skate', label: '滑板专业', icon: 'target' },
+    { to: '/board-assistant', label: '选板助手', icon: 'skateboard' },
     { to: '/ai-coach', label: 'AI 滑板老师', icon: 'skateboard' },
     { to: '/bulletins', label: '社区快讯', icon: 'news' }
   ]
   if (hasToken.value) {
-    base.push({ to: '/messages', label: '私信', icon: 'message' })
+    base.push({ to: '/messages', label: '私信', icon: 'message', badge: privateUnreadCount.value })
     base.push({ to: '/profile', label: '个人中心', icon: 'user' })
   }
   if (role.value === 'ADMIN') base.push({ to: '/admin', label: '后台管理', icon: 'admin' })
@@ -50,11 +55,42 @@ const navItems = computed(() => {
 function logout() {
   clearAuth()
   syncAuthState()
+  privateUnreadCount.value = 0
   router.replace('/login')
 }
 
 function handleAuthChange() {
   syncAuthState()
+  loadPrivateUnreadCount()
+}
+
+function prefetchRoute(path) {
+  warmRouteChunk(path)
+}
+
+async function loadPrivateUnreadCount() {
+  if (!getToken()) {
+    privateUnreadCount.value = 0
+    return
+  }
+  try {
+    const result = await api.privateUnreadCount()
+    privateUnreadCount.value = Number(result?.unreadCount || 0)
+  } catch (_) {
+    privateUnreadCount.value = 0
+  }
+}
+
+function startUnreadPolling() {
+  stopUnreadPolling()
+  unreadTimer = window.setInterval(loadPrivateUnreadCount, 30000)
+}
+
+function stopUnreadPolling() {
+  if (unreadTimer) {
+    window.clearInterval(unreadTimer)
+    unreadTimer = null
+  }
 }
 
 onMounted(() => {
@@ -62,19 +98,19 @@ onMounted(() => {
   installToastAlertBridge()
   window.addEventListener('storage', handleAuthChange)
   window.addEventListener(getAuthChangedEventName(), handleAuthChange)
-
-  const warmRoutes = () => warmLikelyRouteChunks()
-  if (typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(warmRoutes, { timeout: 1500 })
-  } else {
-    window.setTimeout(warmRoutes, 600)
-  }
+  loadPrivateUnreadCount()
+  startUnreadPolling()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('storage', handleAuthChange)
   window.removeEventListener(getAuthChangedEventName(), handleAuthChange)
+  stopUnreadPolling()
   restoreToastAlertBridge()
+})
+
+watch(() => route.path, () => {
+  loadPrivateUnreadCount()
 })
 </script>
 
@@ -83,7 +119,7 @@ onBeforeUnmount(() => {
     <header v-if="!isAuthPage" class="topbar">
       <div class="brand" @click="$router.push('/')">
         <span class="brand-icon"><AppIcon name="skateboard" :size="20" /></span>
-        <span>滑板交流网站</span>
+        <span>滑板知识网站</span>
       </div>
 
       <nav class="nav-links">
@@ -92,9 +128,12 @@ onBeforeUnmount(() => {
           :key="item.to"
           :to="item.to"
           class="nav-link"
+          @mouseenter="prefetchRoute(item.to)"
+          @focus="prefetchRoute(item.to)"
         >
           <AppIcon :name="item.icon" :size="16" />
           <span>{{ item.label }}</span>
+          <small v-if="item.badge" class="nav-badge">{{ item.badge }}</small>
         </router-link>
       </nav>
 
@@ -118,7 +157,7 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <main :class="['main-container', { 'main-container-wide': useWideLayout }]">
+    <main :class="['main-container', { 'main-container-wide': useWideLayout, 'main-container-messages': isMessagesPage }]">
       <RouterView v-slot="{ Component, route: viewRoute }">
         <Transition name="route-glide" mode="out-in">
           <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
@@ -130,13 +169,16 @@ onBeforeUnmount(() => {
 
     <nav v-if="!isAuthPage" class="mobile-bottom-nav" aria-label="移动端主导航">
       <router-link
-        v-for="item in navItems.slice(0, 5)"
+        v-for="item in navItems.slice(0, 6)"
         :key="`mobile-${item.to}`"
         :to="item.to"
         class="mobile-bottom-link"
+        @touchstart.passive="prefetchRoute(item.to)"
+        @focus="prefetchRoute(item.to)"
       >
         <AppIcon :name="item.icon" :size="18" />
         <span>{{ item.label.replace('社区帖子', '社区').replace('同城约板', '活动').replace('AI 滑板老师', 'AI').replace('社区快讯', '快讯') }}</span>
+        <small v-if="item.badge" class="mobile-nav-badge">{{ item.badge }}</small>
       </router-link>
     </nav>
 
@@ -182,8 +224,7 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(243, 244, 246, 0.92);
-  backdrop-filter: blur(8px);
+  background: rgba(243, 244, 246, 0.98);
   border-bottom: 1px solid rgba(148, 163, 184, 0.34);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
   padding: 12px 18px;
@@ -220,6 +261,7 @@ onBeforeUnmount(() => {
 }
 
 .nav-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -228,8 +270,6 @@ onBeforeUnmount(() => {
   color: var(--text-soft);
   border: 1px solid rgba(148, 163, 184, 0.32);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(241, 245, 249, 0.62));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   font-size: 14px;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
   transition:
@@ -238,6 +278,21 @@ onBeforeUnmount(() => {
     border-color 0.24s ease,
     background-color 0.24s ease,
     color 0.24s ease;
+}
+
+.nav-badge,
+.mobile-nav-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .nav-link:hover {
@@ -274,8 +329,6 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.62);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.5));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   color: var(--text);
   font-size: 14px;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
@@ -294,6 +347,11 @@ onBeforeUnmount(() => {
 .main-container-wide {
   max-width: 1680px;
   width: 100%;
+}
+
+.main-container-messages {
+  max-width: none;
+  padding: 0;
 }
 
 .site-footer {
@@ -334,7 +392,7 @@ onBeforeUnmount(() => {
 
 .route-glide-enter-active,
 .route-glide-leave-active {
-  transition: opacity 0.24s var(--motion-ease), transform 0.24s var(--motion-ease);
+  transition: opacity 0.16s var(--motion-ease), transform 0.16s var(--motion-ease);
 }
 
 .route-glide-enter-from {
@@ -370,6 +428,10 @@ onBeforeUnmount(() => {
     padding-bottom: 92px;
   }
 
+  .main-container-messages {
+    padding: 0;
+  }
+
   .mobile-bottom-nav {
     position: fixed;
     left: 12px;
@@ -377,18 +439,17 @@ onBeforeUnmount(() => {
     bottom: max(10px, env(safe-area-inset-bottom));
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 4px;
     padding: 7px;
     border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 18px 38px rgba(18, 21, 19, 0.18);
-    backdrop-filter: blur(18px) saturate(1.15);
-    -webkit-backdrop-filter: blur(18px) saturate(1.15);
   }
 
   .mobile-bottom-link {
+    position: relative;
     display: grid;
     place-items: center;
     gap: 3px;
@@ -412,6 +473,15 @@ onBeforeUnmount(() => {
     background: #151917;
     color: #fff;
     transform: translateY(-1px);
+  }
+
+  .mobile-nav-badge {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    min-width: 17px;
+    height: 17px;
+    font-size: 10px;
   }
 
   .site-footer {

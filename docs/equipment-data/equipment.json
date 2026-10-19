@@ -1,0 +1,2720 @@
+{
+  "dataset": "双翘滑板器材数据（中国大陆市场）",
+  "collected_date": "2026-10-09",
+  "currency_policy": "cn_price 为国内参考价（人民币），可直接用于推荐；overseas_price 为海外原币价，仅作参考，不得直接换算后参与国内推荐",
+  "records": [
+    {
+      "record_id": "DECK-001",
+      "category": "板面",
+      "brand": "Powell Peralta",
+      "brand_country": "美国",
+      "model": "Skeleton Silver Foil Flight 8.25（Shape 243 K26）",
+      "spec": {
+        "width_in": 8.25,
+        "length_in": 31.95,
+        "wheelbase_in": 14.25,
+        "construction": "美国硬岩枫木+玻璃纤维，环氧树脂热压（Flight结构，比标准7层更薄更抗断）",
+        "nose_in": 6.88,
+        "tail_in": 6.63
+      },
+      "summary_zh": "银箔骷髅图案 Flight 玻纤板面，K26 中等凹度对称双翘",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "碗池"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 114.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://www.powell-peralta.com/powell-peralta-skeleton-silver-foil-flight-skateboard-deck-8-25-k26",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://www.powell-peralta.com/powell-peralta-skeleton-silver-foil-flight-skateboard-deck-8-25-k26",
+        "page_title": "Powell Peralta Skeleton Silver Foil FLIGHT Skateboard Deck - 8.25 K26",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1nui66cqrbhn5.cloudfront.net/assets/powellperalta/productimage/size/265x265/method/padding/v/3737/DCGAFLTSKS825F26.jpg",
+        "license_note": "官网产品图，版权属品牌方，仅记录链接，未下载，默认无使用授权"
+      },
+      "notes": "官方同 Shape 243 Flight 另有 8.0/8.5 等宽度，本次仅验证到 8.25 在售页；powell-peralta.com 对抓取有反爬（401/reCAPTCHA），经渲染抓取成功"
+    },
+    {
+      "record_id": "DECK-002",
+      "category": "板面",
+      "brand": "Santa Cruz",
+      "brand_country": "美国",
+      "model": "Classic Dot 8.0（SC-347板型）",
+      "spec": {
+        "width_in": 8.0,
+        "length_in": 31.62,
+        "wheelbase_in": 14.25,
+        "construction": "7层北美枫木热压",
+        "nose_in": 6.78,
+        "tail_in": 6.38
+      },
+      "summary_zh": "经典圆点 Logo 街式双翘板面",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 75.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://nhsskatedirect.com/products/8-00in-x-31-62in-classic-dot-santa-cruz-skateboard-deck-11117701",
+        "collected_date": "2026-10-09",
+        "note": "NHS官方店（nhsfunfactory.com已301至nhsskatedirect.com）；页面提示库存不足10件"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/8-00in-x-31-62in-classic-dot-santa-cruz-skateboard-deck-11117701",
+        "page_title": "Classic Dot 8.00in | Skateboard Decks | Santa Cruz",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://nhsskatedirect.com/products/8-00in-x-31-62in-classic-dot-santa-cruz-skateboard-deck-11117701",
+        "license_note": "官网产品图，版权属NHS/Santa Cruz，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-003",
+      "category": "板面",
+      "brand": "Girl",
+      "brand_country": "美国",
+      "model": "Bennett Follies Deck",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": 8.25,
+            "length_in": 31.75,
+            "wheelbase_in": null,
+            "mold": "G027"
+          },
+          {
+            "width_in": 8.5,
+            "length_in": 32.0,
+            "wheelbase_in": 14.4375,
+            "mold": "G053双头对称Twin Tip"
+          }
+        ],
+        "construction": "枫木双翘（官方页未标注层数）"
+      },
+      "summary_zh": "Follies 系列职业队员板面，8.5 版双头对称",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 552,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价（按中国大陆IP显示人民币）",
+        "sales_region": "CN",
+        "source_url": "https://crailtap.com/products/girl-skateboards-bennett-follies-deck-skateboard-deck",
+        "collected_date": "2026-10-09",
+        "note": "Crailtap 为 Girl/Chocolate 官方商城；页面按访问地区显示¥552，是否含税及大陆配送运费未验证"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://crailtap.com/products/girl-skateboards-bennett-follies-deck-skateboard-deck",
+        "page_title": "Girl Skateboards | Bennett Follies Deck Skateboard Deck",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://crailtap.com/products/girl-skateboards-bennett-follies-deck-skateboard-deck",
+        "license_note": "官网产品图，版权属Girl Skateboard Company，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-004",
+      "category": "板面",
+      "brand": "Chocolate",
+      "brand_country": "美国",
+      "model": "Perez World Is Yours Deck",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": 7.75,
+            "length_in": 31.125,
+            "wheelbase_in": 13.8125,
+            "mold": "G009"
+          },
+          {
+            "width_in": 8.4,
+            "length_in": 32.0,
+            "wheelbase_in": null
+          }
+        ],
+        "construction": "枫木双翘（官方页未标注层数）"
+      },
+      "summary_zh": "经典 City 脚印画风板面，覆盖 7.75 小宽与 8.4",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 552,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价（按中国大陆IP显示人民币）",
+        "sales_region": "CN",
+        "source_url": "https://crailtap.com/products/chocolate-skateboards-perez-world-is-yours-deck-skateboard-deck",
+        "collected_date": "2026-10-09",
+        "note": "该店全店 Chocolate 板面统一¥552（Loveseat+系列¥558）；含税与运费未验证"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://crailtap.com/products/chocolate-skateboards-perez-world-is-yours-deck-skateboard-deck",
+        "page_title": "Chocolate Skateboards | Perez World Is Yours Deck Skateboard Deck",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://crailtap.com/products/chocolate-skateboards-perez-world-is-yours-deck-skateboard-deck",
+        "license_note": "官网产品图，版权属Chocolate Skateboards，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-005",
+      "category": "板面",
+      "brand": "Element",
+      "brand_country": "美国",
+      "model": "Seal",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": 7.75,
+            "length_in": 31.25,
+            "wheelbase_in": 14.0
+          },
+          {
+            "width_in": 8.0,
+            "length_in": 31.75,
+            "wheelbase_in": 14.25
+          },
+          {
+            "width_in": 8.25,
+            "length_in": 32.0,
+            "wheelbase_in": 14.25
+          }
+        ],
+        "construction": "枫木（官方页标注Maple Wood，未标注层数）"
+      },
+      "summary_zh": "Element 经典树标板面，三宽度入门友好",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 269,
+        "currency": "CNY",
+        "price_type": "淘宝滑板店零售价（店铺优惠后；优惠前¥480，清仓特价售出不退换）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=740317741959",
+        "collected_date": "2026-10-09",
+        "note": "BLOW滑板店（7年老店，页面标注保证正品 假一赔十）；Seal 8.0【单板面】SKU，另可选92' Classic/Blazin' 8.0及整套"
+      },
+      "overseas_price": {
+        "amount": 65,
+        "currency": "EUR",
+        "sales_region": "LU",
+        "price_type": "官方商城零售价（卢森堡区域站）",
+        "source_url": "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+        "collected_date": "2026-10-09",
+        "note": "elementbrand.com 主站对抓取返回403，参数与价格取自品牌官方区域站；页面标注暂时缺货"
+      },
+      "spec_source": {
+        "url": "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+        "page_title": "Seal 8\" - Multi Unisex Skateboard Deck | Element",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.elementbrand.lu/seal-8-multi-unisex-skateboard-deck/C4DCF5ELPP-0001.html",
+        "license_note": "官网产品图，版权属Element（Boardriders），仅记录链接"
+      },
+      "notes": "国内售价未能核实：京东频道页JS懒加载无法获取第三方店铺商品，天猫/淘宝需登录，均记为限制 国内渠道已核实：Element Seal 8.0 板面 ¥269（清仓）。同页另有¥174-395的其他Element板面在售，低价款未逐一验真，未采用。"
+    },
+    {
+      "record_id": "DECK-006",
+      "category": "板面",
+      "brand": "Zero",
+      "brand_country": "美国",
+      "model": "Blood Skull",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": 8.0,
+            "length_in": 31.6,
+            "wheelbase_in": 14.0
+          },
+          {
+            "width_in": 8.25,
+            "length_in": 31.9,
+            "wheelbase_in": 14.25
+          },
+          {
+            "width_in": 8.5,
+            "length_in": 32.3,
+            "wheelbase_in": 14.5
+          }
+        ],
+        "construction": "标准枫木叠层（墨西哥产，官方页未标注层数）"
+      },
+      "summary_zh": "Zero 经典血骷髅板面，8.0-8.5 三宽度",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "碗池"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 74.99,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://zeroskateboards.com/products/blood-skull",
+        "collected_date": "2026-10-09",
+        "note": "8.0 宽度当时页面标为无货"
+      },
+      "spec_source": {
+        "url": "https://zeroskateboards.com/products/blood-skull",
+        "page_title": "BLOOD SKULL – Zero Skateboards",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://zeroskateboards.com/products/blood-skull",
+        "license_note": "官网产品图，版权属Zero Skateboards，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-007",
+      "category": "板面",
+      "brand": "Toy Machine",
+      "brand_country": "美国",
+      "model": "Geoff Rowley Robot 8.75",
+      "spec": {
+        "width_in": 8.75,
+        "length_in": 32.0,
+        "wheelbase_in": 14.25,
+        "nose_in": 7.0,
+        "tail_in": 6.88,
+        "construction": "枫木双翘（官方页未标注层数）"
+      },
+      "summary_zh": "8.75 宽板面，适合大脚板与碗池",
+      "suitability_tags": [
+        "街式",
+        "碗池",
+        "滑板场"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 72,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://toymachine.com/products/geoff-rowley-robot-8-75",
+        "collected_date": "2026-10-09",
+        "note": "页面标注已售罄；可选加砂纸+$5.00"
+      },
+      "spec_source": {
+        "url": "https://toymachine.com/products/geoff-rowley-robot-8-75",
+        "page_title": "GEOFF ROWLEY ROBOT 8.75 – Toy Machine",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://toymachine.com/products/geoff-rowley-robot-8-75",
+        "license_note": "官网产品图，版权属Toy Machine，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-008",
+      "category": "板面",
+      "brand": "Real",
+      "brand_country": "美国",
+      "model": "Classic Shape 系列（R1模具）",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": 8.06,
+            "length_in": 31.8,
+            "wheelbase_in": 14.38
+          },
+          {
+            "width_in": 8.25,
+            "length_in": 32.0,
+            "wheelbase_in": 14.38
+          },
+          {
+            "width_in": 8.38,
+            "length_in": 32.25,
+            "wheelbase_in": 14.5
+          },
+          {
+            "width_in": 8.5,
+            "length_in": 31.85,
+            "wheelbase_in": 14.25
+          },
+          {
+            "width_in": 8.5,
+            "length_in": 32.18,
+            "wheelbase_in": 14.38
+          }
+        ],
+        "construction": "标准7层枫木（另有Heavyweights加厚、DBX玄武岩纤维夹层、Slick底板结构）"
+      },
+      "summary_zh": "DLX 旗下 Real 主线 Classic 板型，官方尺寸表全宽度公开",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "碗池"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.realskateboards.com/shapeguide/",
+        "page_title": "REAL Skateboards Shape Guide",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "官网不直销（DLX经销商模式）无官方标价；商品目录页为JS动态渲染无法抓取，参数取自官方Shape Guide；另提供7.5\"/7.75\"小尺寸及Easy Rider/Full/Twin板型"
+    },
+    {
+      "record_id": "DECK-009",
+      "category": "板面",
+      "brand": "Primitive",
+      "brand_country": "美国",
+      "model": "Rodriguez Abyss 8.125",
+      "spec": {
+        "width_in": 8.125,
+        "length_in": 31.75,
+        "wheelbase_in": 14.0,
+        "construction": "7层北美硬岩枫木，中等凹度"
+      },
+      "summary_zh": "P-Rod 金箔印花街式板面，8.125 中等宽度",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 70,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://primitiveskate.com/collections/decks/products/rodriguez-abyss-deck",
+        "collected_date": "2026-10-09",
+        "note": "页面标注已售罄"
+      },
+      "spec_source": {
+        "url": "https://primitiveskate.com/collections/decks/products/rodriguez-abyss-deck",
+        "page_title": "RODRIGUEZ ABYSS DECK - 8.125\" – Primitive Skateboarding",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://primitiveskate.com/collections/decks/products/rodriguez-abyss-deck",
+        "license_note": "官网产品图，版权属Primitive Skateboarding，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "DECK-010",
+      "category": "板面",
+      "brand": "Baker",
+      "brand_country": "美国",
+      "model": "Andrew Reynolds Purple Pain 8.25",
+      "spec": {
+        "width_in": 8.25,
+        "length_in": 31.875,
+        "wheelbase_in": 14.25,
+        "construction": "100%硬岩加拿大枫木，Mellow凹度"
+      },
+      "summary_zh": "Reynolds 经典图案板面，附赠黑砂纸",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 87,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价",
+        "source_url": "https://bakerskateboards.com/products/andrew-reynolds-purple-pain-deck-8-25",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://bakerskateboards.com/products/andrew-reynolds-purple-pain-deck-8-25",
+        "page_title": "Andrew Reynolds Purple Pain Deck 8.25 – baker skateboards",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://bakerskateboards.com/products/andrew-reynolds-purple-pain-deck-8-25",
+        "license_note": "官网产品图，版权属Baker Skateboards，仅记录链接"
+      },
+      "notes": "官方 Board Construction 页给出 7.31-8.5 全宽度对应长度/轴距表（如8.0→31.5\"/14.25\"，8.5→32\"/14.5\"）"
+    },
+    {
+      "record_id": "DECK-011",
+      "category": "板面",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "专业板面（动物园派对/无限/守护/签名款等多图案系列）",
+      "spec": {
+        "available_sizes": [
+          {
+            "width_in": null,
+            "length_in": null,
+            "wheelbase_in": null
+          }
+        ],
+        "construction": null
+      },
+      "summary_zh": "国产头部品牌（深圳，2010年创立，2019-2023淘系滑板类目销售额第一）专业板面，图案系列丰富",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "初学"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": "240-270",
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价（不同图案价格不同）",
+        "sales_region": "CN",
+        "source_url": "https://www.dobyheart.com/product.html",
+        "collected_date": "2026-10-09",
+        "note": "官方商城页面未逐款标注宽度与层数"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.dobyheart.com/product.html",
+        "page_title": "DBH滑板官网商城",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "宽度字段为null：官方商城未标注各图案尺寸；京东自营整板标题显示存在8.0英寸规格（见SET-002）。品牌事实来自官网：成立于2010年、总部深圳、线下600+经销伙伴"
+    },
+    {
+      "record_id": "TRUCK-001",
+      "category": "桥",
+      "brand": "Independent",
+      "brand_country": "美国",
+      "model": "Stage 11 Polished Standard",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "129",
+            "axle_in": 7.6,
+            "height": "55mm",
+            "deck_range_in": [
+              7.4,
+              7.8
+            ]
+          },
+          {
+            "size_code": "139",
+            "axle_in": 8.0,
+            "height": "55mm",
+            "deck_range_in": [
+              7.8,
+              8.2
+            ]
+          },
+          {
+            "size_code": "144",
+            "axle_in": 8.25,
+            "height": "55mm",
+            "deck_range_in": [
+              8.2,
+              8.375
+            ]
+          },
+          {
+            "size_code": "149",
+            "axle_in": 8.5,
+            "height": "55mm",
+            "deck_range_in": [
+              8.375,
+              8.6
+            ]
+          },
+          {
+            "size_code": "159",
+            "axle_in": 8.75,
+            "height": "55mm",
+            "deck_range_in": [
+              8.6,
+              9.0
+            ]
+          },
+          {
+            "size_code": "169",
+            "axle_in": 9.125,
+            "height": "55mm",
+            "deck_range_in": [
+              9.0,
+              9.5
+            ]
+          }
+        ],
+        "construction": "A356 T6热处理铸铝hanger，铬钼钢轴，Grade 8碳钢kingpin，90a PU垫"
+      },
+      "summary_zh": "经典55mm标准高街式桥，尺寸覆盖全，终身质保",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": 430,
+        "currency": "CNY",
+        "price_type": "京东第三方滑板店零售价（到手价，原价¥500）",
+        "sales_region": "CN",
+        "source_url": "https://item.jd.com/10095337527533.html",
+        "collected_date": "2026-10-09",
+        "note": "DBH京东店铺售进口INDY，139 Mid金色实心款，54+条评价；页面未明示单只/一对，推荐功能使用前需核实数量"
+      },
+      "overseas_price": {
+        "amount": 27.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（单只）",
+        "source_url": "https://nhsskatedirect.com/products/stage-11-polished-standard-skateboard-trucks-independent",
+        "collected_date": "2026-10-09",
+        "note": "页面另见促销价$20.95；官方注明单只销售、一对=2件"
+      },
+      "spec_source": {
+        "url": "https://independenttrucks.com/trucks",
+        "page_title": "Skateboard Trucks | Independent Truck Company（官方Size Chart）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://nhsskatedirect.com/products/stage-11-polished-standard-skateboard-trucks-independent",
+        "license_note": "官网产品图，版权属品牌方，仅记录链接"
+      },
+      "notes": "官方尺寸表已二次核验：139→8.0\"轴/7.8-8.2\"板面，144→8.25\"/8.2-8.375\"，149→8.5\"/8.375-8.6\"；Stage 11高度55mm（锻造空心/钛款53.5mm，Mid系列52mm）；官方另列146/151/166/215等尺寸；159/169配6孔新旧两用底座"
+    },
+    {
+      "record_id": "TRUCK-002",
+      "category": "桥",
+      "brand": "Thunder",
+      "brand_country": "美国",
+      "model": "Lights",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "143",
+            "axle_in": 7.125,
+            "height": "Team底座50mm",
+            "deck_range_in": [
+              null,
+              7.4
+            ]
+          },
+          {
+            "size_code": "145",
+            "axle_in": 7.62,
+            "height": "Team底座50mm/锻造底座49mm",
+            "deck_range_in": [
+              7.4,
+              7.9
+            ]
+          },
+          {
+            "size_code": "147",
+            "axle_in": 8.0,
+            "height": "Team底座50mm/锻造底座49mm",
+            "deck_range_in": [
+              7.9,
+              8.12
+            ]
+          },
+          {
+            "size_code": "148",
+            "axle_in": 8.25,
+            "height": "Team底座52mm/锻造底座51mm",
+            "deck_range_in": [
+              8.12,
+              8.38
+            ]
+          },
+          {
+            "size_code": "149",
+            "axle_in": 8.5,
+            "height": "Team底座52mm/锻造底座51mm",
+            "deck_range_in": [
+              8.38,
+              8.62
+            ]
+          },
+          {
+            "size_code": "151",
+            "axle_in": 8.75,
+            "height": "Team底座52mm/锻造底座51mm",
+            "deck_range_in": [
+              8.62,
+              8.85
+            ]
+          },
+          {
+            "size_code": "161",
+            "axle_in": 9.125,
+            "height": "Team底座53mm/锻造底座52mm",
+            "deck_range_in": [
+              8.9,
+              9.5
+            ]
+          }
+        ],
+        "construction": "轻量化设计（官方样式图为中空轴结构），尺寸表适用Team/Hollow/Titanium Lights各线"
+      },
+      "summary_zh": "DLX旗下轻量化桥，147对应8.0英寸轴、适配7.9-8.12英寸板面",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": 385,
+        "currency": "CNY",
+        "price_type": "淘宝滑板店零售价（平台补贴后；优惠前¥500起，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=757207011202",
+        "collected_date": "2026-10-09",
+        "note": "Thunder 雷桥专售商品页（原装进口，送工具+板钉）；147【实心】原色与147【锻造中空】原色点选后均显示补贴后¥385，已售97"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.thundertrucks.com/sizing/",
+        "page_title": "Know Control for Every Size - Thunder Trucks（官方尺寸表PNG，已逐图视觉解析）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.thundertrucks.com/images/th-staples-23-lights-web-01.jpg",
+        "license_note": "官网样式图，版权属Thunder/DLX，仅记录链接"
+      },
+      "notes": "官网不直销无USD价。已二次核验：143→7.125\"轴/≤7.4\"板，145→7.62\"/7.4-7.9\"，161→9.125\"/8.9-9.5\"，与调研数据一致；另存在181（10.0\"轴/9.5\"+）档位；147/148/149/151数据取自同一官方图表解析，命名即毫米轴距。国内行货价未能在可访问渠道核实 国内行货渠道已核实：Thunder 147（实心/锻造中空）补贴后¥385，与京东 Venture 锻造款价格互证合理。"
+    },
+    {
+      "record_id": "TRUCK-003",
+      "category": "桥",
+      "brand": "Venture",
+      "brand_country": "美国",
+      "model": "标准抛光系列（Hi/Lo）",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "5.0",
+            "axle_in": 7.62,
+            "height": "Hi和Lo两版（mm未公布）",
+            "deck_range_in": [
+              null,
+              7.9
+            ]
+          },
+          {
+            "size_code": "5.2",
+            "axle_in": 8.0,
+            "height": "Hi和Lo两版（mm未公布）",
+            "deck_range_in": [
+              7.9,
+              8.1
+            ]
+          },
+          {
+            "size_code": "5.6",
+            "axle_in": 8.25,
+            "height": "Hi和Lo两版（mm未公布）",
+            "deck_range_in": [
+              8.1,
+              8.3
+            ]
+          },
+          {
+            "size_code": "5.8",
+            "axle_in": 8.5,
+            "height": "Hi和Lo两版（mm未公布）",
+            "deck_range_in": [
+              8.4,
+              8.6
+            ]
+          },
+          {
+            "size_code": "6.1",
+            "axle_in": 8.75,
+            "height": "Hi和Lo两版（mm未公布）",
+            "deck_range_in": [
+              8.62,
+              null
+            ]
+          }
+        ],
+        "construction": "铸铝hanger+钢轴（Deluxe Distribution旗下）"
+      },
+      "summary_zh": "DLX旗下经典桥，小数命名即轴宽英寸数，官方提供Hi/Lo两种高度",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 385,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥500，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=836505351414",
+        "collected_date": "2026-10-09",
+        "note": "Weyoung滑板（页面标注正品授权 质量保障）；Venture桥5.2H【实心】/5.0H【实心】点选后均显示¥385，高52mm，已售69"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.venturetrucks.net/sizes/",
+        "page_title": "Ride The Right Size Truck - Venture Trucks（官方尺寸图PNG，已视觉解析）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://venturetrucks.net/wp-content/uploads/2019/05/ve-2019-5.2.png",
+        "license_note": "官网尺寸图，版权属Venture/DLX，仅记录链接"
+      },
+      "notes": "venturetrucks.com当日宕机，改用DLX官网指向的venturetrucks.net；官方Sizes图8.3-8.4英寸区间未分配（5.6止于8.3、5.8起于8.4）；hanger宽度与Hi/Lo毫米高度官方未公布 国内价已复核：Weyoung授权店 Venture 5.0H/5.2H 实心 ¥385；与京东锻造签名款¥538（DBH店）互证合理。"
+    },
+    {
+      "record_id": "TRUCK-004",
+      "category": "桥",
+      "brand": "Ace",
+      "brand_country": "美国",
+      "model": "AF1",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "22",
+            "hanger_in": 5.2,
+            "axle_in": 7.75,
+            "height": "53mm",
+            "deck_range_in": [
+              7.25,
+              8.0
+            ]
+          },
+          {
+            "size_code": "33",
+            "hanger_in": 5.4,
+            "axle_in": 8.0,
+            "height": "53mm",
+            "deck_range_in": [
+              8.0,
+              8.25
+            ]
+          },
+          {
+            "size_code": "44",
+            "hanger_in": 5.6,
+            "axle_in": 8.25,
+            "height": "53mm",
+            "deck_range_in": [
+              8.25,
+              8.5
+            ]
+          },
+          {
+            "size_code": "55",
+            "hanger_in": 5.8,
+            "axle_in": 8.5,
+            "height": "53mm",
+            "deck_range_in": [
+              8.5,
+              8.75
+            ]
+          },
+          {
+            "size_code": "60",
+            "hanger_in": 6.1,
+            "axle_in": 8.75,
+            "height": "53mm",
+            "deck_range_in": [
+              8.75,
+              9.0
+            ]
+          },
+          {
+            "size_code": "66",
+            "hanger_in": 6.4,
+            "axle_in": 9.0,
+            "height": "53mm",
+            "deck_range_in": [
+              9.0,
+              9.25
+            ]
+          },
+          {
+            "size_code": "77",
+            "hanger_in": 6.9,
+            "axle_in": 9.5,
+            "height": "53mm",
+            "deck_range_in": [
+              9.25,
+              9.75
+            ]
+          },
+          {
+            "size_code": "80",
+            "hanger_in": 7.4,
+            "axle_in": 10.0,
+            "height": "53mm",
+            "deck_range_in": [
+              9.75,
+              null
+            ]
+          }
+        ],
+        "construction": "AF1锻造结构（另有AF1 Low 49mm与AF1 Hollow中空版，同尺寸表）"
+      },
+      "summary_zh": "锻造一体AF1，53mm标准高，22-80八档尺寸，覆盖最全",
+      "suitability_tags": [
+        "街式",
+        "滑板场",
+        "综合"
+      ],
+      "level_tags": [
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 35.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（AF1 Polished；部分色卡促销$29.95，原价$37.95）",
+        "source_url": "https://mesaskatesupply.com/products/ace-af1-polished-skateboard-trucks",
+        "collected_date": "2026-10-09",
+        "note": "Ace官方sizing-chart页指向其官方店Mesa Skate Supply；单双只页面未标注"
+      },
+      "spec_source": {
+        "url": "https://acetrucks.com/sizing-chart",
+        "page_title": "Sizing Chart – Ace Trucks（官方表，经官方店Mesa页面呈现）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://mesaskatesupply.com/collections/af1-trucks",
+        "license_note": "官方店产品图，版权属Ace，仅记录链接"
+      },
+      "notes": "Classic经典线高度同为53mm但轴宽命名不同（如33=8.0轴/5.35 hanger/7.875-8.25板）；Ace命名偏小一档（44=8.25\"轴）"
+    },
+    {
+      "record_id": "TRUCK-005",
+      "category": "桥",
+      "brand": "Royal",
+      "brand_country": "美国",
+      "model": "Raw Truck",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "127",
+            "axle_in": 7.5,
+            "height": "52mm",
+            "deck_range_in": [
+              null,
+              7.75
+            ]
+          },
+          {
+            "size_code": "139",
+            "axle_in": 8.0,
+            "height": "52mm",
+            "deck_range_in": [
+              7.75,
+              8.25
+            ]
+          },
+          {
+            "size_code": "144",
+            "axle_in": 8.25,
+            "height": "52mm",
+            "deck_range_in": [
+              8.0,
+              8.5
+            ]
+          },
+          {
+            "size_code": "149",
+            "axle_in": 8.5,
+            "height": "52mm",
+            "deck_range_in": [
+              8.25,
+              8.75
+            ]
+          },
+          {
+            "size_code": "159",
+            "axle_in": 8.75,
+            "height": "52mm",
+            "deck_range_in": [
+              8.5,
+              null
+            ]
+          }
+        ],
+        "construction": "Fusion Cast专利铸造，比标准款减重25g，手浇PU垫与pivot cup；Ultra Light版中空轴+中空kingpin再减7%"
+      },
+      "summary_zh": "Crailtap旗下inverted kingpin设计桥，52mm标准高",
+      "suitability_tags": [
+        "街式",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 345,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价（按中国大陆IP显示人民币）",
+        "sales_region": "CN",
+        "source_url": "https://crailtap.com/products/w41-d3-royal-the-royal-raw-truck",
+        "collected_date": "2026-10-09",
+        "note": "官方店crailtap.com按访问IP显示¥345；含税与运费未验证"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://royalskateboardtrucks.com",
+        "page_title": "Royal Skateboard Trucks（官方Size Finder表）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://crailtap.com/products/w41-d3-royal-the-royal-raw-truck",
+        "license_note": "官方店产品图，版权属Royal/Crailtap，仅记录链接"
+      },
+      "notes": "royaltruckco.com域名已失效，现官网为royalskateboardtrucks.com；官方页hanger宽度列缺失"
+    },
+    {
+      "record_id": "TRUCK-006",
+      "category": "桥",
+      "brand": "Krux",
+      "brand_country": "美国",
+      "model": "K5 Standard",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "8.0",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": [
+              7.9,
+              8.25
+            ]
+          },
+          {
+            "size_code": "8.25",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": [
+              7.9,
+              8.25
+            ]
+          },
+          {
+            "size_code": "8.5",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": null
+          }
+        ],
+        "construction": "NHS旗下中端桥（另有K5 Down Low低版、Hollow版、Inverted Kingpin版）"
+      },
+      "summary_zh": "NHS中端K5系列，性价比高，8.0/8.25/8.5三档",
+      "suitability_tags": [
+        "街式",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 322,
+        "currency": "CNY",
+        "price_type": "京东第三方滑板店零售价（到手价，原价¥380）",
+        "sales_region": "CN",
+        "source_url": "https://item.jd.com/10095340017492.html",
+        "collected_date": "2026-10-09",
+        "note": "DBH京东店铺售美国进口KRUX K5原色实心（性价比款，货号120766），8条评价；单只/一对未明示"
+      },
+      "overseas_price": {
+        "amount": 16.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（NHS官方店）",
+        "source_url": "https://nhsskatedirect.com/collections/krux-trucks-standard",
+        "collected_date": "2026-10-09",
+        "note": "列表页价，单双只未标注"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/collections/krux-trucks-standard",
+        "page_title": "Krux Trucks Standard | NHS Skate Direct（NHS官方店）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://nhsskatedirect.com/collections/krux-trucks-standard",
+        "license_note": "官方店产品图，版权属Krux/NHS，仅记录链接"
+      },
+      "notes": "官方仅见一处尺寸标注：K5 Standard Silver为5.35英寸hanger、适配7.9-8.25板面；官方未公布桥高毫米数与逐尺寸对照表"
+    },
+    {
+      "record_id": "TRUCK-007",
+      "category": "桥",
+      "brand": "Bullet",
+      "brand_country": "美国",
+      "model": "Silver",
+      "spec": {
+        "size_variants": [
+          {
+            "size_code": "130mm",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": null
+          },
+          {
+            "size_code": "140mm",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": null
+          },
+          {
+            "size_code": "150mm",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": null
+          },
+          {
+            "size_code": "160mm",
+            "axle_in": null,
+            "height": null,
+            "deck_range_in": null
+          }
+        ],
+        "construction": "NHS入门线"
+      },
+      "summary_zh": "NHS入门级桥，毫米命名130-160，适合初学第一套桥",
+      "suitability_tags": [
+        "街式",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 12.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（单只）",
+        "source_url": "https://bulletskateboards.com/collections/bullet-skateboards-trucks",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://bulletskateboards.com/collections/bullet-skateboards-trucks",
+        "page_title": "Bullet Skateboard Trucks（NHS官方Bullet品牌店）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://bulletskateboards.com/collections/bullet-skateboards-trucks",
+        "license_note": "官方店产品图，版权属Bullet/NHS，仅记录链接"
+      },
+      "notes": "官方店只标毫米命名，未提供hanger/轴宽英寸数与推荐板面对照表；粗略对应：140mm≈8.0\"轴、150mm≈8.5\"轴（此换算为通用经验，非官方数据）"
+    },
+    {
+      "record_id": "WHEEL-001",
+      "category": "轮子",
+      "brand": "Spitfire",
+      "brand_country": "美国",
+      "model": "Formula Four Classic",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 52,
+            "durometer": "99a",
+            "width_mm": 32,
+            "contact_patch_mm": 15.6
+          },
+          {
+            "diameter_mm": 53,
+            "durometer": "99a",
+            "width_mm": 33,
+            "contact_patch_mm": 16
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "99a",
+            "width_mm": 33.6,
+            "contact_patch_mm": 16.4
+          },
+          {
+            "diameter_mm": 52,
+            "durometer": "101a",
+            "width_mm": 32,
+            "contact_patch_mm": 15.6
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "101a",
+            "width_mm": 33.6,
+            "contact_patch_mm": 16.4
+          }
+        ],
+        "formula": "Formula Four Urethane（Classic形状页标注可用97/99/101三档硬度）"
+      },
+      "summary_zh": "经典街式硬轮：中等宽度接触面+圆侧壁，全场景控制",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": "300起",
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥400起，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=596067916282",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；F4 专业街式动作轮多款（52/53/54mm等），已售200+，评价含“正品好”"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.spitfirewheels.com/wheel-shapes/",
+        "page_title": "Formula Four Shapes - Spitfire Wheels",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.spitfirewheels.com/spring24/sf-93-clsc-shapes.png",
+        "license_note": "官网产品目录图，版权属Spitfire/NHS，仅记录链接"
+      },
+      "notes": "官网为纯目录站无官方商城，故无USD价；官方硬度说明：93a软滑/97a全能/99a耐久+控制/101a更硬更快；另提供97a（Four Everywhere）与93a（Soft Sliders）档位；国内行货价未能在可访问渠道核实 国内行货渠道已核实：55滑板店 F4 ¥300起。注意淘宝¥99-150的同名低价商品 authenticity 存疑，未采用。"
+    },
+    {
+      "record_id": "WHEEL-002",
+      "category": "轮子",
+      "brand": "Bones Wheels",
+      "brand_country": "美国",
+      "model": "STF Street Tech Formula（V1 Standards/V3 Slims/V5 Sidecuts）",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 52,
+            "durometer": "99a",
+            "width_mm": 31,
+            "sku": "WSCAE26V15299A4"
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "99a",
+            "width_mm": 32,
+            "sku": "WSCAE26V15499A4"
+          },
+          {
+            "diameter_mm": 52,
+            "durometer": "103a",
+            "width_mm": null,
+            "series": "V3 Slims"
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "103a",
+            "width_mm": null,
+            "series": "V3 Slims"
+          },
+          {
+            "diameter_mm": 52,
+            "durometer": "99a",
+            "width_mm": null,
+            "series": "V5 Sidecuts"
+          }
+        ],
+        "formula": "Street Tech Formula (STF)"
+      },
+      "summary_zh": "官方称滚速快、不平斑；99A版粗糙路面更省力，103A为原始硬度",
+      "suitability_tags": [
+        "街式"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 386.3,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥490，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=596946795846",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES STF/SPF/ATF 进口美产滑板轮，已售100+"
+      },
+      "overseas_price": {
+        "amount": 39.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://www.skateone.com/bones-wheels-stf-skateboard-wheel-street-tech-formula-52-v1-standards-99a-4pk",
+        "collected_date": "2026-10-09",
+        "note": "bones.com官网有JS反爬，数据经同厂官方直营商城Skate One核实（bones.com页脚官方指向）"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bones-wheels-stf-skateboard-wheel-street-tech-formula-52-v1-standards-99a-4pk",
+        "page_title": "BONES WHEELS STF Skateboard Wheel STREET TECH FORMULA 52 V1 STANDARDS 99A 4PK - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1buo5hgs7m928.cloudfront.net/assets/skateone/productimage/size/240x240/method/padding/v/693c/WSCAE26V15299A4.jpg",
+        "license_note": "官方商城产品图，版权属Skate One/Bones，仅记录链接"
+      },
+      "notes": "V3/V5轮宽官方页未披露，记null 国内行货渠道已核实：55滑板店 STF/SPF ¥386.3。"
+    },
+    {
+      "record_id": "WHEEL-003",
+      "category": "轮子",
+      "brand": "Bones Wheels",
+      "brand_country": "美国",
+      "model": "SPF Skatepark Formula P5 Sidecut",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 54,
+            "durometer": "84B（=104a）",
+            "width_mm": 31,
+            "sku": "WSCABS265403W4"
+          },
+          {
+            "diameter_mm": 56,
+            "durometer": "84B（=104a）",
+            "width_mm": 32,
+            "sku": "WSCABS265603W4"
+          },
+          {
+            "diameter_mm": 58,
+            "durometer": "84B（=104a）",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "81B",
+            "width_mm": null
+          }
+        ],
+        "formula": "Skatepark Formula (SPF)"
+      },
+      "summary_zh": "专为滑板场光滑面抗平斑设计，高回弹、滚速快",
+      "suitability_tags": [
+        "滑板场",
+        "街式"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 50,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒；58/60mm 84B为$55，81B版$50-55）",
+        "source_url": "https://www.skateone.com/bones-wheels-spf-skateboard-wheels-skatepark-formula-54-p5-sidecuts-84b-4pk",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bones-wheels-spf-skateboard-wheels-skatepark-formula-54-p5-sidecuts-84b-4pk",
+        "page_title": "BONES WHEELS SPF Skateboard Wheels SKATEPARK FORMULA 54 P5 SIDECUTS 84B 4PK - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1buo5hgs7m928.cloudfront.net/assets/skateone/productimage/size/240x240/method/padding/v/422c/WSCABS265403W4.jpg",
+        "license_note": "官方商城产品图，版权属Skate One/Bones，仅记录链接"
+      },
+      "notes": "官方用途栏标注Skateparks；官方换算84B=104a"
+    },
+    {
+      "record_id": "WHEEL-004",
+      "category": "轮子",
+      "brand": "OJ Wheels",
+      "brand_country": "美国",
+      "model": "Elite Hardline 101a（Mini Combo形状）",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 54,
+            "durometer": "101a",
+            "width_mm": 34.3,
+            "contact_patch_mm": 23.4
+          }
+        ],
+        "formula": "OJ Elite Urethane"
+      },
+      "summary_zh": "OJ顶级配方：更快更耐滚、全地形；宽接触面稳定且滑动一致",
+      "suitability_tags": [
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 39.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://nhsskatedirect.com/products/54mm-giovanni-vianna-elite-hardline-101a-skateboard-wheels-oj",
+        "collected_date": "2026-10-09",
+        "note": "页面显示Sold Out但官方标价可见"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/54mm-giovanni-vianna-elite-hardline-101a-skateboard-wheels-oj",
+        "page_title": "54mm Giovanni Vianna Elite Hardline 101a OJ Skateboard Wheels | NHS Skate Direct",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://cdn.shopify.com/s/files/1/0527/5051/6381/files/22222843_124700_58523_54mm_Giovanni_Vianna_Elite_Hardline_101a_Skateboard_Wheels_OJ_size_54mm.jpg?v=1772694164",
+        "license_note": "官方商城产品图，版权属NHS/OJ，仅记录链接"
+      },
+      "notes": "同系列另有Double Duro Hardline 53/54mm 99a/95a双硬度版（促销$42.95，原价$56.95，促销价有时效）"
+    },
+    {
+      "record_id": "WHEEL-005",
+      "category": "轮子",
+      "brand": "Mini Logo",
+      "brand_country": "美国",
+      "model": "Wheel Sidecut 101A / Hybrid Sidecut",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 53,
+            "durometer": "101a",
+            "width_mm": 31,
+            "sku": "WSBCMLSC35301W4"
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "101a",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 53,
+            "durometer": "90a",
+            "width_mm": null,
+            "series": "Hybrid"
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "95a",
+            "width_mm": null,
+            "series": "Hybrid"
+          }
+        ],
+        "formula": "Mini Logo高回弹配方"
+      },
+      "summary_zh": "高回弹长寿命配方，官方称以专业轮零头价格提供高性能，终身质保",
+      "suitability_tags": [
+        "街式",
+        "入门练习"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 26.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://www.skateone.com/mini-logo-wheel-sidecut-53mm-101a-white-4pk",
+        "collected_date": "2026-10-09",
+        "note": "Hybrid 90a/95a版同价"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/mini-logo-wheel-sidecut-53mm-101a-white-4pk",
+        "page_title": "Mini Logo Wheel Sidecut 53mm 101A White 4pk - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1buo5hgs7m928.cloudfront.net/assets/skateone/productimage/size/240x240/method/padding/v/fed4/WSBCMLSC35301W4.jpg",
+        "license_note": "官方商城产品图，版权属Skate One/Mini Logo，仅记录链接"
+      },
+      "notes": "官方用途栏标注Street（技术街式）；powell-peralta.com深层页反爬，数据取自同厂官方商城Skate One"
+    },
+    {
+      "record_id": "WHEEL-006",
+      "category": "轮子",
+      "brand": "OJ Wheels",
+      "brand_country": "美国",
+      "model": "Super Juice 78a / Mini Super Juice 78a",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 60,
+            "durometer": "78a",
+            "width_mm": 45,
+            "contact_patch_mm": 37
+          },
+          {
+            "diameter_mm": 55,
+            "durometer": "78a",
+            "width_mm": null,
+            "series": "Mini Super Juice"
+          }
+        ],
+        "formula": "OJ Super Juice软轮配方"
+      },
+      "summary_zh": "刷街/代步软轮：滚动更顺滑省力，不易卡碎石裂缝",
+      "suitability_tags": [
+        "刷街",
+        "通勤",
+        "日常滑行"
+      ],
+      "level_tags": [
+        "初学可",
+        "通用"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 49.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://nhsskatedirect.com/products/60mm-super-juice-orange-78a-skateboard-wheels-oj",
+        "collected_date": "2026-10-09",
+        "note": "Mini Super Juice 55mm官方价$44.95"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/60mm-super-juice-orange-78a-skateboard-wheels-oj",
+        "page_title": "60mm Super Juice Orange 78a OJ Skateboard Wheels | NHS Skate Direct",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://cdn.shopify.com/sfiles/1/0527/5051/6381/files/22223277_152460_88323_60mm_Super_Juice_Orange_78a_Skateboard_Wheels_OJ_color_orange.jpg?v=1773876648",
+        "license_note": "官方商城产品图，版权属NHS/OJ，仅记录链接"
+      },
+      "notes": "配方描述取自品牌官网ojwheels.com/urethane"
+    },
+    {
+      "record_id": "WHEEL-007",
+      "category": "轮子",
+      "brand": "Ricta",
+      "brand_country": "美国",
+      "model": "Clouds",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 52,
+            "durometer": "78a",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "78a",
+            "width_mm": 34,
+            "contact_patch_mm": 18.36
+          },
+          {
+            "diameter_mm": 56,
+            "durometer": "78a",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 60,
+            "durometer": "78a",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 53,
+            "durometer": "86a",
+            "width_mm": null
+          },
+          {
+            "diameter_mm": 54,
+            "durometer": "92a",
+            "width_mm": null
+          }
+        ],
+        "formula": "Ricta Clouds（All Terrain全地形）"
+      },
+      "summary_zh": "烂路顺滑，吸收裂缝震动，78a最软最舒适，92a接近硬轮",
+      "suitability_tags": [
+        "刷街",
+        "通勤",
+        "日常滑行",
+        "影像拍摄"
+      ],
+      "level_tags": [
+        "初学可",
+        "通用"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 42.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://nhsskatedirect.com/products/54mm-clouds-white-78a-ricta-skateboard-wheels",
+        "collected_date": "2026-10-09",
+        "note": "86a版$42.95、57mm/86a $43.95、60mm/78a $44.95"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/54mm-clouds-white-78a-ricta-skateboard-wheels",
+        "page_title": "54mm Clouds 78a Ricta Skateboard Wheels | NHS Skate Direct",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://cdn.shopify.com/s/files/1/0527/5051/6381/files/22221061_32926_88364_54mm_Clouds_White_78a_Skateboard_Wheels_Ricta_color_white.jpg?v=1776184852",
+        "license_note": "官方商城产品图，版权属NHS/Ricta，仅记录链接"
+      },
+      "notes": "官方注明Clouds覆盖52-60mm、78a/86a/92a三档硬度"
+    },
+    {
+      "record_id": "WHEEL-008",
+      "category": "轮子",
+      "brand": "Powell-Peralta",
+      "brand_country": "美国",
+      "model": "Rat Bones（经典复刻）",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 60,
+            "durometer": "90a",
+            "width_mm": 44,
+            "sku": "WSBARAT6090W4"
+          },
+          {
+            "diameter_mm": 60,
+            "durometer": "85a",
+            "width_mm": null
+          }
+        ],
+        "formula": "OG Urethane"
+      },
+      "summary_zh": "全能复古轮：超宽接触面、偏置轴承，加州本土制造",
+      "suitability_tags": [
+        "日常滑行",
+        "刷街",
+        "复古玩法"
+      ],
+      "level_tags": [
+        "初学可",
+        "通用"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 39.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套4粒）",
+        "source_url": "https://www.skateone.com/powell-peralta-rat-bones-skateboard-wheels-60mm-90a-white-4-pack",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/powell-peralta-rat-bones-skateboard-wheels-60mm-90a-white-4-pack",
+        "page_title": "Powell Peralta Rat Bones Skateboard Wheels 60mm 90a - White (4 pack) - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1buo5hgs7m928.cloudfront.net/assets/skateone/productimage/size/240x240/method/padding/v/6b53/WSBARAT6090W4.jpg",
+        "license_note": "官方商城产品图，版权属Skate One/Powell-Peralta，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "WHEEL-009",
+      "category": "轮子",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "官方专业板技巧轮（硬轮）",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": 52,
+            "durometer": "100A",
+            "width_mm": null
+          }
+        ],
+        "formula": null
+      },
+      "summary_zh": "DBH官方商城在售的专业板动作硬轮，入门街式练习用",
+      "suitability_tags": [
+        "街式",
+        "入门练习"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": {
+        "amount": 80,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价",
+        "sales_region": "CN",
+        "source_url": "https://www.dobyheart.com/product.html",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.dobyheart.com/product.html",
+        "page_title": "DBH滑板官网商城",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "轮宽、配方等参数官方商城未标注，记null"
+    },
+    {
+      "record_id": "WHEEL-010",
+      "category": "轮子",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "GRIND全能轮",
+      "spec": {
+        "size_variants": [
+          {
+            "diameter_mm": null,
+            "durometer": null,
+            "width_mm": null
+          }
+        ],
+        "formula": null
+      },
+      "summary_zh": "DBH官方商城在售的全能轮（款式一/二同价），直径硬度未标注",
+      "suitability_tags": [
+        "综合",
+        "日常滑行"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": {
+        "amount": 180,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价",
+        "sales_region": "CN",
+        "source_url": "https://www.dobyheart.com/product.html",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.dobyheart.com/product.html",
+        "page_title": "DBH滑板官网商城",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "官方商城未标注直径/硬度/轮宽，全部为null；如需用于推荐建议先向品牌确认参数"
+    },
+    {
+      "record_id": "BRG-001",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "REDS 8 pack",
+      "spec": {
+        "standard": "Skate Rated（非ABEC标注）",
+        "material": "单面非接触可拆橡胶防尘盖+高速尼龙保持架+Speed Cream润滑",
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "入门经典轴承，一套8粒（不含隔套垫圈）",
+      "suitability_tags": [
+        "综合",
+        "初学"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 100.1,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥130，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES REDS（黑盒）SKU，已售900+"
+      },
+      "overseas_price": {
+        "amount": 24.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bonesr-redsr-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bonesr-redsr-skateboard-bearings-8-pack",
+        "page_title": "Bones® REDS® Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.skateone.com/assets/skateone/productimage/size/700x700/method/padding/v/e2a2/BSACBR88.jpg",
+        "license_note": "官网产品图，版权归品牌方，仅记录链接"
+      },
+      "notes": "已二次核验（$24.95/8粒/Skate Rated/不含隔套垫圈）；另有含隔套垫圈版本；国内京东在售Bones轴承多为第三方店铺（如上海易飞），无法核实授权真实性，故不作为国内参考价 国内行货渠道已核实：55滑板店（授权书/正品保证）REDS 黑盒 ¥100.1。"
+    },
+    {
+      "record_id": "BRG-002",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "BIG BALLS REDS 8 pack",
+      "spec": {
+        "standard": "Skate Rated（非ABEC标注）",
+        "material": null,
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "6颗加大17%滚珠，更快更耐用的REDS系",
+      "suitability_tags": [
+        "综合",
+        "耐久"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 160,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥200，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES BIGBALLS REDS（金盒）SKU"
+      },
+      "overseas_price": {
+        "amount": 29.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bonesr-big-ballsr-redsr-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": "另有含垫圈隔套版本$32.45"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bonesr-big-ballsr-redsr-skateboard-bearings-8-pack",
+        "page_title": "Bones® BIG BALLS® REDS® Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://d1buo5hgs7m928.cloudfront.net/assets/skateone/productimage/size/700x700/method/padding/v/cb0a/BSACB688.jpg",
+        "license_note": "官网产品图，版权归品牌方，仅记录链接"
+      },
+      "notes": "页面未标注具体材质/防尘盖细节"
+    },
+    {
+      "record_id": "BRG-003",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "Swiss 8 pack",
+      "spec": {
+        "standard": "Skate Rated + 瑞士精密制造",
+        "material": "单面可拆非接触橡胶防尘盖+高速尼龙保持架+Speed Cream润滑",
+        "quantity_per_set": 8,
+        "spacers_included": true,
+        "washers_included": false
+      },
+      "summary_zh": "瑞士制造旗舰轴承，含4个隔套",
+      "suitability_tags": [
+        "综合",
+        "专业"
+      ],
+      "level_tags": [
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 49.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bones-reg-swiss-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bones-reg-swiss-skateboard-bearings-8-pack",
+        "page_title": "Bones® Swiss Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.skateone.com/assets/skateone/productimage/size/700x700/method/padding/v/11cd/BSAWBX88.jpg",
+        "license_note": "官网产品图，版权归品牌方，仅记录链接"
+      },
+      "notes": "官方称寿命数倍于普通ABEC轴承"
+    },
+    {
+      "record_id": "BRG-004",
+      "category": "轴承",
+      "brand": "Bronson Speed Co.",
+      "brand_country": "美国",
+      "model": "G3",
+      "spec": {
+        "standard": null,
+        "material": "深沟滚道+微槽滚道+Max Impact强化保持架，免摩擦可拆防尘盖，定制高速防水防锈润滑脂",
+        "quantity_per_set": 8,
+        "spacers_included": true,
+        "washers_included": true
+      },
+      "summary_zh": "带全套隔套垫圈的进阶轴承，充氮包装防氧化",
+      "suitability_tags": [
+        "综合",
+        "街式",
+        "耐久"
+      ],
+      "level_tags": [
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 37.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（一套8粒）",
+        "source_url": "https://nhsskatedirect.com/products/g3-box-8-bronson-speed-co-skateboard-bearings",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/g3-box-8-bronson-speed-co-skateboard-bearings",
+        "page_title": "G3 Skateboard Bearings | Bronson Speed Co.",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "一套含8轴承+4隔套+8轴垫圈；页面未标注ABEC；bronsonspeed.com官网为占位页"
+    },
+    {
+      "record_id": "GRIP-001",
+      "category": "砂纸",
+      "brand": "MOB Grip",
+      "brand_country": "美国",
+      "model": "9\" x 33\" Black Grip Sheet",
+      "spec": {
+        "sheet_size": "9英寸×33英寸",
+        "features": "刻痕透气（数百微孔排气防气泡）；碳化硅磨砂+超粘背胶；高强度防水防撕裂背衬"
+      },
+      "summary_zh": "刻痕透气经典黑砂纸",
+      "suitability_tags": [
+        "通用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": "59.5起",
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥70起，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=611155191401",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（授权书 正品保证）；MOB全黑砂/透明砂/纯色等多款，已售200+。商品页已复核（此前卡片价准确）"
+      },
+      "overseas_price": {
+        "amount": 8.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（单张）",
+        "source_url": "https://nhsskatedirect.com/products/9in-x-33in-sheet-mob-skateboard-grip-tape",
+        "collected_date": "2026-10-09",
+        "note": "抓取时库存不足10件"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/9in-x-33in-sheet-mob-skateboard-grip-tape",
+        "page_title": "9in Black Grip Sheet | Mob Skateboard Griptape",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "DBH官方整板套装标注赠送MOB砂纸；国内单张行货价未能在可访问渠道核实（京东有滑板店代理但频道页JS懒加载无法取到具体商品）"
+    },
+    {
+      "record_id": "GRIP-002",
+      "category": "砂纸",
+      "brand": "Jessup",
+      "brand_country": "美国",
+      "model": "The Original Griptape Sheets",
+      "spec": {
+        "sheet_size": "9英寸×33英寸",
+        "features": "碳化硅磨砂（业界首款滑板用碳化硅砂纸）；免气泡易贴；易裁切不撕裂；美国制造"
+      },
+      "summary_zh": "业界首款碳化硅砂纸，经典原版9x33",
+      "suitability_tags": [
+        "通用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": 38.7,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥45，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=890046872883",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；经典全黑单张，已售100+"
+      },
+      "overseas_price": {
+        "amount": 7.1,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方厂商店标价（B2B模式，实际零售需登录查看）",
+        "source_url": "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+        "collected_date": "2026-10-09",
+        "note": "抓取时缺货/可预订；jessupgrip.com域名DNS无法解析，官方站为厂商Jessup Manufacturing的jessupmfg.com"
+      },
+      "spec_source": {
+        "url": "https://www.jessupmfg.com/jessup-the-originalr-griptape-sheets.html",
+        "page_title": "Jessup The Original® Griptape Sheets",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": {
+        "url": "https://www.jessupmfg.com/media/catalog/product/3/1/3100-9x33-sb_hr.jpg",
+        "license_note": "官网产品图，版权归品牌方，仅记录链接"
+      },
+      "notes": null
+    },
+    {
+      "record_id": "GRIP-003",
+      "category": "砂纸",
+      "brand": "MOB Grip",
+      "brand_country": "美国",
+      "model": "10\" x 33\" Clear Sheet",
+      "spec": {
+        "sheet_size": "10英寸×33英寸",
+        "features": "光学透明（可展示板面图案）；独家磨砂固着工艺不易磨损；可自由裁切"
+      },
+      "summary_zh": "透明砂纸，可展示板面图案",
+      "suitability_tags": [
+        "透明板面",
+        "通用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 10.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（单张）",
+        "source_url": "https://nhsskatedirect.com/products/10in-x-33in-mob-clear-sheet-mob-skateboard-grip-tape",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/10in-x-33in-mob-clear-sheet-mob-skateboard-grip-tape",
+        "page_title": "9in Clear / Transparent Grip | Mob Skateboard Griptape",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "NHS页面标题写9in但详情规格为10in x 33in（页面元数据不一致，以Details为准）"
+    },
+    {
+      "record_id": "HW-001",
+      "category": "桥螺丝",
+      "brand": "Shorty's",
+      "brand_country": "美国",
+      "model": "Original Hardware（Phillips/Allen）",
+      "spec": {
+        "lengths": [
+          "1英寸",
+          "1 1/8英寸",
+          "1 1/4英寸"
+        ],
+        "head_types": [
+          "Phillips十字",
+          "Allen内六角"
+        ],
+        "quantity_per_set": 8,
+        "nuts_included": 8,
+        "usage": "半螺纹设计抗弯折；1\"/1 1/8\"适合无垫片或薄垫片，1 1/4\"适合加垫片"
+      },
+      "summary_zh": "经典滑板桥螺丝，8钉8母，双头型可选",
+      "suitability_tags": [
+        "通用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 4.73,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8钉8母）",
+        "source_url": "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+        "collected_date": "2026-10-09",
+        "note": "抓取时仅1 1/4\" Allen在售，价格为该规格；1\"与1 1/8\"缺货"
+      },
+      "spec_source": {
+        "url": "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+        "page_title": "Shorty's Original Allen Hardware – Shorty's Inc.",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "页面未标注钢材具体材质"
+    },
+    {
+      "record_id": "HW-002",
+      "category": "桥螺丝",
+      "brand": "Independent",
+      "brand_country": "美国",
+      "model": "Genuine Parts Phillips Hardware 1\" Black",
+      "spec": {
+        "lengths": [
+          "1英寸"
+        ],
+        "head_types": [
+          "Phillips十字"
+        ],
+        "quantity_per_set": 8,
+        "nuts_included": 8,
+        "usage": "无垫片常规装配（官方尺码表：1\"配无垫片；1/8\"垫片场景亦标注可用1\"，因其无螺纹加长杆设计）"
+      },
+      "summary_zh": "尼龙锁母1寸十字螺丝，官方称保证不断",
+      "suitability_tags": [
+        "常规装配",
+        "轻量"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 2.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（一套8钉8母）",
+        "source_url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+        "collected_date": "2026-10-09",
+        "note": "另有Allen头与7/8\"、1 1/4\"等规格均$2.95"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+        "page_title": "Black 1in Phillips Skate Hardware | Genuine Parts | Independent",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "尼龙锁母、加长无螺纹杆减少板面损伤、钻石纹大钉头"
+    },
+    {
+      "record_id": "HW-003",
+      "category": "桥螺丝",
+      "brand": "Independent",
+      "brand_country": "美国",
+      "model": "Genuine Parts Phillips Hardware 1.25\" Black",
+      "spec": {
+        "lengths": [
+          "1 1/4英寸"
+        ],
+        "head_types": [
+          "Phillips十字"
+        ],
+        "quantity_per_set": 8,
+        "nuts_included": 8,
+        "usage": "搭配1/8\"及以上垫片/避震垫使用"
+      },
+      "summary_zh": "1又1/4寸十字螺丝，适配加垫片场景",
+      "suitability_tags": [
+        "加垫片装配"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 2.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（一套8钉8母）",
+        "source_url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+        "page_title": "Black 1.25in Phillips Skate Hardware | Genuine Parts | Independent",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": null
+    },
+    {
+      "record_id": "RSR-001",
+      "category": "垫片/避震垫",
+      "brand": "Shorty's",
+      "brand_country": "美国",
+      "model": "Dooks Riser Pads",
+      "spec": {
+        "heights": [
+          "1/8英寸(3.2mm)",
+          "1/4英寸(6.4mm)",
+          "1/2英寸(12.7mm)"
+        ],
+        "material": null,
+        "quantity_per_set": null,
+        "usage": "双孔型兼容新旧school桥，带kingpin孔；抬升防咬轮"
+      },
+      "summary_zh": "经典硬质垫片，1/8至1/2寸可选",
+      "suitability_tags": [
+        "抬升防咬轮"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 3.55,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套）",
+        "source_url": "https://www.shortysinc.com/products/dooks-riser-pads",
+        "collected_date": "2026-10-09",
+        "note": "1/4\"为$4.15、1/2\"为$5.34；抓取时1/8\"缺货"
+      },
+      "spec_source": {
+        "url": "https://www.shortysinc.com/products/dooks-riser-pads",
+        "page_title": "Dooks Riser Pads – Shorty's Inc.",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "页面未标注材质与每套片数；注意Shorty's的Doh-Doh's是桥端缓冲胶（bushings），垫片产品名为Dooks"
+    },
+    {
+      "record_id": "RSR-002",
+      "category": "垫片/避震垫",
+      "brand": "Independent",
+      "brand_country": "美国",
+      "model": "Genuine Parts Risers 1/8\" Black",
+      "spec": {
+        "heights": [
+          "1/8英寸(3.2mm)"
+        ],
+        "material": "玻璃纤维填充TPU",
+        "quantity_per_set": 2,
+        "usage": "官方尺码表：1/8\"垫片建议配55-58mm轮与1\"螺丝"
+      },
+      "summary_zh": "玻纤填充TPU超耐用垫片，一对装",
+      "suitability_tags": [
+        "抬升防咬轮",
+        "耐用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 4.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（一对Pk/2）",
+        "source_url": "https://nhsskatedirect.com/products/genuine-parts-1-8-in-risers-pk-2-independent",
+        "collected_date": "2026-10-09",
+        "note": "另有1/4\"规格$5.95（抓取时缺货）"
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/genuine-parts-1-8-in-risers-pk-2-independent",
+        "page_title": "1/8in Skate Risers | Genuine Parts | Independent",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": null
+    },
+    {
+      "record_id": "RSR-003",
+      "category": "垫片/避震垫",
+      "brand": "Independent",
+      "brand_country": "美国",
+      "model": "Genuine Parts Shock Pads 1/8\"",
+      "spec": {
+        "heights": [
+          "1/8英寸(3.2mm)"
+        ],
+        "material": "TPE软质材料（60a邵氏硬度）",
+        "quantity_per_set": 2,
+        "usage": "吸震减振降噪，适合粗糙路面与刷街"
+      },
+      "summary_zh": "60a软质TPE避震垫，减震减噪一对装",
+      "suitability_tags": [
+        "减震",
+        "降噪",
+        "刷街"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶",
+        "专业"
+      ],
+      "cn_price": null,
+      "overseas_price": {
+        "amount": 5.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "品牌方NHS官方直营商城零售价（一对Pk/2）",
+        "source_url": "https://nhsskatedirect.com/products/genuine-parts-1-8-in-shock-pads-pk-2-independent",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "spec_source": {
+        "url": "https://nhsskatedirect.com/products/genuine-parts-1-8-in-shock-pads-pk-2-independent",
+        "page_title": "1/8in Skate Risers / Shock Pads | Genuine Parts | Independent",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": null
+    },
+    {
+      "record_id": "SET-001",
+      "category": "整板",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "PRO套装（马戏团/动物园派对/PJ洛杉矶/lucas联名等多图案）",
+      "spec": {
+        "components": "专业整板（板面+桥+轮+轴承+砂纸，具体配件品牌官方未标注）",
+        "deck_width_in": null
+      },
+      "summary_zh": "DBH官方商城专业整板主力套装，图案选择多",
+      "suitability_tags": [
+        "初学",
+        "街式",
+        "滑板场"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 580,
+        "currency": "CNY",
+        "price_type": "品牌官方商城零售价",
+        "sales_region": "CN",
+        "source_url": "https://www.dobyheart.com",
+        "collected_date": "2026-10-09",
+        "note": null
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.dobyheart.com",
+        "page_title": "DBH滑板官网 dobyheart.com 专业好滑板，就选DBH！",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "官网另售：FLIP套装¥350、TREFLIP套装¥430、Agan联名¥460、LIMITLESS形象款¥340/经典LOGO¥320、DO BY HEART 5.5系列PRO套装¥550"
+    },
+    {
+      "record_id": "SET-002",
+      "category": "整板",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "专业板双翘板 蓝象 8.0英寸（京东自营）",
+      "spec": {
+        "components": "整板（板面+桥+轮+轴承+砂纸）",
+        "deck_width_in": 8.0
+      },
+      "summary_zh": "京东自营旗舰店在售的DBH专业双翘整板，2万+评价，滑板运动用品热卖榜第7名",
+      "suitability_tags": [
+        "初学",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": {
+        "amount": 323,
+        "currency": "CNY",
+        "price_type": "京东自营旗舰店零售价（到手价，划线价¥400，限时折上9.5折）",
+        "sales_region": "CN",
+        "source_url": "https://item.jd.com/100019623506.html",
+        "collected_date": "2026-10-09",
+        "note": "促销价有时效；同店另有Treflip动作轮/全能轮套装等规格选项"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://item.jd.com/100019623506.html",
+        "page_title": "DBH滑板专业板初学者儿童成年人男女6-12-18岁四轮双翘板蓝象8.0英寸 - 京东（DBH滑板京东自营旗舰店）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": null
+    },
+    {
+      "record_id": "SET-003",
+      "category": "整板",
+      "brand": "BOILING播零（沸点旗下）",
+      "brand_country": "中国",
+      "model": "入门板 1979系列（白色）",
+      "spec": {
+        "components": "整板（板面+桥+轮+轴承+砂纸）",
+        "deck_width_in": null
+      },
+      "summary_zh": "沸点公司（深圳，2011年成立）旗下入门整板品牌，京东在售",
+      "suitability_tags": [
+        "初学",
+        "刷街"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": {
+        "amount": 446,
+        "currency": "CNY",
+        "price_type": "京东零售价（到手价，划线价¥476）",
+        "sales_region": "CN",
+        "source_url": "https://item.jd.com/10036039740943.html",
+        "collected_date": "2026-10-09",
+        "note": "仅7条评价；促销价有时效"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://item.jd.com/10036039740943.html",
+        "page_title": "沸点BOILING播零滑板初学者【板入门板】1979系列(白色) - 京东",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "沸点公司旗下还有专业品牌Justice（2002年创立）与女子品牌Psychos；BOILING整板被普遍作为入门专业板使用（非玩具板）"
+    },
+    {
+      "record_id": "SET-004",
+      "category": "整板",
+      "brand": "BOILING播零（沸点旗下）",
+      "brand_country": "中国",
+      "model": "进阶板 半切割",
+      "spec": {
+        "components": "整板（板面+桥+轮+轴承+砂纸）",
+        "deck_width_in": null
+      },
+      "summary_zh": "BOILING进阶定位整板，京东在售",
+      "suitability_tags": [
+        "进阶",
+        "街式"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 720,
+        "currency": "CNY",
+        "price_type": "京东零售价（到手价，划线价¥760）",
+        "sales_region": "CN",
+        "source_url": "https://item.jd.com/10036039788481.html",
+        "collected_date": "2026-10-09",
+        "note": "仅1条评价；促销价有时效"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://item.jd.com/10036039788481.html",
+        "page_title": "沸点BOILING播零滑板初学者【板进阶板】半切割 - 京东",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": null
+    },
+    {
+      "record_id": "BRG-005",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "SUPER REDS 8 pack",
+      "spec": {
+        "standard": "Skate Rated（非ABEC标注）",
+        "material": null,
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "REDS升级款，更高精度滚道与更快滚速",
+      "suitability_tags": [
+        "综合",
+        "进阶"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": 176.4,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥220，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES SUPER REDS（红盒）SKU"
+      },
+      "overseas_price": {
+        "amount": 37.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bonesr-super-redsr-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": "小件调研中已验证在售（$37.95）"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bonesr-super-redsr-skateboard-bearings-8-pack",
+        "page_title": "Bones® SUPER REDS® Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "国内价来自55滑板店同链接SKU；海外规格与价格来源为Skate One官方商城"
+    },
+    {
+      "record_id": "BRG-006",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "CERAMIC REDS 8 pack（陶瓷白盒）",
+      "spec": {
+        "standard": "Skate Rated + 陶瓷滚珠",
+        "material": "Ceramic Super Race滚珠（品牌陶瓷混合材质）",
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "REDS系陶瓷珠顶配，更耐磨更长寿命",
+      "suitability_tags": [
+        "综合",
+        "专业"
+      ],
+      "level_tags": [
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": 411.4,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥520，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES CERAMIC REDS 陶瓷轴（白盒）SKU"
+      },
+      "overseas_price": {
+        "amount": 79.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bonesr-ceramic-redsr-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": "小件调研中已验证在售"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bonesr-ceramic-redsr-skateboard-bearings-8-pack",
+        "page_title": "Bones® CERAMIC REDS® Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "国内价来自55滑板店同链接SKU；具体材质表述以官方页为准"
+    },
+    {
+      "record_id": "BRG-007",
+      "category": "轴承",
+      "brand": "Bones Bearings",
+      "brand_country": "美国",
+      "model": "RACE REDS 8 pack（蓝盒）",
+      "spec": {
+        "standard": "Skate Rated（非ABEC标注）",
+        "material": null,
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "REDS竞速版（蓝盒），高速润滑配置",
+      "suitability_tags": [
+        "综合",
+        "竞速"
+      ],
+      "level_tags": [
+        "进阶",
+        "专业"
+      ],
+      "cn_price": {
+        "amount": 210.2,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥260，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；BONES RACE REDS（蓝盒）SKU"
+      },
+      "overseas_price": {
+        "amount": 40.95,
+        "currency": "USD",
+        "sales_region": "US",
+        "price_type": "官方商城零售价（一套8粒）",
+        "source_url": "https://www.skateone.com/bonesr-race-redsr-skateboard-bearings-8-pack",
+        "collected_date": "2026-10-09",
+        "note": "小件调研中已验证在售"
+      },
+      "spec_source": {
+        "url": "https://www.skateone.com/bonesr-race-redsr-skateboard-bearings-8-pack",
+        "page_title": "Bones® RACE REDS® Skateboard Bearings 8 pack - Skate One",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "国内价来自55滑板店同链接SKU"
+    },
+    {
+      "record_id": "BRG-008",
+      "category": "轴承",
+      "brand": "Mini Logo",
+      "brand_country": "美国",
+      "model": "Bearings 8 pack",
+      "spec": {
+        "standard": "Skate Rated（品牌称无ABEC虚标）",
+        "material": null,
+        "quantity_per_set": 8,
+        "spacers_included": false,
+        "washers_included": false
+      },
+      "summary_zh": "Skate One入门性价比轴承，高回弹设计",
+      "suitability_tags": [
+        "初学",
+        "综合"
+      ],
+      "level_tags": [
+        "初学可"
+      ],
+      "cn_price": {
+        "amount": 76.5,
+        "currency": "CNY",
+        "price_type": "淘宝授权滑板店零售价（平台补贴后；优惠前¥90，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=595928553385",
+        "collected_date": "2026-10-09",
+        "note": "55滑板店（淘宝，25年老店，页面标注品牌授权书/正品保证）；MINILOGO SKU"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://www.skateone.com",
+        "page_title": "Skate One（Mini Logo 为其旗下品牌）",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "海外具体产品页未单独验证，故overseas_price为null；国内价来自55滑板店同链接SKU"
+    },
+    {
+      "record_id": "GRIP-004",
+      "category": "砂纸",
+      "brand": "DBH",
+      "brand_country": "中国",
+      "model": "专业滑板砂纸（棋盘格/彩砂/透明砂等）",
+      "spec": {
+        "sheet_size": null,
+        "features": "专业双翘滑板砂，气孔款可选（以商品页为准）"
+      },
+      "summary_zh": "DBH国产专业砂纸，1985滑板店在售",
+      "suitability_tags": [
+        "通用"
+      ],
+      "level_tags": [
+        "初学可",
+        "进阶"
+      ],
+      "cn_price": {
+        "amount": "34.65起",
+        "currency": "CNY",
+        "price_type": "淘宝滑板店零售价（平台补贴后；优惠前¥45起，活动至2026-10-12 24点）",
+        "sales_region": "CN",
+        "source_url": "https://item.taobao.com/item.htm?id=538665243932",
+        "collected_date": "2026-10-09",
+        "note": "1985滑板店；棋盘格/彩砂/透明砂/气孔等多款，已售900+。商品页已复核"
+      },
+      "overseas_price": null,
+      "spec_source": {
+        "url": "https://item.taobao.com/item.htm?id=538665243932",
+        "page_title": "1985滑板店DBH专业滑板砂纸棋盘格彩砂透明砂鱼板公路板防滑气孔 - 淘宝",
+        "fetched_date": "2026-10-09"
+      },
+      "image_source": null,
+      "notes": "单张尺寸官方未标注，记null"
+    }
+  ]
+}

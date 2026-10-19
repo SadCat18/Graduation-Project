@@ -35,6 +35,19 @@ const serverTrickTags = computed(() => String(video.value?.trickTags || '')
   .filter(Boolean)
 )
 const displaySkillTags = computed(() => serverTrickTags.value.length ? serverTrickTags.value : skillTags(video.value))
+const sourceKey = computed(() => String(route.query.from || ''))
+const backLabel = computed(() => ({
+  'profile-videos': '返回我的视频库',
+  skate: '返回滑板专业',
+  'ai-coach': '返回 AI 滑板老师',
+  home: '返回首页'
+}[sourceKey.value] || '返回'))
+const sourceTarget = computed(() => ({
+  'profile-videos': { path: '/profile', query: { tab: 'creation' }, hash: '#profile-video-library' },
+  skate: { path: '/skate' },
+  'ai-coach': { path: '/ai-coach' },
+  home: { path: '/' }
+}[sourceKey.value] || null))
 
 function formatDateTime(value) {
   if (!value) return '刚刚发布'
@@ -83,11 +96,15 @@ async function loadVideo() {
 }
 
 function goBack() {
-  if (window.history.length > 1) {
+  if (sourceTarget.value) {
+    router.push(sourceTarget.value)
+    return
+  }
+  if (window.history.state?.back) {
     router.back()
     return
   }
-  router.push('/ai-coach')
+  router.push('/skate')
 }
 
 function goCoach() {
@@ -96,7 +113,10 @@ function goCoach() {
 
 function goVideo(nextVideoId) {
   if (!nextVideoId) return
-  router.push(`/videos/${nextVideoId}`)
+  router.push({
+    path: `/videos/${nextVideoId}`,
+    query: sourceKey.value ? { from: sourceKey.value } : undefined
+  })
 }
 
 async function copyText(text) {
@@ -152,7 +172,7 @@ async function shareVideo() {
 
 function openOriginalVideo() {
   if (!videoUrl.value) return
-  window.location.href = videoUrl.value
+  window.open(videoUrl.value, '_blank', 'noopener,noreferrer')
 }
 
 watch(videoId, loadVideo)
@@ -168,7 +188,7 @@ onBeforeUnmount(() => {
       <div class="watch-topbar">
         <button type="button" class="btn-soft icon-text-btn" @click="goBack">
           <AppIcon name="arrow-left" :size="15" />
-          返回
+          {{ backLabel }}
         </button>
         <button type="button" class="btn-soft icon-text-btn" @click="goCoach">
           <AppIcon name="skateboard" :size="15" />
@@ -638,9 +658,8 @@ onBeforeUnmount(() => {
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 16px 32px rgba(18, 21, 19, 0.18);
-  backdrop-filter: blur(18px) saturate(1.2);
   transform: translateX(-50%);
 }
 

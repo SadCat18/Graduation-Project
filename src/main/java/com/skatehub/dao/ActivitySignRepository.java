@@ -15,6 +15,10 @@ public interface ActivitySignRepository extends JpaRepository<ActivitySign, Long
 
     List<ActivitySign> findByUserIdOrderBySignTimeDesc(Long userId);
 
+    List<ActivitySign> findTop50ByUserIdOrderBySignTimeDesc(Long userId);
+
+    List<ActivitySign> findByUserIdAndActivityIdIn(Long userId, List<Long> activityIds);
+
     long countByActivityId(Long activityId);
 
     long countByActivityIdAndSignStatus(Long activityId, String signStatus);

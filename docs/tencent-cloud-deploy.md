@@ -33,8 +33,24 @@ chmod +x scripts/deploy-tencent.sh
 - `JWT_SECRET`
 - `SERVER_NAME`
 - `APP_PORT`
+- `CORS_ALLOWED_ORIGINS`
+- `ADMIN_BOOTSTRAP_ENABLED`
+- `ADMIN_DEFAULT_PASSWORD`
+- `FLYWAY_ENABLED`
+- `RATE_LIMIT_ENABLED`
 - `AMAP_KEY`
 - `AMAP_SECURITY_JS_CODE`
+
+生产环境必须把 `CORS_ALLOWED_ORIGINS` 设置为真实站点域名，例如 `https://skatehub.example.com`，不要使用 `*`。
+
+如需首次创建默认管理员，只在第一次部署时临时设置：
+
+```env
+ADMIN_BOOTSTRAP_ENABLED=true
+ADMIN_DEFAULT_PASSWORD=一段满足管理员强度要求的临时强密码
+```
+
+管理员创建完成后，把 `ADMIN_BOOTSTRAP_ENABLED` 改回 `false` 并重新部署。不要使用旧默认密码 `SkateHub@2026`。
 
 5. 再执行一次：
 
@@ -70,7 +86,13 @@ docker compose --env-file deploy/docker/.env -f deploy/docker/docker-compose.yml
 
 ## 说明
 
-- 数据库初始化脚本来自 `database/init.sql`，仅在 MySQL 数据卷首次创建时执行。
+- 数据库结构由 Flyway 迁移管理，迁移文件位于 `src/main/resources/db/migration`。
+- 新空库默认执行 Flyway；已有生产库首次接入前必须先备份。`FLYWAY_BASELINE_ON_MIGRATE=true` 用于让 Flyway 接管已有非空数据库并创建 `flyway_schema_history` 基线。
+- `JPA_DDL_AUTO` 在生产中保持 `none`，不要使用 `update` 自动改表。
 - 上传文件持久化到仓库根目录 `upload/`。
 - 前端通过 Nginx 反向代理 `/api`、`/upload` 和 `/_AMapService`，浏览器侧不需要再写死后端地址。
-- 如果你准备绑定域名，记得在腾讯云安全组开放 `80` 端口；如果以后要上 HTTPS，建议再接一个证书版 Nginx 或腾讯云负载均衡。
+- Nginx 已设置常见安全响应头，并把上传体积限制调整为 300MB，与后端视频上传策略一致。
+- 推荐使用腾讯云负载均衡或 CDN 托管 HTTPS 证书，容器内继续 HTTP。HTTPS 上线后用 `curl -I https://你的域名` 检查安全响应头。
+- 后端启用 `/actuator/health` 和 Prometheus metrics。不要把 `/actuator/prometheus` 暴露到公网。
+- Redis 限流默认在 Docker 环境启用，覆盖登录、注册、AI、上传和主要写接口；Redis 不可用时关键接口会保守拒绝。
+- 备份和回滚流程见 `docs/backup-and-restore.md`。

@@ -1,0 +1,2243 @@
+{
+  "evidenceKind" : "SYNTHETIC_IN_MEMORY_NOT_BUSINESS_ACCEPTANCE",
+  "requests" : {
+    "recommend" : {
+      "budgetCents" : 100000,
+      "purpose" : "ACTION",
+      "preference" : "VALUE",
+      "recommendationType" : "BOTH"
+    },
+    "evaluate" : {
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH"
+      },
+      "selection" : {
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "items" : [ {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK"
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK"
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL"
+        }, {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING"
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP"
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE"
+        } ]
+      }
+    },
+    "replace" : {
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH"
+      },
+      "selection" : {
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "items" : [ {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK"
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK"
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL"
+        }, {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING"
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP"
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE"
+        } ]
+      },
+      "category" : "WHEEL",
+      "page" : 1,
+      "size" : 20
+    },
+    "compare" : {
+      "plans" : [ {
+        "demand" : {
+          "budgetCents" : 100000,
+          "purpose" : "ACTION",
+          "preference" : "VALUE",
+          "recommendationType" : "BOTH"
+        },
+        "selection" : {
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "items" : [ {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK"
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK"
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL"
+          }, {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING"
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP"
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE"
+          } ]
+        }
+      } ]
+    },
+    "save" : {
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH"
+      },
+      "selection" : {
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "items" : [ {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK"
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK"
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL"
+        }, {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING"
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP"
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE"
+        } ]
+      },
+      "name" : "合成测试方案",
+      "note" : "Synthetic only",
+      "expectedCalculationVersion" : "7a793aaa868d9264459c8425f40170a621bee04d76efdf6d0402284b8434ac4b"
+    }
+  },
+  "responses" : {
+    "evaluate" : {
+      "pricingMode" : "EXACT",
+      "priceAssumptions" : [ ],
+      "selection" : {
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "items" : [ {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING"
+        }, {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK"
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP"
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE"
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK"
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL"
+        } ]
+      },
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH",
+        "shoeSize" : null
+      },
+      "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind" : "ASSEMBLY",
+      "templateKey" : "SYN-T",
+      "templateVersion" : 1,
+      "items" : [ {
+        "category" : "BEARING",
+        "variantKey" : "SYN-V-BEARING",
+        "productKey" : "SYN-P-BEARING",
+        "label" : "SYNTHETIC BEARING",
+        "requiredQuantity" : 8,
+        "specs" : {
+          "standard" : "608"
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 8,
+        "quoteKey" : "SYN-Q-BEARING",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 813,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 1,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "category" : "DECK",
+        "variantKey" : "SYN-V-DECK",
+        "productKey" : "SYN-P-DECK",
+        "label" : "SYNTHETIC DECK",
+        "requiredQuantity" : 1,
+        "specs" : {
+          "widthInch" : 8,
+          "lengthInch" : 32,
+          "wheelbaseInch" : 14
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 1,
+        "quoteKey" : "SYN-Q-DECK",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 106,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 1,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "category" : "GRIP",
+        "variantKey" : "SYN-V-GRIP",
+        "productKey" : "SYN-P-GRIP",
+        "label" : "SYNTHETIC GRIP",
+        "requiredQuantity" : 1,
+        "specs" : {
+          "widthInch" : 9,
+          "lengthInch" : 33
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 1,
+        "quoteKey" : "SYN-Q-GRIP",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 106,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 1,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "category" : "HARDWARE",
+        "variantKey" : "SYN-V-HARDWARE",
+        "productKey" : "SYN-P-HARDWARE",
+        "label" : "SYNTHETIC HARDWARE",
+        "requiredQuantity" : 8,
+        "specs" : {
+          "lengthMm" : 25,
+          "headType" : "fictional",
+          "nutsIncluded" : true
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 1,
+        "quoteKey" : "SYN-Q-HARDWARE",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 106,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 10,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "category" : "TRUCK",
+        "variantKey" : "SYN-V-TRUCK",
+        "productKey" : "SYN-P-TRUCK",
+        "label" : "SYNTHETIC TRUCK",
+        "requiredQuantity" : 2,
+        "specs" : {
+          "sizeCode" : "fictional",
+          "construction" : "STANDARD",
+          "axleWidthInch" : 8,
+          "heightMm" : 50,
+          "deckMinInch" : 7.5,
+          "deckMaxInch" : 8.5
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 2,
+        "quoteKey" : "SYN-Q-TRUCK",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 207,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 1,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "category" : "WHEEL",
+        "variantKey" : "SYN-V-WHEEL",
+        "productKey" : "SYN-P-WHEEL",
+        "label" : "SYNTHETIC WHEEL",
+        "requiredQuantity" : 4,
+        "specs" : {
+          "diameterMm" : 52,
+          "hardnessValue" : 99,
+          "hardnessScale" : "A",
+          "widthMm" : 30,
+          "contactPatchMm" : 20,
+          "shape" : "fictional"
+        },
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ],
+        "packageCount" : 4,
+        "quoteKey" : "SYN-Q-WHEEL",
+        "quoteVersion" : 1,
+        "lineTotalCents" : 409,
+        "pricingMode" : "EXACT",
+        "packageQuantity" : 1,
+        "amountCents" : 101,
+        "shippingCents" : 3,
+        "taxCents" : 2,
+        "quoteSources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      } ],
+      "checks" : [ {
+        "type" : "COMPLETENESS",
+        "state" : "PASS",
+        "explanation" : "SYNTHETIC rule",
+        "ruleKey" : "SYN-R-COMPLETENESS",
+        "ruleVersion" : 1,
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "type" : "DECK_TRUCK_FIT",
+        "state" : "PASS",
+        "explanation" : "SYNTHETIC rule",
+        "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+        "ruleVersion" : 1,
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "type" : "WHEEL_TRUCK_RISER",
+        "state" : "PASS",
+        "explanation" : "SYNTHETIC rule",
+        "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+        "ruleVersion" : 1,
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "type" : "RISER_HARDWARE_LENGTH",
+        "state" : "PASS",
+        "explanation" : "SYNTHETIC rule",
+        "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+        "ruleVersion" : 1,
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      }, {
+        "type" : "GRIP_COVERAGE",
+        "state" : "PASS",
+        "explanation" : "SYNTHETIC rule",
+        "ruleKey" : "SYN-R-GRIP_COVERAGE",
+        "ruleVersion" : 1,
+        "sources" : [ {
+          "url" : "https://example.invalid/synthetic-only",
+          "title" : "SYNTHETIC not a manufacturer fact",
+          "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+          "verificationStatus" : "VERIFIED"
+        } ]
+      } ],
+      "missing" : [ ],
+      "reasons" : [ "SYNTHETIC_ONLY" ],
+      "knownSubtotalCents" : 1747,
+      "priceComplete" : true,
+      "validationState" : "VERIFIED",
+      "requiresConfirmation" : false,
+      "proposedAdjustments" : [ ],
+      "totalCents" : 1747,
+      "budgetDeltaCents" : 98253,
+      "calculationVersion" : "7a793aaa868d9264459c8425f40170a621bee04d76efdf6d0402284b8434ac4b",
+      "templateVersions" : {
+        "SYN-T" : 1
+      },
+      "ruleVersions" : {
+        "SYN-R-COMPLETENESS" : 1,
+        "SYN-R-DECK_TRUCK_FIT" : 1,
+        "SYN-R-GRIP_COVERAGE" : 1,
+        "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+        "SYN-R-WHEEL_TRUCK_RISER" : 1
+      }
+    },
+    "recommend" : {
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH",
+        "shoeSize" : null
+      },
+      "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "complete" : {
+        "state" : "OK",
+        "searchTruncated" : false,
+        "plans" : [ {
+          "pricingMode" : "EXACT",
+          "priceAssumptions" : [ ],
+          "selection" : {
+            "kind" : "COMPLETE",
+            "templateKey" : null,
+            "items" : [ {
+              "category" : "COMPLETE",
+              "variantKey" : "SYNTHETIC-V"
+            } ]
+          },
+          "demand" : {
+            "budgetCents" : 100000,
+            "purpose" : "ACTION",
+            "preference" : "VALUE",
+            "recommendationType" : "BOTH",
+            "shoeSize" : null
+          },
+          "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind" : "COMPLETE",
+          "templateKey" : null,
+          "templateVersion" : null,
+          "items" : [ {
+            "category" : "COMPLETE",
+            "variantKey" : "SYNTHETIC-V",
+            "productKey" : "SYNTHETIC-P",
+            "label" : "SYNTHETIC complete",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "deckWidthInch" : 8,
+              "manufacturerComplete" : true
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYNTHETIC-Q",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 10010,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 10010,
+            "shippingCents" : 0,
+            "taxCents" : 0,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          } ],
+          "checks" : [ ],
+          "missing" : [ ],
+          "reasons" : [ ],
+          "knownSubtotalCents" : 10010,
+          "priceComplete" : true,
+          "validationState" : "MANUFACTURER_COMPLETE",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 10010,
+          "budgetDeltaCents" : 89990,
+          "calculationVersion" : "b928f1eb5bd33b842d44e4e2c846331e817c30486eb1e9ee5cb75c44b4c7a85a",
+          "templateVersions" : { },
+          "ruleVersions" : { }
+        } ],
+        "excludedCounts" : { },
+        "missing" : [ ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 1
+      },
+      "assembly" : {
+        "state" : "OK",
+        "searchTruncated" : false,
+        "plans" : [ {
+          "pricingMode" : "EXACT",
+          "priceAssumptions" : [ ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "SYN-T",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "SYN-V-BEARING"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "SYN-V-DECK"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "SYN-V-GRIP"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "SYN-V-HARDWARE"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "SYN-V-TRUCK"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "SYN-V-WHEEL"
+            } ]
+          },
+          "demand" : {
+            "budgetCents" : 100000,
+            "purpose" : "ACTION",
+            "preference" : "VALUE",
+            "recommendationType" : "BOTH",
+            "shoeSize" : null
+          },
+          "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "templateVersion" : 1,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING",
+            "productKey" : "SYN-P-BEARING",
+            "label" : "SYNTHETIC BEARING",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "608"
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 8,
+            "quoteKey" : "SYN-Q-BEARING",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 813,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK",
+            "productKey" : "SYN-P-DECK",
+            "label" : "SYNTHETIC DECK",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "widthInch" : 8,
+              "lengthInch" : 32,
+              "wheelbaseInch" : 14
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-DECK",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP",
+            "productKey" : "SYN-P-GRIP",
+            "label" : "SYNTHETIC GRIP",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "widthInch" : 9,
+              "lengthInch" : 33
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-GRIP",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE",
+            "productKey" : "SYN-P-HARDWARE",
+            "label" : "SYNTHETIC HARDWARE",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "lengthMm" : 25,
+              "headType" : "fictional",
+              "nutsIncluded" : true
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-HARDWARE",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 10,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK",
+            "productKey" : "SYN-P-TRUCK",
+            "label" : "SYNTHETIC TRUCK",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "sizeCode" : "fictional",
+              "construction" : "STANDARD",
+              "axleWidthInch" : 8,
+              "heightMm" : 50,
+              "deckMinInch" : 7.5,
+              "deckMaxInch" : 8.5
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 2,
+            "quoteKey" : "SYN-Q-TRUCK",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 207,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL",
+            "productKey" : "SYN-P-WHEEL",
+            "label" : "SYNTHETIC WHEEL",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "diameterMm" : 52,
+              "hardnessValue" : 99,
+              "hardnessScale" : "A",
+              "widthMm" : 30,
+              "contactPatchMm" : 20,
+              "shape" : "fictional"
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 4,
+            "quoteKey" : "SYN-Q-WHEEL",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 409,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-COMPLETENESS",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-GRIP_COVERAGE",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          } ],
+          "missing" : [ ],
+          "reasons" : [ "SYNTHETIC_ONLY" ],
+          "knownSubtotalCents" : 1747,
+          "priceComplete" : true,
+          "validationState" : "VERIFIED",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 1747,
+          "budgetDeltaCents" : 98253,
+          "calculationVersion" : "7a793aaa868d9264459c8425f40170a621bee04d76efdf6d0402284b8434ac4b",
+          "templateVersions" : {
+            "SYN-T" : 1
+          },
+          "ruleVersions" : {
+            "SYN-R-COMPLETENESS" : 1,
+            "SYN-R-DECK_TRUCK_FIT" : 1,
+            "SYN-R-GRIP_COVERAGE" : 1,
+            "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+            "SYN-R-WHEEL_TRUCK_RISER" : 1
+          }
+        }, {
+          "pricingMode" : "EXACT",
+          "priceAssumptions" : [ ],
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "SYN-T",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "SYN-V-BEARING"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "SYN-V-DECK"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "SYN-V-GRIP"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "SYN-V-HARDWARE"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "SYN-V-RISER"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "SYN-V-TRUCK"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "SYN-V-WHEEL"
+            } ]
+          },
+          "demand" : {
+            "budgetCents" : 100000,
+            "purpose" : "ACTION",
+            "preference" : "VALUE",
+            "recommendationType" : "BOTH",
+            "shoeSize" : null
+          },
+          "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "templateVersion" : 1,
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING",
+            "productKey" : "SYN-P-BEARING",
+            "label" : "SYNTHETIC BEARING",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "standard" : "608"
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 8,
+            "quoteKey" : "SYN-Q-BEARING",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 813,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK",
+            "productKey" : "SYN-P-DECK",
+            "label" : "SYNTHETIC DECK",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "widthInch" : 8,
+              "lengthInch" : 32,
+              "wheelbaseInch" : 14
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-DECK",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP",
+            "productKey" : "SYN-P-GRIP",
+            "label" : "SYNTHETIC GRIP",
+            "requiredQuantity" : 1,
+            "specs" : {
+              "widthInch" : 9,
+              "lengthInch" : 33
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-GRIP",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE",
+            "productKey" : "SYN-P-HARDWARE",
+            "label" : "SYNTHETIC HARDWARE",
+            "requiredQuantity" : 8,
+            "specs" : {
+              "lengthMm" : 25,
+              "headType" : "fictional",
+              "nutsIncluded" : true
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 1,
+            "quoteKey" : "SYN-Q-HARDWARE",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 106,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 10,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "RISER",
+            "variantKey" : "SYN-V-RISER",
+            "productKey" : "SYN-P-RISER",
+            "label" : "SYNTHETIC RISER",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "heightMm" : 3
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 2,
+            "quoteKey" : "SYN-Q-RISER",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 207,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK",
+            "productKey" : "SYN-P-TRUCK",
+            "label" : "SYNTHETIC TRUCK",
+            "requiredQuantity" : 2,
+            "specs" : {
+              "sizeCode" : "fictional",
+              "construction" : "STANDARD",
+              "axleWidthInch" : 8,
+              "heightMm" : 50,
+              "deckMinInch" : 7.5,
+              "deckMaxInch" : 8.5
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 2,
+            "quoteKey" : "SYN-Q-TRUCK",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 207,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL",
+            "productKey" : "SYN-P-WHEEL",
+            "label" : "SYNTHETIC WHEEL",
+            "requiredQuantity" : 4,
+            "specs" : {
+              "diameterMm" : 52,
+              "hardnessValue" : 99,
+              "hardnessScale" : "A",
+              "widthMm" : 30,
+              "contactPatchMm" : 20,
+              "shape" : "fictional"
+            },
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ],
+            "packageCount" : 4,
+            "quoteKey" : "SYN-Q-WHEEL",
+            "quoteVersion" : 1,
+            "lineTotalCents" : 409,
+            "pricingMode" : "EXACT",
+            "packageQuantity" : 1,
+            "amountCents" : 101,
+            "shippingCents" : 3,
+            "taxCents" : 2,
+            "quoteSources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          } ],
+          "checks" : [ {
+            "type" : "COMPLETENESS",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-COMPLETENESS",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "DECK_TRUCK_FIT",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "WHEEL_TRUCK_RISER",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "RISER_HARDWARE_LENGTH",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          }, {
+            "type" : "GRIP_COVERAGE",
+            "state" : "PASS",
+            "explanation" : "SYNTHETIC rule",
+            "ruleKey" : "SYN-R-GRIP_COVERAGE",
+            "ruleVersion" : 1,
+            "sources" : [ {
+              "url" : "https://example.invalid/synthetic-only",
+              "title" : "SYNTHETIC not a manufacturer fact",
+              "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+              "verificationStatus" : "VERIFIED"
+            } ]
+          } ],
+          "missing" : [ ],
+          "reasons" : [ "SYNTHETIC_ONLY" ],
+          "knownSubtotalCents" : 1954,
+          "priceComplete" : true,
+          "validationState" : "VERIFIED",
+          "requiresConfirmation" : false,
+          "proposedAdjustments" : [ ],
+          "totalCents" : 1954,
+          "budgetDeltaCents" : 98046,
+          "calculationVersion" : "ba4c96fbd3985b02c7a781e9ccab991247261897ec7f140945c74b52cbac7fee",
+          "templateVersions" : {
+            "SYN-T" : 1
+          },
+          "ruleVersions" : {
+            "SYN-R-COMPLETENESS" : 1,
+            "SYN-R-DECK_TRUCK_FIT" : 1,
+            "SYN-R-GRIP_COVERAGE" : 1,
+            "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+            "SYN-R-WHEEL_TRUCK_RISER" : 1
+          }
+        } ],
+        "excludedCounts" : { },
+        "missing" : [ ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 2
+      },
+      "searchTruncated" : false,
+      "evaluatedCount" : 3,
+      "evaluationLimit" : 2000
+    },
+    "compare" : {
+      "evaluations" : [ {
+        "pricingMode" : "EXACT",
+        "priceAssumptions" : [ ],
+        "selection" : {
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING"
+          }, {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK"
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP"
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE"
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK"
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL"
+          } ]
+        },
+        "demand" : {
+          "budgetCents" : 100000,
+          "purpose" : "ACTION",
+          "preference" : "VALUE",
+          "recommendationType" : "BOTH",
+          "shoeSize" : null
+        },
+        "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "templateVersion" : 1,
+        "items" : [ {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING",
+          "productKey" : "SYN-P-BEARING",
+          "label" : "SYNTHETIC BEARING",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "standard" : "608"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 8,
+          "quoteKey" : "SYN-Q-BEARING",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 813,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK",
+          "productKey" : "SYN-P-DECK",
+          "label" : "SYNTHETIC DECK",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 8,
+            "lengthInch" : 32,
+            "wheelbaseInch" : 14
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-DECK",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP",
+          "productKey" : "SYN-P-GRIP",
+          "label" : "SYNTHETIC GRIP",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 9,
+            "lengthInch" : 33
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-GRIP",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE",
+          "productKey" : "SYN-P-HARDWARE",
+          "label" : "SYNTHETIC HARDWARE",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "lengthMm" : 25,
+            "headType" : "fictional",
+            "nutsIncluded" : true
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-HARDWARE",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 10,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK",
+          "productKey" : "SYN-P-TRUCK",
+          "label" : "SYNTHETIC TRUCK",
+          "requiredQuantity" : 2,
+          "specs" : {
+            "sizeCode" : "fictional",
+            "construction" : "STANDARD",
+            "axleWidthInch" : 8,
+            "heightMm" : 50,
+            "deckMinInch" : 7.5,
+            "deckMaxInch" : 8.5
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 2,
+          "quoteKey" : "SYN-Q-TRUCK",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 207,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL",
+          "productKey" : "SYN-P-WHEEL",
+          "label" : "SYNTHETIC WHEEL",
+          "requiredQuantity" : 4,
+          "specs" : {
+            "diameterMm" : 52,
+            "hardnessValue" : 99,
+            "hardnessScale" : "A",
+            "widthMm" : 30,
+            "contactPatchMm" : 20,
+            "shape" : "fictional"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 4,
+          "quoteKey" : "SYN-Q-WHEEL",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 409,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "checks" : [ {
+          "type" : "COMPLETENESS",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-COMPLETENESS",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "DECK_TRUCK_FIT",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "WHEEL_TRUCK_RISER",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "RISER_HARDWARE_LENGTH",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "GRIP_COVERAGE",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-GRIP_COVERAGE",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "missing" : [ ],
+        "reasons" : [ "SYNTHETIC_ONLY" ],
+        "knownSubtotalCents" : 1747,
+        "priceComplete" : true,
+        "validationState" : "VERIFIED",
+        "requiresConfirmation" : false,
+        "proposedAdjustments" : [ ],
+        "totalCents" : 1747,
+        "budgetDeltaCents" : 98253,
+        "calculationVersion" : "7a793aaa868d9264459c8425f40170a621bee04d76efdf6d0402284b8434ac4b",
+        "templateVersions" : {
+          "SYN-T" : 1
+        },
+        "ruleVersions" : {
+          "SYN-R-COMPLETENESS" : 1,
+          "SYN-R-DECK_TRUCK_FIT" : 1,
+          "SYN-R-GRIP_COVERAGE" : 1,
+          "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+          "SYN-R-WHEEL_TRUCK_RISER" : 1
+        }
+      } ],
+      "comparisonFields" : [ "kind", "totalCents", "budgetDeltaCents", "validationState", "pricingMode", "knownSubtotalCents", "priceAssumptions", "items", "checks", "missing" ]
+    },
+    "priceChanged" : {
+      "errorCode" : "PRICE_CHANGED",
+      "requiresConfirmation" : true,
+      "evaluation" : {
+        "pricingMode" : "EXACT",
+        "priceAssumptions" : [ ],
+        "selection" : {
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING"
+          }, {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK"
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP"
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE"
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK"
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL"
+          } ]
+        },
+        "demand" : {
+          "budgetCents" : 100000,
+          "purpose" : "ACTION",
+          "preference" : "VALUE",
+          "recommendationType" : "BOTH",
+          "shoeSize" : null
+        },
+        "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "templateVersion" : 1,
+        "items" : [ {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING",
+          "productKey" : "SYN-P-BEARING",
+          "label" : "SYNTHETIC BEARING",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "standard" : "608"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 8,
+          "quoteKey" : "SYN-Q-BEARING",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 813,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK",
+          "productKey" : "SYN-P-DECK",
+          "label" : "SYNTHETIC DECK",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 8,
+            "lengthInch" : 32,
+            "wheelbaseInch" : 14
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-DECK",
+          "quoteVersion" : 2,
+          "lineTotalCents" : 206,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 201,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP",
+          "productKey" : "SYN-P-GRIP",
+          "label" : "SYNTHETIC GRIP",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 9,
+            "lengthInch" : 33
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-GRIP",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE",
+          "productKey" : "SYN-P-HARDWARE",
+          "label" : "SYNTHETIC HARDWARE",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "lengthMm" : 25,
+            "headType" : "fictional",
+            "nutsIncluded" : true
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-HARDWARE",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 10,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK",
+          "productKey" : "SYN-P-TRUCK",
+          "label" : "SYNTHETIC TRUCK",
+          "requiredQuantity" : 2,
+          "specs" : {
+            "sizeCode" : "fictional",
+            "construction" : "STANDARD",
+            "axleWidthInch" : 8,
+            "heightMm" : 50,
+            "deckMinInch" : 7.5,
+            "deckMaxInch" : 8.5
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 2,
+          "quoteKey" : "SYN-Q-TRUCK",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 207,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL",
+          "productKey" : "SYN-P-WHEEL",
+          "label" : "SYNTHETIC WHEEL",
+          "requiredQuantity" : 4,
+          "specs" : {
+            "diameterMm" : 52,
+            "hardnessValue" : 99,
+            "hardnessScale" : "A",
+            "widthMm" : 30,
+            "contactPatchMm" : 20,
+            "shape" : "fictional"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 4,
+          "quoteKey" : "SYN-Q-WHEEL",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 409,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "checks" : [ {
+          "type" : "COMPLETENESS",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-COMPLETENESS",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "DECK_TRUCK_FIT",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "WHEEL_TRUCK_RISER",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "RISER_HARDWARE_LENGTH",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "GRIP_COVERAGE",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-GRIP_COVERAGE",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "missing" : [ ],
+        "reasons" : [ "SYNTHETIC_ONLY" ],
+        "knownSubtotalCents" : 1847,
+        "priceComplete" : true,
+        "validationState" : "VERIFIED",
+        "requiresConfirmation" : false,
+        "proposedAdjustments" : [ ],
+        "totalCents" : 1847,
+        "budgetDeltaCents" : 98153,
+        "calculationVersion" : "c240983fc31d886283d81729235558189d2ffdebbaea121c0fb4988f554cb858",
+        "templateVersions" : {
+          "SYN-T" : 1
+        },
+        "ruleVersions" : {
+          "SYN-R-COMPLETENESS" : 1,
+          "SYN-R-DECK_TRUCK_FIT" : 1,
+          "SYN-R-GRIP_COVERAGE" : 1,
+          "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+          "SYN-R-WHEEL_TRUCK_RISER" : 1
+        }
+      }
+    },
+    "linkedReplacement" : {
+      "total" : 1,
+      "searchTruncated" : false,
+      "list" : [ {
+        "pricingMode" : "EXACT",
+        "priceAssumptions" : [ ],
+        "selection" : {
+          "kind" : "ASSEMBLY",
+          "templateKey" : "SYN-T",
+          "items" : [ {
+            "category" : "BEARING",
+            "variantKey" : "SYN-V-BEARING"
+          }, {
+            "category" : "DECK",
+            "variantKey" : "SYN-V-DECK"
+          }, {
+            "category" : "GRIP",
+            "variantKey" : "SYN-V-GRIP"
+          }, {
+            "category" : "HARDWARE",
+            "variantKey" : "SYN-V-HARDWARE"
+          }, {
+            "category" : "TRUCK",
+            "variantKey" : "SYN-V-TRUCK"
+          }, {
+            "category" : "WHEEL",
+            "variantKey" : "SYN-V-WHEEL"
+          } ]
+        },
+        "demand" : {
+          "budgetCents" : 100000,
+          "purpose" : "ACTION",
+          "preference" : "VALUE",
+          "recommendationType" : "BOTH",
+          "shoeSize" : null
+        },
+        "catalogVersion" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind" : "ASSEMBLY",
+        "templateKey" : "SYN-T",
+        "templateVersion" : 1,
+        "items" : [ {
+          "category" : "BEARING",
+          "variantKey" : "SYN-V-BEARING",
+          "productKey" : "SYN-P-BEARING",
+          "label" : "SYNTHETIC BEARING",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "standard" : "608"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 8,
+          "quoteKey" : "SYN-Q-BEARING",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 813,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "DECK",
+          "variantKey" : "SYN-V-DECK",
+          "productKey" : "SYN-P-DECK",
+          "label" : "SYNTHETIC DECK",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 8,
+            "lengthInch" : 32,
+            "wheelbaseInch" : 14
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-DECK",
+          "quoteVersion" : 2,
+          "lineTotalCents" : 206,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 201,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "GRIP",
+          "variantKey" : "SYN-V-GRIP",
+          "productKey" : "SYN-P-GRIP",
+          "label" : "SYNTHETIC GRIP",
+          "requiredQuantity" : 1,
+          "specs" : {
+            "widthInch" : 9,
+            "lengthInch" : 33
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-GRIP",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "HARDWARE",
+          "variantKey" : "SYN-V-HARDWARE",
+          "productKey" : "SYN-P-HARDWARE",
+          "label" : "SYNTHETIC HARDWARE",
+          "requiredQuantity" : 8,
+          "specs" : {
+            "lengthMm" : 25,
+            "headType" : "fictional",
+            "nutsIncluded" : true
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 1,
+          "quoteKey" : "SYN-Q-HARDWARE",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 106,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 10,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "TRUCK",
+          "variantKey" : "SYN-V-TRUCK",
+          "productKey" : "SYN-P-TRUCK",
+          "label" : "SYNTHETIC TRUCK",
+          "requiredQuantity" : 2,
+          "specs" : {
+            "sizeCode" : "fictional",
+            "construction" : "STANDARD",
+            "axleWidthInch" : 8,
+            "heightMm" : 50,
+            "deckMinInch" : 7.5,
+            "deckMaxInch" : 8.5
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 2,
+          "quoteKey" : "SYN-Q-TRUCK",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 207,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "category" : "WHEEL",
+          "variantKey" : "SYN-V-WHEEL",
+          "productKey" : "SYN-P-WHEEL",
+          "label" : "SYNTHETIC WHEEL",
+          "requiredQuantity" : 4,
+          "specs" : {
+            "diameterMm" : 52,
+            "hardnessValue" : 99,
+            "hardnessScale" : "A",
+            "widthMm" : 30,
+            "contactPatchMm" : 20,
+            "shape" : "fictional"
+          },
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ],
+          "packageCount" : 4,
+          "quoteKey" : "SYN-Q-WHEEL",
+          "quoteVersion" : 1,
+          "lineTotalCents" : 409,
+          "pricingMode" : "EXACT",
+          "packageQuantity" : 1,
+          "amountCents" : 101,
+          "shippingCents" : 3,
+          "taxCents" : 2,
+          "quoteSources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "checks" : [ {
+          "type" : "COMPLETENESS",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-COMPLETENESS",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "DECK_TRUCK_FIT",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-DECK_TRUCK_FIT",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "WHEEL_TRUCK_RISER",
+          "state" : "INCOMPATIBLE",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-WHEEL_TRUCK_RISER",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "RISER_HARDWARE_LENGTH",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-RISER_HARDWARE_LENGTH",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        }, {
+          "type" : "GRIP_COVERAGE",
+          "state" : "PASS",
+          "explanation" : "SYNTHETIC rule",
+          "ruleKey" : "SYN-R-GRIP_COVERAGE",
+          "ruleVersion" : 1,
+          "sources" : [ {
+            "url" : "https://example.invalid/synthetic-only",
+            "title" : "SYNTHETIC not a manufacturer fact",
+            "collectedAt" : "2026-10-10T12:42:09.076158300Z",
+            "verificationStatus" : "VERIFIED"
+          } ]
+        } ],
+        "missing" : [ ],
+        "reasons" : [ "SYNTHETIC_ONLY" ],
+        "knownSubtotalCents" : 1847,
+        "priceComplete" : true,
+        "validationState" : "INCOMPATIBLE",
+        "requiresConfirmation" : true,
+        "proposedAdjustments" : [ {
+          "category" : "RISER",
+          "variantKey" : "SYN-V-RISER",
+          "reasonCode" : "ADJUSTMENT_REQUIRED",
+          "selection" : {
+            "kind" : "ASSEMBLY",
+            "templateKey" : "SYN-T",
+            "items" : [ {
+              "category" : "BEARING",
+              "variantKey" : "SYN-V-BEARING"
+            }, {
+              "category" : "DECK",
+              "variantKey" : "SYN-V-DECK"
+            }, {
+              "category" : "GRIP",
+              "variantKey" : "SYN-V-GRIP"
+            }, {
+              "category" : "HARDWARE",
+              "variantKey" : "SYN-V-HARDWARE"
+            }, {
+              "category" : "RISER",
+              "variantKey" : "SYN-V-RISER"
+            }, {
+              "category" : "TRUCK",
+              "variantKey" : "SYN-V-TRUCK"
+            }, {
+              "category" : "WHEEL",
+              "variantKey" : "SYN-V-WHEEL"
+            } ]
+          }
+        } ],
+        "totalCents" : 1847,
+        "budgetDeltaCents" : 98153,
+        "calculationVersion" : "a15d2a68585de149395385bfbf8301b3ed62a63dbd3b4ad4b1a28f3a3fa9da99",
+        "templateVersions" : {
+          "SYN-T" : 1
+        },
+        "ruleVersions" : {
+          "SYN-R-COMPLETENESS" : 1,
+          "SYN-R-DECK_TRUCK_FIT" : 1,
+          "SYN-R-GRIP_COVERAGE" : 1,
+          "SYN-R-RISER_HARDWARE_LENGTH" : 1,
+          "SYN-R-WHEEL_TRUCK_RISER" : 1
+        }
+      } ],
+      "excludedCounts" : {
+        "INCOMPATIBLE" : 1
+      }
+    },
+    "recordedDraftRecommend" : {
+      "demand" : {
+        "budgetCents" : 100000,
+        "purpose" : "ACTION",
+        "preference" : "VALUE",
+        "recommendationType" : "BOTH",
+        "shoeSize" : null
+      },
+      "catalogVersion" : "0000000000000000000000000000000000000000000000000000000000000000",
+      "complete" : {
+        "state" : "DATA_INSUFFICIENT",
+        "searchTruncated" : false,
+        "plans" : [ ],
+        "excludedCounts" : { },
+        "missing" : [ "ACTIVE_TEMPLATE_OR_VERIFIED_DATA_REQUIRED" ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 0
+      },
+      "assembly" : {
+        "state" : "DATA_INSUFFICIENT",
+        "searchTruncated" : false,
+        "plans" : [ ],
+        "excludedCounts" : { },
+        "missing" : [ "ACTIVE_TEMPLATE_OR_VERIFIED_DATA_REQUIRED" ],
+        "minimumFeasiblePlan" : null,
+        "shortfallCents" : null,
+        "evaluatedCount" : 0
+      },
+      "searchTruncated" : false,
+      "evaluatedCount" : 0,
+      "evaluationLimit" : 2000
+    }
+  }
+}

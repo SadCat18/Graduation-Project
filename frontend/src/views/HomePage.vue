@@ -129,6 +129,10 @@ async function runUnifiedSearch() {
 
 function goSearchResult(item) {
   if (!item?.routePath) return
+  if (item.type === 'VIDEO') {
+    router.push({ path: item.routePath, query: { from: 'home' } })
+    return
+  }
   router.push(item.routePath)
 }
 
@@ -646,15 +650,12 @@ onDeactivated(() => {
   height: 520px;
   object-fit: cover;
   display: block;
-  filter: saturate(1.02);
   transform: scale(1);
-  transition: transform 5.8s ease, filter 0.45s ease;
-  will-change: transform;
+  transition: transform 5.8s ease;
 }
 
 .carousel-main:hover .carousel-image-frame img {
   transform: scale(1.018);
-  filter: saturate(1.06);
 }
 
 .hero-shade {
@@ -699,13 +700,12 @@ onDeactivated(() => {
 
 .carousel-fade-enter-active,
 .carousel-fade-leave-active {
-  transition: opacity 0.28s ease, transform 0.36s ease, filter 0.28s ease;
+  transition: opacity 0.28s ease, transform 0.36s ease;
 }
 
 .carousel-fade-enter-from {
   opacity: 0;
   transform: scale(1.01);
-  filter: saturate(0.98);
 }
 
 .carousel-fade-leave-to {
@@ -715,19 +715,17 @@ onDeactivated(() => {
 
 .hero-caption-copy-enter-active,
 .hero-caption-copy-leave-active {
-  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), filter 0.38s ease;
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-caption-copy-enter-from {
   opacity: 0;
   transform: translateY(10px);
-  filter: blur(4px);
 }
 
 .hero-caption-copy-leave-to {
   opacity: 0;
   transform: translateY(-8px);
-  filter: blur(4px);
 }
 
 .carousel-nav {
@@ -739,8 +737,6 @@ onDeactivated(() => {
   border: none;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   color: #fff;
   font-size: 20px;
   line-height: 1;
@@ -910,13 +906,11 @@ onDeactivated(() => {
   max-height: calc(100% - 126px);
   overflow: auto;
   z-index: 5;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.58);
   padding: 14px;
   color: var(--text);
   border-radius: 18px;
-  backdrop-filter: blur(14px) saturate(1.08);
-  -webkit-backdrop-filter: blur(14px) saturate(1.08);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 

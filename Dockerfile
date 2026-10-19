@@ -5,10 +5,13 @@ COPY pom.xml mvnw mvnw.cmd ./
 COPY .mvn .mvn
 COPY src src
 
-RUN mvn -q -DskipTests package
+RUN mvn -s .mvn/settings.xml -B -DskipTests package
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.revision=$VCS_REF
 
 COPY --from=builder /workspace/target/*.jar /app/app.jar
 

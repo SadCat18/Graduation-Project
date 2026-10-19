@@ -5,6 +5,7 @@ import AppIcon from '../components/AppIcon.vue'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { setAuth } from '../utils/auth'
+import { safeBoardReturn } from '../board/state'
 
 const router = useRouter()
 const route = useRoute()
@@ -27,14 +28,14 @@ const touchStartY = ref(0)
 const brandContent = computed(() => {
   if (authMode.value === 'register') {
     return {
-      sub: '加入滑板交流网站',
+      sub: '加入滑板知识网站',
       title: '创建账号',
       desc: '注册后可发布帖子、参加活动、使用 AI 滑板老师，并完善你的滑板档案。',
       points: ['发帖分享动作与路线', '同城约板活动报名签到', 'AI 滑板老师一对一问答', '个人资料与头像本地上传']
     }
   }
   return {
-    sub: '滑板交流网站',
+    sub: '滑板知识网站',
     title: '欢迎回来',
     desc: '登录后可发布帖子、参加同城约板、使用 AI 滑板老师并管理个人内容。',
     points: ['内容先浏览，登录后互动', 'AI 滑板老师登录后可用', '极简社区，专注滑板交流', '支持管理员后台运营']
@@ -51,7 +52,8 @@ function setMode(mode, syncRoute = true) {
   if (!syncRoute) return
   const targetPath = mode === 'register' ? '/register' : '/login'
   if (route.path !== targetPath) {
-    router.replace(targetPath)
+    const returnTo = safeBoardReturn(route.query.returnTo)
+    router.replace({ path: targetPath, query: returnTo ? { returnTo } : {} })
   }
 }
 
@@ -92,7 +94,7 @@ async function submitLogin() {
       ? await api.adminLogin(loginForm.value)
       : await api.userLogin(payload)
     setAuth(data.token, data.role, data.name)
-    router.push(data.role === 'ADMIN' ? '/admin' : '/')
+    router.push(data.role === 'ADMIN' ? '/admin' : safeBoardReturn(route.query.returnTo) || '/')
   } catch (e) {
     loginError.value = e.message || '登录失败，请检查账号、密码或验证码'
     loginForm.value.captchaCode = ''
