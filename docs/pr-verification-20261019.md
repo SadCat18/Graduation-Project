@@ -28,6 +28,16 @@ The two mock visual specs now use64x64 inline SVG data URIs (eight fixture value
 
 Production audit remains0; complete development-toolchain audit remains44 as disclosed above. A new exact-head remote frontend/backend/docker-build run must complete successfully before marking the PR ready. The prior failed run remains historical evidence and is not reported as green.
 
+## Confirmed CI footer-image isolation
+
+The avatar-only head a611048 still failed21/3 on remote run39216004671. Diagnostic-only head e33cf699 retained every assertion and logged actual URLs; remote run39217040163 directly identified requestfailed and console.location for https://www.beian.gov.cn/img/ghs.png (ERR_CONNECTION_REFUSED). Thus the earlier local avatar refusal was a sufficient failure mechanism, not proof of the remaining CI root cause. Both failed histories remain disclosed.
+
+Only the two mock visual specs now fulfill that exact image URL with existing inline SVG fixture bytes. Production App.vue,备案 links/number/loading, dependency versions, all diagnostic/error assertions and CI selection/thresholds are unchanged. No whole-domain or all-network success/error suppression is introduced.
+
+Node20 default E2E24/24 and productionaudit0 passed locally. The reviewer independently reran all4 affected visual scenarios with a lower-priority context refusal: each exact image request was handled locally, response200/image SVG/SHA matched, serverAddr null, decoded width64, fallback refusal0, avatar network requests0, failed/console/pageerrors0. The4 are a subset of24, not28 distinct tests. Complete development audit remains44 as disclosed.
+
+The release reviewer follows the new exact-head backend/frontend/docker-build workflow to explicit outcomes; no local result or skipped Docker job counts as remote success. Mark ready only after all three succeed, never auto-merge/deploy.
+
 ## Reproduce from a clean checkout
 
 Use JDK17, Python3 and Node20+ with npm. From the repository root:
