@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import AdminEmptyState from './AdminEmptyState.vue'
 import echarts from './echarts'
@@ -15,6 +15,7 @@ defineEmits(['refresh'])
 
 const chartEl = ref(null)
 let chart = null
+let chartElement = null
 let resizeObserver = null
 const hasData = computed(() => props.rows.length > 0)
 const summary = computed(() => {
@@ -23,9 +24,28 @@ const summary = computed(() => {
   return `最近一天新增用户 ${Number(latest.newUsers || 0)}，帖子 ${Number(latest.newPosts || 0)}，活动 ${Number(latest.newActivities || 0)}，报名 ${Number(latest.newSigns || 0)}。`
 })
 
+function disposeChart() {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  chart?.dispose()
+  chart = null
+  chartElement = null
+}
+
 function renderChart() {
+  if (chartEl.value !== chartElement) {
+    disposeChart()
+    chartElement = chartEl.value
+    if (chartElement) {
+      chart = echarts.init(chartElement)
+      if (typeof ResizeObserver !== 'undefined') {
+        const instance = chart
+        resizeObserver = new ResizeObserver(() => { if (chart === instance) instance.resize() })
+        resizeObserver.observe(chartElement)
+      }
+    }
+  }
   if (!chartEl.value || !hasData.value) return
-  if (!chart) chart = echarts.init(chartEl.value)
   chart.setOption({
     animationDuration: 360,
     color: ['#087A6D', '#2563EB', '#F97316', '#7C3AED'],
@@ -61,21 +81,8 @@ function renderChart() {
   }, true)
 }
 
-watch(() => props.rows, async () => { await nextTick(); renderChart() }, { deep: true })
-
-onMounted(async () => {
-  await nextTick()
-  renderChart()
-  if (typeof ResizeObserver !== 'undefined' && chartEl.value) {
-    resizeObserver = new ResizeObserver(() => chart?.resize())
-    resizeObserver.observe(chartEl.value)
-  }
-})
-
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
-  chart?.dispose()
-})
+watch([chartEl, () => props.rows, () => props.loading, () => props.error], renderChart, { deep: true, flush: 'post' })
+onBeforeUnmount(disposeChart)
 </script>
 
 <template>

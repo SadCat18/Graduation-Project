@@ -64,6 +64,8 @@ function messagePage(overrides = {}) {
   }
 }
 
+const mounted = []
+
 async function mountPage() {
   const wrapper = mount(MessagesPage, {
     attachTo: document.body,
@@ -73,6 +75,7 @@ async function mountPage() {
       }
     }
   })
+  mounted.push(wrapper)
   await flushPromises()
   return wrapper
 }
@@ -83,6 +86,7 @@ async function submitMessage(wrapper, content) {
 }
 
 beforeEach(() => {
+  for (const fn of Object.values(api)) fn.mockReset()
   route.params.conversationId = '1'
   api.profile.mockResolvedValue({ userId: 7 })
   api.privateConversations.mockImplementation(async () => conversationPage())
@@ -100,6 +104,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  for (const wrapper of mounted.splice(0)) if (wrapper.exists()) wrapper.unmount()
+  vi.restoreAllMocks()
   document.body.innerHTML = ''
   vi.useRealTimers()
 })
@@ -219,5 +225,145 @@ describe('MessagesPage runtime behavior', () => {
 
     wrapper.unmount()
     expect(vi.getTimerCount()).toBe(0)
+  })
+})
+
+function deferred() {
+  let resolve, reject
+  const promise = new Promise((yes,no) => { resolve=yes; reject=no })
+  return {promise,resolve,reject}
+}
+const secondConversation = {...conversation,conversationId:2,otherUserId:8,otherUsername:'小周'}
+const secondMessage = {...initialMessage,messageId:20,conversationId:2,senderId:8,content:'B新线程'}
+function twoConversations() { return {list:[conversation,secondConversation],total:2,totalPages:1} }
+async function selectB(wrapper) { await wrapper.findAll('button.conversation-item')[1].trigger('click'); await flushPromises() }
+function bPage() { return messagePage({list:[secondMessage],nextBeforeMessageId:20,hasMore:true}) }
+
+describe('SYNTHETIC messages remediation; mocked APIs do not prove server acceptance', () => {
+  it('retries failed page 2, commits success before page 3, and deduplicates overlap', async () => {
+    route.params.conversationId = undefined
+    const pages=[]; let attempts=0
+    api.privateConversations.mockImplementation(async ({page}) => {
+      pages.push(page)
+      if(page===2 && ++attempts===1) throw new Error('第二页暂不可用')
+      return {list:page===1?[conversation]:page===2?[conversation,secondConversation]:[{...conversation,conversationId:3,otherUsername:'第三页'}],total:3,totalPages:3}
+    })
+    const wrapper=await mountPage()
+    await wrapper.get('button.load-more').trigger('click'); await flushPromises()
+    expect(wrapper.text()).toContain('第二页暂不可用'); expect(wrapper.get('button.load-more').attributes('disabled')).toBeUndefined()
+    await wrapper.get('button.load-more').trigger('click'); await flushPromises()
+    expect(wrapper.findAll('.conversation-item')).toHaveLength(2)
+    await wrapper.get('button.load-more').trigger('click'); await flushPromises()
+    expect(pages).toEqual([1,2,2,3]); expect(wrapper.findAll('.conversation-item')).toHaveLength(3)
+  })
+
+  it('late A success cannot replace B messages/cursor, mark A read, or refresh B list', async () => {
+    const a=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation(id=>id===1?a.promise:Promise.resolve(bPage()))
+    const wrapper=await mountPage(); await selectB(wrapper)
+    const calls=api.privateConversations.mock.calls.length
+    a.resolve(messagePage({nextBeforeMessageId:10,hasMore:true})); await flushPromises()
+    expect(wrapper.get('.thread-identity h2').text()).toBe('小周')
+    expect(wrapper.text()).toContain('B新线程'); expect(wrapper.text()).not.toContain(initialMessage.content)
+    expect(wrapper.vm.nextBeforeMessageId).toBe(20)
+    expect(api.privateConversations).toHaveBeenCalledTimes(calls)
+    expect(api.readPrivateConversation.mock.calls).toEqual([[2,{lastReadMessageId:20}]])
+  })
+
+  it('late A failure/finally cannot set B error or clear B loading', async () => {
+    const a=deferred(), b=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation(id=>id===1?a.promise:b.promise)
+    const wrapper=await mountPage(); await selectB(wrapper)
+    a.reject(new Error('过期A失败')); await flushPromises()
+    expect(wrapper.vm.loadingMessages).toBe(true); expect(wrapper.text()).not.toContain('过期A失败')
+    b.resolve(bPage()); await flushPromises()
+    expect(wrapper.text()).toContain('B新线程'); expect(wrapper.vm.loadingMessages).toBe(false)
+  })
+
+  it('a read receipt already dispatched for A cannot trigger a later refresh/scroll against B', async () => {
+    const readA=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation(async id=>id===1?messagePage():bPage())
+    api.readPrivateConversation.mockImplementation(id=>id===1?readA.promise:Promise.resolve({}))
+    const wrapper=await mountPage(); await selectB(wrapper)
+    const calls=api.privateConversations.mock.calls.length
+    readA.resolve({}); await flushPromises()
+    expect(api.privateConversations).toHaveBeenCalledTimes(calls)
+    expect(wrapper.get('.thread-identity h2').text()).toBe('小周'); expect(wrapper.vm.nextBeforeMessageId).toBe(20)
+    expect(api.readPrivateConversation.mock.calls).toEqual([[1,{lastReadMessageId:10}],[2,{lastReadMessageId:20}]])
+  })
+
+  it('late A list refresh is discarded after B is selected', async () => {
+    const listA=deferred(); let count=0
+    api.privateConversations.mockImplementation(()=>++count===2?listA.promise:Promise.resolve(twoConversations()))
+    api.privateMessages.mockImplementation(async id=>id===1?messagePage():bPage())
+    const wrapper=await mountPage(); await selectB(wrapper)
+    listA.resolve({list:[conversation],total:1,totalPages:1}); await flushPromises()
+    expect(wrapper.get('.thread-identity h2').text()).toBe('小周')
+    expect(wrapper.findAll('.conversation-item')).toHaveLength(2); expect(wrapper.text()).toContain('B新线程')
+  })
+
+  it.each(['resolve','reject'])('late older A %s cannot merge into B or clear B older lock', async outcome => {
+    const oldA=deferred(), oldB=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation((id,params)=>params.beforeMessageId
+      ? (id===1?oldA.promise:oldB.promise)
+      : Promise.resolve(id===1?messagePage({nextBeforeMessageId:10,hasMore:true}):bPage()))
+    const wrapper=await mountPage(); await wrapper.get('button.load-older').trigger('click')
+    await selectB(wrapper); await wrapper.get('button.load-older').trigger('click')
+    oldA[outcome](outcome==='resolve'?messagePage({list:[{...initialMessage,content:'过期A旧消息'}]}):new Error('过期A旧消息失败'))
+    await flushPromises()
+    expect(wrapper.vm.loadingMoreMessages).toBe(true); expect(wrapper.vm.nextBeforeMessageId).toBe(20)
+    expect(wrapper.text()).not.toContain('过期A')
+    oldB.resolve(messagePage({list:[{...secondMessage,messageId:15,content:'B更早消息'}]})); await flushPromises()
+    expect(wrapper.text()).toContain('B更早消息'); expect(wrapper.vm.loadingMoreMessages).toBe(false)
+  })
+
+  it.each(['resolve','reject'])('late send A %s cannot alter B sending/error or refresh its list', async outcome => {
+    const sendA=deferred(), sendB=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation(async id=>id===1?messagePage():bPage())
+    api.sendPrivateMessage.mockImplementation(id=>id===1?sendA.promise:sendB.promise)
+    const wrapper=await mountPage(); await submitMessage(wrapper,'A待发送')
+    await selectB(wrapper); await submitMessage(wrapper,'B待发送')
+    const calls=api.privateConversations.mock.calls.length
+    sendA[outcome](outcome==='resolve'?{...initialMessage,messageId:30,content:'A待发送'}:new Error('过期A发送失败'))
+    await flushPromises()
+    expect(wrapper.vm.sendingMessage).toBe(true); expect(wrapper.text()).not.toContain('A待发送'); expect(wrapper.text()).not.toContain('过期A发送失败')
+    expect(api.privateConversations).toHaveBeenCalledTimes(calls)
+    sendB.resolve({...secondMessage,messageId:31,content:'B待发送'}); await flushPromises()
+    expect(wrapper.vm.sendingMessage).toBe(false); expect(wrapper.text()).toContain('B待发送')
+  })
+
+  it.each(['resolve','reject'])('late poll A %s cannot merge/mark B or emit stale warnings', async outcome => {
+    const pollA=deferred(); api.privateConversations.mockResolvedValue(twoConversations())
+    api.privateMessages.mockImplementation(async id=>id===1?messagePage():bPage())
+    const wrapper=await mountPage(), warn=vi.spyOn(console,'warn').mockImplementation(()=>{})
+    api.privateMessages.mockImplementation(id=>id===1?pollA.promise:Promise.resolve(bPage()))
+    const pending=wrapper.vm.pollForUpdates(); await flushPromises(); await selectB(wrapper)
+    const reads=api.readPrivateConversation.mock.calls.length, lists=api.privateConversations.mock.calls.length
+    pollA[outcome](outcome==='resolve'?messagePage({list:[{...initialMessage,messageId:99,content:'过期A轮询'}]}):new Error('过期A轮询失败'))
+    await pending; await flushPromises()
+    expect(wrapper.text()).not.toContain('过期A'); expect(wrapper.text()).toContain('B新线程')
+    expect(api.readPrivateConversation).toHaveBeenCalledTimes(reads); expect(api.privateConversations).toHaveBeenCalledTimes(lists)
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it('warns once per continuous polling failure and resets after recovery; manual refresh still reports errors', async () => {
+    const wrapper=await mountPage(), warn=vi.spyOn(console,'warn').mockImplementation(()=>{})
+    api.privateConversations.mockRejectedValue(new Error('SECRET_TOKEN PRIVATE_MESSAGE USER_DETAILS'))
+    await wrapper.vm.pollForUpdates(); await wrapper.vm.pollForUpdates(); await wrapper.vm.pollForUpdates()
+    expect(warn.mock.calls).toEqual([['[Messages] 轮询失败，将在下一周期重试。']])
+    expect(wrapper.text()).not.toContain('SECRET_TOKEN')
+    api.privateConversations.mockResolvedValue(conversationPage()); await wrapper.vm.pollForUpdates()
+    api.privateConversations.mockRejectedValue(new Error('SECRET_TOKEN')); await wrapper.vm.pollForUpdates()
+    expect(warn).toHaveBeenCalledTimes(2)
+    api.privateMessages.mockRejectedValue(new Error('手动刷新失败'))
+    await wrapper.get('[aria-label="刷新当前对话"]').trigger('click'); await flushPromises()
+    expect(wrapper.text()).toContain('手动刷新失败'); expect(warn).toHaveBeenCalledTimes(2)
+  })
+
+  it('unmount invalidates a pending initial thread and never starts a late polling timer', async () => {
+    vi.useFakeTimers(); const a=deferred(); api.privateMessages.mockReturnValue(a.promise)
+    const wrapper=await mountPage(); wrapper.unmount()
+    a.resolve(messagePage()); await flushPromises()
+    expect(api.readPrivateConversation).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0)
   })
 })

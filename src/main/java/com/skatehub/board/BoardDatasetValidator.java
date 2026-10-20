@@ -99,7 +99,7 @@ public class BoardDatasetValidator {
         return true;
     }
     public static boolean referenceQuote(JsonNode node) {
-        return reference(node)&&node.path("active").asBoolean()&&recordedSources(node)&&words("RECORDED VERIFIED").contains(text(node,"verificationStatus"))&&"EXACT".equals(text(node,"priceKind"))&&"CNY".equals(text(node,"currency"))&&"CN".equals(text(node,"market"))&&integer(node.get("amountCents"),0)&&!node.path("priceAssumptions").isEmpty()&&!"TRUCK-001--cn-price".equals(text(node,"key"));
+        return reference(node)&&node.path("active").asBoolean()&&recordedSources(node)&&words("RECORDED VERIFIED").contains(text(node,"verificationStatus"))&&"EXACT".equals(text(node,"priceKind"))&&"CNY".equals(text(node,"currency"))&&"CN".equals(text(node,"market"))&&integer(node.get("amountCents"),0)&&!node.path("priceAssumptions").isEmpty()&&!knownMismatchedQuote(text(node,"key"));
     }
     public JsonNode versioned(JsonNode input) {
         ObjectNode result = input.deepCopy(); if (!result.has("version")) result.put("version", 1); return result;
@@ -134,7 +134,11 @@ public class BoardDatasetValidator {
                 boolean verified = sources(node,id,errors);
                 if(node.has("pricingMode")&&!words("REFERENCE EXACT").contains(text(node,"pricingMode")))add(errors,id,"INVALID_PRICING_MODE","REFERENCE/EXACT or omit");
                 if(node.has("priceAssumptions"))stringArray(node.get("priceAssumptions"),id+".priceAssumptions",errors);
-                if (node.path("active").asBoolean() && (reference(node)? !recordedSources(node)||(!group.equals("products")&&!words("RECORDED VERIFIED").contains(text(node,"verificationStatus"))):!verified || (!group.equals("products") && !"VERIFIED".equals(text(node,"verificationStatus"))))) add(errors,id,"UNVERIFIED_ACTIVE","explicit reference needs recorded evidence; exact needs verified evidence");
+                boolean product=group.equals("products");
+                boolean referenceEvidence=recordedSources(node)&&(product||words("RECORDED VERIFIED").contains(text(node,"verificationStatus")));
+                boolean exactEvidence=verified&&(product||"VERIFIED".equals(text(node,"verificationStatus")));
+                boolean activationAllowed=reference(node)?referenceEvidence:exactEvidence;
+                if(node.path("active").asBoolean()&&!activationAllowed)add(errors,id,"UNVERIFIED_ACTIVE","explicit reference needs recorded evidence; exact needs verified evidence");
             }
             input.put(group,rows); effective.put(group,merged);
         }
@@ -170,7 +174,7 @@ public class BoardDatasetValidator {
             String id=entry.getKey();JsonNode q=entry.getValue();String vk=text(q,"variantKey"),pk=text(q,"sourceProductKey");
             if(!products.containsKey(pk)|| (q.hasNonNull("variantKey")&&!variants.containsKey(vk))) add(errors,id,"DANGLING_REFERENCE","quote product/variant");
             if(vk!=null&&variants.containsKey(vk)&&!Objects.equals(pk,text(variants.get(vk),"productKey"))) add(errors,id,"QUOTE_PRODUCT_MISMATCH","source differs from variant");
-            if(id.equals("TRUCK-001--cn-price") && vk!=null) add(errors,id,"MODEL_MISMATCH","139 Mid source is not Standard");
+            if(knownMismatchedQuote(id) && vk!=null) add(errors,id,"MODEL_MISMATCH","139 Mid source is not Standard");
             for(String f:List.of("amountCents","shippingCents","taxCents")) if(q.hasNonNull(f)&&!integer(q.get(f),0)) add(errors,id,"INVALID_CENTS",f);
             if(q.hasNonNull("packageQuantity")&&!integer(q.get("packageQuantity"),1)) add(errors,id,"INVALID_PACKAGE","positive Long");
             String kind=text(q,"priceKind");
@@ -186,7 +190,7 @@ public class BoardDatasetValidator {
                 if(!"EXACT".equals(kind)||!"CNY".equals(text(q,"currency"))||!"CN".equals(text(q,"market")))add(errors,id,"ACTIVE_QUOTE_MARKET","numeric single CN reference only");
                 stringArray(q.get("priceAssumptions"),id+".priceAssumptions",errors);
                 if(q.path("priceAssumptions").isEmpty())add(errors,id,"REFERENCE_ASSUMPTIONS_REQUIRED","estimate scope required");
-                if(id.equals("TRUCK-001--cn-price"))add(errors,id,"MODEL_MISMATCH","Mid price cannot apply to Standard reference variants");
+                if(knownMismatchedQuote(id))add(errors,id,"MODEL_MISMATCH","Mid price cannot apply to Standard reference variants");
             }
             if(q.path("active").asBoolean()&&!reference(q)) {
                 if(vk==null || !variants.getOrDefault(vk,object()).path("active").asBoolean()) add(errors,id,"ACTIVE_QUOTE_VARIANT","active concrete variant");
@@ -300,7 +304,11 @@ public class BoardDatasetValidator {
         }
         return verified;
     }
-    private static boolean key(String value) {return value!=null&&value.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,199}");}
+    public static boolean stableKey(String value) {return value!=null&&value.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,199}");}
+    private static boolean key(String value) {return stableKey(value);}
+    // The original 139 Mid price is not evidence for the normalized Stage 11 Standard variants.
+    // Re-enable only a separately identified, correctly scoped quote with its own provenance; never relabel the raw record.
+    private static boolean knownMismatchedQuote(String key) {return "TRUCK-001--cn-price".equals(key);}
     private static boolean number(JsonNode node,boolean zero) {return node!=null&&node.isNumber()&&(zero?node.decimalValue().signum()>=0:node.decimalValue().signum()>0)&&node.decimalValue().compareTo(BigDecimal.valueOf(100000))<=0&&node.decimalValue().stripTrailingZeros().scale()<=6;}
     private static void range(JsonNode n,String low,String high,boolean zero,String id,List<Issue> errors) {if(!number(n.path(low),zero)||!number(n.path(high),zero)||(n.path(low).isNumber()&&n.path(high).isNumber()&&n.path(low).decimalValue().compareTo(n.path(high).decimalValue())>0))add(errors,id,"RULE_RANGE_INCOMPLETE",low+"/"+high);}
     private static void endpoints(JsonNode n,String id,List<Issue> errors) {if(!n.path("minInclusive").isBoolean()||!n.path("maxInclusive").isBoolean())add(errors,id,"RULE_RANGE_INCOMPLETE","explicit endpoints");}

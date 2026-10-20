@@ -12,6 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 import static com.skatehub.board.BoardDatasetValidator.*;
 import static com.skatehub.board.BoardDtos.*;
 
+@Slf4j
 @Service @RequiredArgsConstructor
 @Transactional(readOnly=true)
 public class BoardCatalogService {
@@ -33,12 +37,21 @@ public class BoardCatalogService {
     private final AdminAuditLogService audit;
     @Value("${app.board-assistant.import-enabled:false}") private boolean importEnabled;
 
-    public String catalogVersion() { return metadata.findById(1L).orElseThrow().getCatalogVersion(); }
+    public String catalogVersion() { return requiredMetadata(false).getCatalogVersion(); }
+
+    private BoardCatalogMeta requiredMetadata(boolean lock) {
+        BoardCatalogMeta meta=lock?metadata.lockCatalog():metadata.findById(1L).orElse(null);
+        if(meta==null){
+            log.error("Board catalog metadata missing: tb_board_catalog_meta id=1; verify V9 migration/schema ownership; no automatic repair performed");
+            throw new BoardRequestException(503,"器材目录暂时不可用，请稍后重试");
+        }
+        return meta;
+    }
 
     private List<? extends BoardRecord> records(String group) {
         return switch(group) {
             case "products" -> products.findAll();case "variants" -> variants.findAll();
-            case "quotes" -> quotes.findAll();case "rules" -> rules.findAll();case "templates" -> templates.findAll();
+            case "quotes" -> quotes.findLatest();case "rules" -> rules.findAll();case "templates" -> templates.findAll();
             default -> throw new IllegalArgumentException(group);
         };
     }
@@ -52,10 +65,29 @@ public class BoardCatalogService {
         for(String group:GROUPS){ArrayNode list=validator.array();for(BoardRecord r:current(group).values())list.add(validator.parse(r.getContentJson()));result.set(group,list);}
         return result;
     }
-    @Transactional
+    /** Short independent serializable snapshot: callers never hold a catalog write lock while calculating. */
+    @Transactional(readOnly=true, isolation=Isolation.SERIALIZABLE, propagation=Propagation.REQUIRES_NEW)
     public ObjectNode calculationCatalog() {
-        metadata.lockCatalog();
-        ObjectNode result=stored();result.put("catalogVersion",catalogVersion());return result;
+        // Metadata first matches every writer. MySQL SERIALIZABLE may take shared locks until this short read ends.
+        String version=requiredMetadata(false).getCatalogVersion();
+        ObjectNode result=stored();result.put("catalogVersion",version);return result;
+    }
+    /** Save/admin mutations join the outer write transaction and retain its version barrier until commit. */
+    @Transactional
+    public ObjectNode lockedCalculationCatalog() {
+        BoardCatalogMeta meta=requiredMetadata(true);
+        ObjectNode result=stored();result.put("catalogVersion",meta.getCatalogVersion());return result;
+    }
+    public org.springframework.data.domain.Page<? extends BoardRecord> currentPage(String group,int page,int size) {
+        var pageable=PageRequest.of(page-1,size,Sort.by("key"));
+        return switch(group){
+            case "products" -> products.findAll(pageable);
+            case "variants" -> variants.findAll(pageable);
+            case "quotes" -> quotes.findLatestPage(pageable);
+            case "rules" -> rules.findAll(pageable);
+            case "templates" -> templates.findAll(pageable);
+            default -> throw new IllegalArgumentException(group);
+        };
     }
     public ValidationReport validate(JsonNode dataset) {
         ValidationReport report=validator.validate(dataset,stored());
@@ -72,7 +104,7 @@ public class BoardCatalogService {
             }
         }
         if(dataset.isObject()&&text(dataset,"datasetVersion")!=null){
-            JsonNode fingerprints=validator.parse(metadata.findById(1L).orElseThrow().getDatasetFingerprints());
+            JsonNode fingerprints=validator.parse(requiredMetadata(false).getDatasetFingerprints());
             String old=text(fingerprints,text(dataset,"datasetVersion"));
             if(old!=null&&!old.equals(validator.hash(dataset)))errors.add(new Issue("datasetVersion","SAME_VERSION_DIFFERENT_CONTENT","dataset fingerprint"));
         }
@@ -84,7 +116,7 @@ public class BoardCatalogService {
     }
     @Transactional
     public ImportResult writeDataset(JsonNode dataset,String expectedCatalogVersion,Long adminId,String action) {
-        BoardCatalogMeta meta=metadata.lockCatalog();
+        BoardCatalogMeta meta=requiredMetadata(true);
         if(!Objects.equals(expectedCatalogVersion,meta.getCatalogVersion()))return new ImportResult(0,0,0,0,List.of(),dataset.path("gaps"),"CATALOG_CHANGED",meta.getCatalogVersion());
         ValidationReport report=validate(dataset);
         if(!report.valid()) {
@@ -147,7 +179,7 @@ public class BoardCatalogService {
         var pageable=PageRequest.of(page-1,size,Sort.by("key"));var result=category==null?products.findByActiveTrue(pageable):products.findByActiveTrueAndCategory(category,pageable);
         List<String> keys=result.getContent().stream().map(BoardProduct::getKey).toList();
         Map<String,List<BoardVariant>> v=variants.findByProductKeyIn(keys).stream().filter(BoardVariant::isActive).collect(Collectors.groupingBy(BoardVariant::getProductKey));
-        List<BoardQuote> q=quotes.findBySourceProductKeyIn(keys);
+        List<BoardQuote> q=quotes.findLatestBySourceProductKeyIn(keys);
         List<JsonNode> list=new ArrayList<>();
         for(BoardProduct p:result){ObjectNode item=publicProduct(p);ArrayNode variantList=validator.array();v.getOrDefault(p.getKey(),List.of()).stream().sorted(Comparator.comparing(BoardVariant::getKey)).forEach(row->variantList.add(publicVariant(row)));item.set("variants",variantList);item.set("displayQuotes",displayQuotes(q,p.getKey(),v.getOrDefault(p.getKey(),List.of())));list.add(item);}
         return new PageResult<>(result.getTotalElements(),list);
@@ -155,8 +187,8 @@ public class BoardCatalogService {
     public JsonNode variant(String key) {
         BoardVariant v=variants.findByKey(key).filter(BoardVariant::isActive).orElseThrow(()->new BoardRequestException(404,"规格不存在"));
         if(!v.getProduct().isActive())throw new BoardRequestException(404,"规格不存在");
-        ObjectNode result=validator.object();result.set("variant",publicVariant(v));result.set("product",publicProduct(v.getProduct()));result.set("displayQuotes",displayQuotes(quotes.findBySourceProductKeyIn(List.of(v.getProductKey())),v.getProductKey(),List.of(v)));
-        ObjectNode eligibility=validator.object();eligibility.put("exactPriceEligible",eligible(quotes.findBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("referencePriceEligible",referenceEligible(quotes.findBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("verificationStatus",v.getVerificationStatus());result.set("eligibility",eligibility);result.set("sources",publicSources(validator.parse(v.getContentJson()).path("sources")));result.put("catalogVersion",catalogVersion());return result;
+        ObjectNode result=validator.object();result.set("variant",publicVariant(v));result.set("product",publicProduct(v.getProduct()));result.set("displayQuotes",displayQuotes(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getProductKey(),List.of(v)));
+        ObjectNode eligibility=validator.object();eligibility.put("exactPriceEligible",eligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("referencePriceEligible",referenceEligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("verificationStatus",v.getVerificationStatus());result.set("eligibility",eligibility);result.set("sources",publicSources(validator.parse(v.getContentJson()).path("sources")));result.put("catalogVersion",catalogVersion());return result;
     }
     private ObjectNode publicProduct(BoardProduct p){return view(validator.parse(p.getContentJson()),"key legacyEquipmentId sourceRecordId category brand model active description suitabilityTags levelTags imageSource imageLicenseStatus version pricingMode");}
     private ObjectNode publicVariant(BoardVariant v){return view(validator.parse(v.getContentJson()),"key productKey label active specs rawSpec verificationStatus version pricingMode");}

@@ -22,7 +22,7 @@ public class BoardPlanService {
     private final BoardDatasetValidator json;
     public JsonNode save(Long owner,JsonNode body){
         fields(body,"name note demand selection expectedCalculationVersion");versionToken(body,"expectedCalculationVersion");validateText(body,true);
-        JsonNode data=catalog.calculationCatalog();ObjectNode evaluation=calculation.evaluate(calculation.demand(body.path("demand")),calculation.selection(body.path("selection")),data);
+        JsonNode data=catalog.lockedCalculationCatalog();ObjectNode evaluation=calculation.evaluate(calculation.demand(body.path("demand")),calculation.selection(body.path("selection")),data);
         if(!body.path("expectedCalculationVersion").asText().equals(evaluation.path("calculationVersion").asText()))return conflict(calculation.changeCode(body.path("expectedCalculationVersion").asText(),evaluation),evaluation);
         if("INCOMPATIBLE".equals(text(evaluation,"validationState")))return conflict("INCOMPATIBLE",evaluation);
         if("INSUFFICIENT_DATA".equals(text(evaluation,"validationState"))){evaluation.putNull("totalCents");evaluation.putNull("budgetDeltaCents");evaluation.put("snapshotState","DRAFT");}else evaluation.put("snapshotState","REFERENCE_ESTIMATE".equals(text(evaluation,"validationState"))?"REFERENCE_ESTIMATE":"VERIFIED".equals(text(evaluation,"validationState"))?"VERIFIED":"MANUFACTURER_COMPLETE");

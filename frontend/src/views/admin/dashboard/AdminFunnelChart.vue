@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import AdminEmptyState from './AdminEmptyState.vue'
 import echarts from './echarts'
 
@@ -13,15 +13,35 @@ defineEmits(['refresh'])
 
 const chartEl = ref(null)
 let chart = null
+let chartElement = null
 let resizeObserver = null
 const views = computed(() => Number(props.conversion?.views || 0))
 const signs = computed(() => Number(props.conversion?.signs || 0))
 const rate = computed(() => Number(props.conversion?.rate || 0))
 const hasData = computed(() => views.value > 0 || signs.value > 0)
 
+function disposeChart() {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  chart?.dispose()
+  chart = null
+  chartElement = null
+}
+
 function renderChart() {
+  if (chartEl.value !== chartElement) {
+    disposeChart()
+    chartElement = chartEl.value
+    if (chartElement) {
+      chart = echarts.init(chartElement)
+      if (typeof ResizeObserver !== 'undefined') {
+        const instance = chart
+        resizeObserver = new ResizeObserver(() => { if (chart === instance) instance.resize() })
+        resizeObserver.observe(chartElement)
+      }
+    }
+  }
   if (!chartEl.value || !hasData.value) return
-  if (!chart) chart = echarts.init(chartEl.value)
   chart.setOption({
     animationDuration: 360,
     color: ['#087A6D', '#F97316'],
@@ -38,15 +58,8 @@ function renderChart() {
   }, true)
 }
 
-watch(() => props.conversion, async () => { await nextTick(); renderChart() }, { deep: true })
-onMounted(async () => {
-  await nextTick(); renderChart()
-  if (typeof ResizeObserver !== 'undefined' && chartEl.value) {
-    resizeObserver = new ResizeObserver(() => chart?.resize())
-    resizeObserver.observe(chartEl.value)
-  }
-})
-onBeforeUnmount(() => { resizeObserver?.disconnect(); chart?.dispose() })
+watch([chartEl, () => props.conversion, () => props.loading, () => props.error], renderChart, { deep: true, flush: 'post' })
+onBeforeUnmount(disposeChart)
 </script>
 
 <template>

@@ -29,6 +29,7 @@ export const isReference = evaluation => evaluation?.pricingMode === 'REFERENCE'
 export const referenceNotice = '按已采集资料估算，实际价格和库存请通过来源自行确认。'
 export const priceLabel = evaluation => evaluation?.totalCents == null ? (isReference(evaluation) ? '已知参考小计' : '已知小计') : (isReference(evaluation) ? '参考估价' : '总价')
 export const sourceDate = source => source.collectedAt || source.collectedDate || '未知'
+// Contract: callers supply plain JSON request/response data; undefined, dates and cyclic objects are outside this domain.
 export const clone = value => JSON.parse(JSON.stringify(value))
 export function parseBudget(value) {
   const text = String(value).trim()
