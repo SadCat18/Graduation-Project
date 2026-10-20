@@ -27,6 +27,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -36,6 +38,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimitService rateLimitService;
     private final RateLimitProperties properties;
     private final ObjectMapper objectMapper;
+    private static final Set<String> BOARD_COMPUTATION_PATHS=Set.of(
+            "/api/skate/board-assistant/recommend", "/api/skate/board-assistant/evaluate",
+            "/api/skate/board-assistant/replacements", "/api/skate/board-assistant/compare");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -86,6 +91,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         if (path.startsWith("/api/files/upload/") && HttpMethod.POST.matches(method)) {
             return RequestLimit.simple("upload:user:" + userKey(), properties.getUploadUserPerMinute(), Duration.ofMinutes(1));
+        }
+        if (HttpMethod.POST.matches(method) && BOARD_COMPUTATION_PATHS.contains(path)) {
+            // One IP budget across all four expensive public operations, not four independent allowances.
+            return RequestLimit.simple("board:ip:" + clientIp(request), properties.getBoardIpPerMinute(), Duration.ofMinutes(1));
         }
         if (isWriteEndpoint(method, path)) {
             return RequestLimit.simple("write:user:" + userKey(), properties.getWriteUserPerMinute(), Duration.ofMinutes(1));
@@ -140,11 +149,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr() == null ? "unknown" : request.getRemoteAddr();
+        return ClientIpResolver.resolve(request.getRemoteAddr(), request.getHeader("X-Forwarded-For"), properties.getTrustedProxies());
     }
 
     private void writeError(HttpServletResponse response, int status, String message) throws IOException {
@@ -154,7 +159,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"code\":" + status + ",\"message\":\"" + message + "\"}");
+        objectMapper.writeValue(response.getWriter(), Map.of("code", status, "message", message));
     }
 
     private record RequestLimit(String key, int limit, Duration window,

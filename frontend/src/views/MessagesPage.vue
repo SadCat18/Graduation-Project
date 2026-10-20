@@ -158,7 +158,7 @@
                 </div>
               </div>
             </template>
-            <button v-if="hasNewMessages" class="new-message-tip" type="button" @click="scrollToBottom">
+            <button v-if="hasNewMessages" class="new-message-tip" type="button" @click="scrollToBottom()">
               有新消息
             </button>
           </div>
@@ -231,6 +231,32 @@ const threadPanel = ref(null)
 const messageScroller = ref(null)
 const sendButton = ref(null)
 let pollTimer = null
+let disposed = false
+let threadEpoch = 0
+let messageLoadSequence = 0
+let conversationLoadSequence = 0
+let conversationRequestSequence = 0
+let pollInFlight = false
+let pollFailureReported = false
+
+function captureThread() { return { id: selectedConversationId.value, epoch: threadEpoch } }
+function isCurrentThread(context) {
+  return !disposed && context.epoch === threadEpoch && context.id === selectedConversationId.value
+}
+function changeThread(id) {
+  ++threadEpoch
+  ++messageLoadSequence
+  selectedConversationId.value = id
+  messages.value = []
+  nextBeforeMessageId.value = null
+  hasMoreMessages.value = false
+  loadingMessages.value = false
+  loadingMoreMessages.value = false
+  sendingMessage.value = false
+  messageError.value = ''
+  sendError.value = ''
+  hasNewMessages.value = false
+}
 
 const activeConversation = computed(() => {
   const selectedId = Number(selectedConversationId.value)
@@ -377,8 +403,9 @@ function isNearBottom() {
   return el.scrollHeight - el.scrollTop - el.clientHeight < 96
 }
 
-function scrollToBottom() {
+function scrollToBottom(context = captureThread()) {
   nextTick(() => {
+    if (!isCurrentThread(context)) return
     if (messageScroller.value) {
       messageScroller.value.scrollTop = messageScroller.value.scrollHeight
     }
@@ -403,129 +430,138 @@ function handleMessageScroll() {
 async function loadCurrentUser() {
   try {
     const user = await api.profile()
-    currentUserId.value = user?.userId ?? null
+    if (!disposed) currentUserId.value = user?.userId ?? null
   } catch (_) {
-    currentUserId.value = null
+    if (!disposed) currentUserId.value = null
   }
 }
 
 async function refreshConversations(options = {}) {
   const page = options.page || conversationPage.value
-  const result = normalizeConversationPage(await api.privateConversations({
-    page,
-    size: CONVERSATION_PAGE_SIZE,
-    keyword: conversationKeyword.value.trim(),
-    unreadOnly: unreadOnly.value
-  }))
+  const request = ++conversationRequestSequence
+  const current = () => !disposed && request === conversationRequestSequence && (!options.guard || options.guard())
+  let data
+  try {
+    data = await api.privateConversations({ page, size: CONVERSATION_PAGE_SIZE, keyword: conversationKeyword.value.trim(), unreadOnly: unreadOnly.value })
+  } catch (error) {
+    if (!current()) return false
+    throw error
+  }
+  if (!current()) return false
+  const result = normalizeConversationPage(data)
   conversationTotal.value = result.total
   hasMoreConversations.value = page < result.totalPages
-  conversations.value = options.append ? [...conversations.value, ...result.list] : result.list
+  conversationPage.value = page
+  conversations.value = options.append
+    ? [...new Map([...conversations.value, ...result.list].map(item => [String(item.conversationId), item])).values()]
+    : result.list
   await nextTick()
+  if (!current()) return false
   animateUnreadBadges()
+  return true
 }
 
 async function loadConversations(options = {}) {
-  if (options.resetPage) {
-    conversationPage.value = 1
-  }
+  if (options.resetPage) conversationPage.value = 1
+  const request = ++conversationLoadSequence
+  const context = captureThread()
+  const current = () => request === conversationLoadSequence && isCurrentThread(context)
   loadingConversations.value = true
   conversationError.value = ''
   try {
-    await refreshConversations({ page: conversationPage.value })
+    if (!await refreshConversations({ page: conversationPage.value, guard: current }) || !current()) return
     const routeConversationId = normalizeConversationId(route.params.conversationId)
     const keptConversationId = options.keepSelection ? normalizeConversationId(selectedConversationId.value) : null
     const nextConversationId = routeConversationId || keptConversationId
-    if (nextConversationId) {
-      await selectConversation(nextConversationId, { syncRoute: Boolean(routeConversationId), skipConversationRefresh: true })
-    } else {
-      selectedConversationId.value = null
-      messages.value = []
-    }
+    if (nextConversationId) await selectConversation(nextConversationId, { syncRoute: Boolean(routeConversationId), skipConversationRefresh: true })
+    else changeThread(null)
   } catch (error) {
-    conversationError.value = error?.message || '会话加载失败，请稍后重试'
+    if (current()) conversationError.value = error?.message || '会话加载失败，请稍后重试'
   } finally {
-    loadingConversations.value = false
+    if (!disposed && request === conversationLoadSequence) loadingConversations.value = false
   }
 }
 
 async function loadMoreConversations() {
   if (loadingConversations.value || !hasMoreConversations.value) return
+  const request = ++conversationLoadSequence
+  const current = () => !disposed && request === conversationLoadSequence
+  const nextPage = conversationPage.value + 1
   loadingConversations.value = true
+  conversationError.value = ''
   try {
-    conversationPage.value += 1
-    await refreshConversations({ page: conversationPage.value, append: true })
+    // The page cursor is committed by refreshConversations only after a successful response.
+    await refreshConversations({ page: nextPage, append: true, guard: current })
   } catch (error) {
-    conversationError.value = error?.message || '更多会话加载失败'
+    if (current()) conversationError.value = error?.message || '更多会话加载失败'
   } finally {
-    loadingConversations.value = false
+    if (current()) loadingConversations.value = false
   }
 }
 
 async function selectConversation(conversationId, options = {}) {
   const normalizedId = normalizeConversationId(conversationId)
-  if (!normalizedId) return
-  selectedConversationId.value = normalizedId
+  if (!normalizedId || disposed) return
+  if (normalizedId !== selectedConversationId.value) changeThread(normalizedId)
   messageError.value = ''
   sendError.value = ''
   hasNewMessages.value = false
-
-  if (options.syncRoute !== false && String(route.params.conversationId || '') !== String(normalizedId)) {
-    router.push(`/messages/${normalizedId}`)
-  }
-
+  if (options.syncRoute !== false && String(route.params.conversationId || '') !== String(normalizedId)) router.push(`/messages/${normalizedId}`)
   await loadMessages(normalizedId)
 }
 
-async function markVisibleMessagesRead(conversationId) {
+async function markVisibleMessagesRead(context, current = () => isCurrentThread(context)) {
+  if (!current()) return
   const lastReadMessageId = latestVisibleMessageId()
-  if (!lastReadMessageId) return
-  await api.readPrivateConversation(conversationId, { lastReadMessageId })
+  if (lastReadMessageId) await api.readPrivateConversation(context.id, { lastReadMessageId })
 }
 
 async function loadMessages(conversationId) {
   const normalizedId = normalizeConversationId(conversationId)
-  if (!normalizedId) return
+  if (!normalizedId || normalizedId !== selectedConversationId.value || disposed) return
+  const context = captureThread(), request = ++messageLoadSequence
+  const current = () => isCurrentThread(context) && request === messageLoadSequence
   loadingMessages.value = true
+  loadingMoreMessages.value = false
   messageError.value = ''
   try {
     const page = normalizeMessagePage(await api.privateMessages(normalizedId, { size: MESSAGE_PAGE_SIZE }))
+    if (!current()) return
     messages.value = page.list
     nextBeforeMessageId.value = page.nextBeforeMessageId
     hasMoreMessages.value = page.hasMore
-    await markVisibleMessagesRead(normalizedId)
-    await refreshConversations()
-    scrollToBottom()
+    await markVisibleMessagesRead(context, current)
+    if (!current()) return
+    if (!await refreshConversations({ guard: current }) || !current()) return
+    scrollToBottom(context)
     animateThreadSwitch()
     await nextTick()
-    animateRecentMessages()
+    if (current()) animateRecentMessages()
   } catch (error) {
-    messageError.value = error?.message || '消息加载失败，请稍后重试'
+    if (current()) messageError.value = error?.message || '消息加载失败，请稍后重试'
   } finally {
-    loadingMessages.value = false
+    if (current()) loadingMessages.value = false
   }
 }
 
 async function loadOlderMessages() {
-  if (!selectedConversationId.value || !hasMoreMessages.value || loadingMoreMessages.value) return
-  const scroller = messageScroller.value
-  const previousHeight = scroller?.scrollHeight || 0
+  if (!selectedConversationId.value || !hasMoreMessages.value || loadingMoreMessages.value || loadingMessages.value) return
+  const context = captureThread(), load = messageLoadSequence
+  const current = () => isCurrentThread(context) && load === messageLoadSequence
+  const scroller = messageScroller.value, previousHeight = scroller?.scrollHeight || 0
   loadingMoreMessages.value = true
   try {
-    const page = normalizeMessagePage(await api.privateMessages(selectedConversationId.value, {
-      beforeMessageId: nextBeforeMessageId.value,
-      size: MESSAGE_PAGE_SIZE
-    }))
+    const page = normalizeMessagePage(await api.privateMessages(context.id, { beforeMessageId: nextBeforeMessageId.value, size: MESSAGE_PAGE_SIZE }))
+    if (!current()) return
     messages.value = [...page.list, ...messages.value]
     nextBeforeMessageId.value = page.nextBeforeMessageId
     hasMoreMessages.value = page.hasMore
     await nextTick()
-    if (scroller) {
-      scroller.scrollTop = scroller.scrollHeight - previousHeight
-    }
+    if (current() && scroller) scroller.scrollTop = scroller.scrollHeight - previousHeight
   } catch (error) {
-    messageError.value = error?.message || '更早消息加载失败'
+    if (current()) messageError.value = error?.message || '更早消息加载失败'
   } finally {
-    loadingMoreMessages.value = false
+    if (current()) loadingMoreMessages.value = false
   }
 }
 
@@ -546,31 +582,29 @@ function buildOptimisticMessage(content, existingMessage = null) {
 }
 
 async function sendOptimistic(content, existingMessage = null) {
-  const optimistic = buildOptimisticMessage(content, existingMessage)
-  const clientKey = optimistic.clientId
-  if (existingMessage) {
-    messages.value = messages.value.map(item => item.clientId === clientKey ? optimistic : item)
-  } else {
-    messages.value.push(optimistic)
-  }
-  scrollToBottom()
+  const context = captureThread()
+  const current = () => isCurrentThread(context)
+  const optimistic = buildOptimisticMessage(content, existingMessage), clientKey = optimistic.clientId
+  if (existingMessage) messages.value = messages.value.map(item => item.clientId === clientKey ? optimistic : item)
+  else messages.value.push(optimistic)
+  scrollToBottom(context)
   sendingMessage.value = true
   sendError.value = ''
   try {
     animateSendPress()
-    const result = await api.sendPrivateMessage(selectedConversationId.value, { content })
+    const result = await api.sendPrivateMessage(context.id, { content })
+    if (!current()) return
     const sentMessage = { ...(result?.message || result), deliveryStatus: 'sent' }
     messages.value = messages.value.map(item => item.clientId === clientKey ? sentMessage : item)
-    await refreshConversations()
+    if (!await refreshConversations({ guard: current }) || !current()) return
     await nextTick()
-    animateRecentMessages()
+    if (current()) animateRecentMessages()
   } catch (error) {
-    messages.value = messages.value.map(item => item.clientId === clientKey
-      ? { ...item, deliveryStatus: 'failed' }
-      : item)
+    if (!current()) return
+    messages.value = messages.value.map(item => item.clientId === clientKey ? { ...item, deliveryStatus: 'failed' } : item)
     sendError.value = error?.message || '发送失败，请重试'
   } finally {
-    sendingMessage.value = false
+    if (current()) sendingMessage.value = false
   }
 }
 
@@ -587,26 +621,37 @@ async function retryMessage(message) {
 }
 
 async function pollForUpdates() {
-  if (document.hidden || loadingMessages.value || loadingConversations.value) return
+  if (disposed || document.hidden || loadingMessages.value || loadingConversations.value || pollInFlight) return
+  const context = captureThread(), load = messageLoadSequence
+  const current = () => isCurrentThread(context) && load === messageLoadSequence
+  pollInFlight = true
   try {
-    await refreshConversations()
-    if (!selectedConversationId.value) return
-    const wasAtBottom = isNearBottom()
-    const page = normalizeMessagePage(await api.privateMessages(selectedConversationId.value, { size: MESSAGE_PAGE_SIZE }))
-    const added = mergeMessages(page.list)
-    if (added) {
-      await nextTick()
-      animateRecentMessages()
-      if (wasAtBottom) {
-        await markVisibleMessagesRead(selectedConversationId.value)
-        scrollToBottom()
-        await refreshConversations()
-      } else {
-        hasNewMessages.value = true
+    if (!await refreshConversations({ guard: current }) || !current()) return
+    if (context.id) {
+      const wasAtBottom = isNearBottom()
+      const page = normalizeMessagePage(await api.privateMessages(context.id, { size: MESSAGE_PAGE_SIZE }))
+      if (!current()) return
+      const added = mergeMessages(page.list)
+      if (added) {
+        await nextTick()
+        if (!current()) return
+        animateRecentMessages()
+        if (wasAtBottom) {
+          await markVisibleMessagesRead(context, current)
+          if (!current()) return
+          scrollToBottom(context)
+          if (!await refreshConversations({ guard: current }) || !current()) return
+        } else hasNewMessages.value = true
       }
     }
+    if (current()) pollFailureReported = false
   } catch (_) {
-    // Polling is best-effort; manual refresh keeps the explicit recovery path.
+    if (current() && !pollFailureReported) {
+      pollFailureReported = true
+      console.warn('[Messages] 轮询失败，将在下一周期重试。')
+    }
+  } finally {
+    pollInFlight = false
   }
 }
 
@@ -636,25 +681,29 @@ watch(
   async (conversationId) => {
     const normalizedId = normalizeConversationId(conversationId)
     if (normalizedId) {
-      await selectConversation(normalizedId, { syncRoute: false })
+      if (normalizedId !== selectedConversationId.value) await selectConversation(normalizedId, { syncRoute: false })
     } else {
-      selectedConversationId.value = null
-      messages.value = []
-      hasNewMessages.value = false
+      changeThread(null)
     }
   }
 )
 
 onMounted(async () => {
   await loadCurrentUser()
+  if (disposed) return
   await loadConversations()
   await nextTick()
+  if (disposed) return
   animatePageEnter()
   document.addEventListener('visibilitychange', handleVisibilityChange)
   startPolling()
 })
 
 onBeforeUnmount(() => {
+  disposed = true
+  ++threadEpoch
+  ++conversationLoadSequence
+  ++conversationRequestSequence
   stopPolling()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   const targets = scopedElements('.messages-header, .conversation-list, .message-thread, .conversation-item, .thread-header, .message-scroll, .composer, .message-row, .unread-dot')

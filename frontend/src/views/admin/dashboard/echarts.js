@@ -2,6 +2,7 @@ import * as echarts from 'echarts/core'
 import { FunnelChart, LineChart, PieChart } from 'echarts/charts'
 import {
   DatasetComponent,
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   TitleComponent,
@@ -11,6 +12,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 
 echarts.use([
   DatasetComponent,
+  GraphicComponent,
   FunnelChart,
   GridComponent,
   LegendComponent,

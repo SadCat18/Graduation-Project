@@ -4,14 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import static com.skatehub.board.BoardDatasetValidator.*;
 
 /** One calculation path for public requests, snapshots and admin trials. No external calls. */
-@Service @RequiredArgsConstructor @Transactional(noRollbackFor=BoardRequestException.class)
+@Service @RequiredArgsConstructor
 public class BoardCalculationService {
     private final BoardCatalogService catalog;
     private final BoardDatasetValidator json;
@@ -29,7 +28,7 @@ public class BoardCalculationService {
         Set<String> names=words(allowed);n.fieldNames().forEachRemaining(k->{if(!names.contains(k))bad("未知字段："+k);});
     }
     static void bad(String message){throw new BoardRequestException(400,message);}
-    static String key(JsonNode n,String field){String s=text(n,field);if(s==null||!s.matches("[A-Za-z0-9][A-Za-z0-9_.:-]{0,199}"))bad("标识格式错误："+field);return s;}
+    static String key(JsonNode n,String field){String s=text(n,field);if(s==null||!stableKey(s))bad("标识格式错误："+field);return s;}
     public ObjectNode demand(JsonNode n) {
         fields(n,"budgetCents purpose preference recommendationType shoeSize");
         if(!integer(n.get("budgetCents"),1)||n.path("budgetCents").longValue()>1_000_000_000_000L)bad("预算须为正整数分且不超过上限");
@@ -58,7 +57,14 @@ public class BoardCalculationService {
     private Map<String,JsonNode> rows(JsonNode data,String group){Map<String,JsonNode> m=new TreeMap<>();for(JsonNode n:data.path(group))m.put(text(n,"key"),n);return m;}
     private boolean enabled(JsonNode n){if(n==null||!n.path("active").asBoolean())return false;if(reference(n))return recordedSources(n)&&(!n.has("verificationStatus")||words("RECORDED VERIFIED").contains(text(n,"verificationStatus")));if(n.has("verificationStatus")&&!"VERIFIED".equals(text(n,"verificationStatus")))return false;if(n.path("sources").isEmpty())return false;for(JsonNode s:n.path("sources"))if(!"VERIFIED".equals(text(s,"verificationStatus")))return false;return true;}
     private boolean quoteEligible(JsonNode q,String category,Instant now) {
-        return !reference(q)&&enabled(q)&&"EXACT".equals(text(q,"priceKind"))&&"CN".equals(text(q,"market"))&&"CNY".equals(text(q,"currency"))&&q.path("landedPriceConfirmed").asBoolean()&&integer(q.get("amountCents"),0)&&integer(q.get("shippingCents"),0)&&integer(q.get("taxCents"),0)&&integer(q.get("packageQuantity"),1)&&("PIECE".equals(text(q,"packageUnit"))&&!category.equals("HARDWARE")||Objects.equals(text(q,"packageUnit"),category.equals("HARDWARE")?"BOLT_NUT_PAIR":category.equals("GRIP")?"SHEET":category))&&time(q.get("collectedAt"))!=null&&!time(q.get("collectedAt")).isAfter(now)&&time(q.get("validUntil"))!=null&&time(q.get("validUntil")).isAfter(now);
+        boolean exactMarket=!reference(q)&&enabled(q)&&"EXACT".equals(text(q,"priceKind"))&&"CN".equals(text(q,"market"))&&"CNY".equals(text(q,"currency"));
+        boolean knownCosts=q.path("landedPriceConfirmed").asBoolean()&&integer(q.get("amountCents"),0)&&integer(q.get("shippingCents"),0)&&integer(q.get("taxCents"),0);
+        String unit=text(q,"packageUnit");
+        String requiredUnit=category.equals("HARDWARE")?"BOLT_NUT_PAIR":category.equals("GRIP")?"SHEET":category;
+        boolean physicalPackage=integer(q.get("packageQuantity"),1)&&("PIECE".equals(unit)&&!category.equals("HARDWARE")||Objects.equals(unit,requiredUnit));
+        Instant collected=time(q.get("collectedAt")),validUntil=time(q.get("validUntil"));
+        boolean current=collected!=null&&!collected.isAfter(now)&&validUntil!=null&&validUntil.isAfter(now);
+        return exactMarket&&knownCosts&&physicalPackage&&current;
     }
     ObjectNode evaluate(ObjectNode demand,ObjectNode selection,JsonNode data) {
         Map<String,JsonNode> products=rows(data,"products"),variants=rows(data,"variants"),templates=rows(data,"templates");
@@ -159,9 +165,17 @@ public class BoardCalculationService {
         if(type.equals("COMPLETENESS")){if(!"BOLT_NUT_PAIR".equals(text(c,"hardwareUnit"))||!"SOURCE_DEPENDENT".equals(text(c,"riserRequirement"))||c.path("requiredQuantities").size()!=6)return "INSUFFICIENT_DATA";for(String cat:REQUIRED)if(c.path("requiredQuantities").path(cat).asInt(-1)!=QUANTITY.get(cat))return "INSUFFICIENT_DATA";}
         if(type.equals("WHEEL_TRUCK_RISER")&&(!words("REQUIRED OPTIONAL NONE").contains(text(c,"riserMode"))||"REQUIRED".equals(text(c,"riserMode"))&&!c.path("riserMinMm").isNumber()))return "INSUFFICIENT_DATA";
         switch(type) {
-            case "COMPLETENESS":return p.keySet().containsAll(REQUIRED)&&p.get("HARDWARE").path("specs").path("nutsIncluded").isBoolean()?p.get("HARDWARE").path("specs").path("nutsIncluded").asBoolean()?"PASS":"INCOMPATIBLE":"INSUFFICIENT_DATA";
+            case "COMPLETENESS":
+                if(!p.keySet().containsAll(REQUIRED))return "INSUFFICIENT_DATA";
+                JsonNode nuts=p.get("HARDWARE").path("specs").path("nutsIncluded");
+                if(!nuts.isBoolean())return "INSUFFICIENT_DATA";
+                return nuts.asBoolean()?"PASS":"INCOMPATIBLE";
             case "DECK_TRUCK_FIT":if(spec(p,"DECK","widthInch")==null)return "INSUFFICIENT_DATA";return in(spec(p,"DECK","widthInch"),c,"deckMinInch","deckMaxInch")?"PASS":"INCOMPATIBLE";
-            case "WHEEL_TRUCK_RISER":if("REQUIRED".equals(text(c,"riserMode"))){BigDecimal height=spec(p,"RISER","heightMm");return height==null?p.containsKey("RISER")?"INSUFFICIENT_DATA":"INCOMPATIBLE":height.compareTo(c.path("riserMinMm").decimalValue())>=0?"PASS":"INCOMPATIBLE";}return "PASS";
+            case "WHEEL_TRUCK_RISER":
+                if(!"REQUIRED".equals(text(c,"riserMode")))return "PASS";
+                BigDecimal height=spec(p,"RISER","heightMm");
+                if(height==null)return p.containsKey("RISER")?"INSUFFICIENT_DATA":"INCOMPATIBLE";
+                return height.compareTo(c.path("riserMinMm").decimalValue())>=0?"PASS":"INCOMPATIBLE";
             case "RISER_HARDWARE_LENGTH":BigDecimal length=spec(p,"HARDWARE","lengthMm");if(length==null)return "INSUFFICIENT_DATA";return in(length,c,"hardwareMinMm","hardwareMaxMm")?"PASS":"INCOMPATIBLE";
             case "GRIP_COVERAGE":for(String f:List.of("widthInch","lengthInch"))if(spec(p,"GRIP",f)==null||spec(p,"DECK",f)==null)return "INSUFFICIENT_DATA";for(String f:List.of("widthInch","lengthInch"))if(spec(p,"GRIP",f).compareTo(spec(p,"DECK",f))<0)return "INCOMPATIBLE";return "PASS";
             default:return "INSUFFICIENT_DATA";
@@ -203,7 +217,23 @@ public class BoardCalculationService {
             ObjectNode current=bucket(evaluated,truncated[0],d,evaluated.isEmpty()?hasData?"DATA_INSUFFICIENT":"NO_CANDIDATE":null);current.put("evaluatedCount",evaluated.size());result.set(kind.toLowerCase(),current);requestTruncated|=truncated[0];
         }return result.put("searchTruncated",requestTruncated).put("evaluatedCount",count[0]).put("evaluationLimit",MAX_REQUEST_EVALUATIONS);
     }
-    private void enumerate(int i,List<String> cats,List<List<JsonNode>> dims,ArrayNode items,JsonNode t,ObjectNode d,JsonNode data,List<ObjectNode> out,int[] count,boolean[] truncated){if(count[0]>=MAX_REQUEST_EVALUATIONS){truncated[0]=true;return;}if(i==dims.size()){ObjectNode s=json.object().put("kind","ASSEMBLY").put("templateKey",text(t,"key"));s.set("items",items.deepCopy());out.add(evaluate(d,selection(s),data));count[0]++;return;}for(JsonNode v:dims.get(i)){boolean add=!v.isNull();if(add)items.add(json.object().put("category",cats.get(i)).put("variantKey",text(v,"key")));enumerate(i+1,cats,dims,items,t,d,data,out,count,truncated);if(add)items.remove(items.size()-1);if(truncated[0])break;}}
+    private void enumerate(int index,List<String> categories,List<List<JsonNode>> dimensions,ArrayNode items,
+                           JsonNode template,ObjectNode demand,JsonNode data,List<ObjectNode> results,
+                           int[] requestCount,boolean[] truncated) {
+        if(requestCount[0]>=MAX_REQUEST_EVALUATIONS){truncated[0]=true;return;}
+        if(index==dimensions.size()){
+            ObjectNode choice=json.object().put("kind","ASSEMBLY").put("templateKey",text(template,"key"));
+            choice.set("items",items.deepCopy());
+            results.add(evaluate(demand,selection(choice),data));requestCount[0]++;return;
+        }
+        for(JsonNode variant:dimensions.get(index)){
+            boolean selected=!variant.isNull();
+            if(selected)items.add(json.object().put("category",categories.get(index)).put("variantKey",text(variant,"key")));
+            enumerate(index+1,categories,dimensions,items,template,demand,data,results,requestCount,truncated);
+            if(selected)items.remove(items.size()-1);
+            if(truncated[0])break;
+        }
+    }
     private boolean feasible(JsonNode e){return e.path("priceComplete").asBoolean()&&words("VERIFIED MANUFACTURER_COMPLETE REFERENCE_ESTIMATE").contains(text(e,"validationState"));}
     private ObjectNode bucket(List<ObjectNode> all,boolean truncated,ObjectNode d,String forced) {
         Comparator<ObjectNode> byPrice=Comparator.comparingLong((ObjectNode e)->e.path("totalCents").longValue()).thenComparing(e->json.canonical(e.path("selection")));

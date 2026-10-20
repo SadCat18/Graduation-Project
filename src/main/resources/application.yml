@@ -63,6 +63,8 @@ app:
   rate-limit:
     enabled: ${RATE_LIMIT_ENABLED:false}
     redis-failure-denies-protected: ${RATE_LIMIT_REDIS_FAILURE_DENIES_PROTECTED:true}
+    board-ip-per-minute: ${RATE_LIMIT_BOARD_IP_PER_MINUTE:30}
+    trusted-proxies: ${RATE_LIMIT_TRUSTED_PROXIES:}
     login-ip-per-minute: ${RATE_LIMIT_LOGIN_IP_PER_MINUTE:10}
     login-account-per-five-minutes: ${RATE_LIMIT_LOGIN_ACCOUNT_PER_FIVE_MINUTES:10}
     register-ip-per-hour: ${RATE_LIMIT_REGISTER_IP_PER_HOUR:20}
