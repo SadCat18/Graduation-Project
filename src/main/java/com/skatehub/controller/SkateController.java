@@ -115,6 +115,11 @@ public class SkateController {
         return ApiResponse.success(skateEventService.checkin(SecurityUtils.currentUser(), eventId));
     }
 
+    @GetMapping("/equipments/categories")
+    public ApiResponse<List<Map<String,String>>> equipmentCategories() {
+        return ApiResponse.success(equipmentService.categories());
+    }
+
     @GetMapping("/equipments")
     public ApiResponse<PageResult<Map<String, Object>>> equipments(@RequestParam(required = false) @Min(1) @Max(10000) Integer page,
                                                                    @RequestParam(required = false) @Min(1) @Max(50) Integer size,

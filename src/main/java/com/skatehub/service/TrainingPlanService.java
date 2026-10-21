@@ -42,8 +42,30 @@ public class TrainingPlanService {
         TrainingPlan plan = activePlan(planId);
         Map<String, Object> result = new HashMap<>();
         result.put("plan", plan);
-        result.put("tasks", taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(planId));
+        List<TrainingTask> tasks=taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(planId);
+        result.put("tasks", tasks);
+        result.put("scheduleCoverage", scheduleCoverage(plan.getDurationDays(),tasks));
         return result;
+    }
+
+    private Map<String,Object> scheduleCoverage(Integer declaredDays,List<TrainingTask> tasks) {
+        boolean validDeclaration=declaredDays!=null&&declaredDays>0;
+        java.util.SortedSet<Integer> available=new java.util.TreeSet<>();
+        List<Map<String,Object>> diagnostics=new java.util.ArrayList<>();
+        if(!validDeclaration)diagnostics.add(Map.of("code","INVALID_DECLARED_DAYS"));
+        for(TrainingTask task:tasks){
+            Integer day=task.getDayNo();
+            if(validDeclaration&&day!=null&&day>=1&&day<=declaredDays)available.add(day);
+            else {
+                Map<String,Object> diagnostic=new HashMap<>();diagnostic.put("code","INVALID_TASK_DAY");diagnostic.put("taskId",task.getTaskId());diagnostic.put("dayNo",day);diagnostics.add(diagnostic);
+            }
+        }
+        List<Integer> missing=new java.util.ArrayList<>();
+        if(validDeclaration)for(int day=1;day<=declaredDays;day++)if(!available.contains(day))missing.add(day);
+        Map<String,Object> coverage=new HashMap<>();coverage.put("declaredDays",declaredDays);coverage.put("availableDays",List.copyOf(available));coverage.put("missingDays",missing);
+        coverage.put("complete",validDeclaration&&missing.isEmpty()&&diagnostics.isEmpty());
+        if(!diagnostics.isEmpty())coverage.put("diagnostics",diagnostics);
+        return coverage;
     }
 
     @Transactional

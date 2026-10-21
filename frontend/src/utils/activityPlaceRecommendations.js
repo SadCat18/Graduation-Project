@@ -1,3 +1,4 @@
+import { localReviewSummary } from './localReviews'
 function cleanText(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -5,11 +6,6 @@ function cleanText(value) {
 function toTimestamp(value) {
   const timestamp = new Date(cleanText(value).replace(' ', 'T')).getTime()
   return Number.isFinite(timestamp) ? timestamp : 0
-}
-
-function toNumber(value) {
-  const number = Number(value)
-  return Number.isFinite(number) ? number : 0
 }
 
 function activityMatchesPlace(activity, place) {
@@ -25,8 +21,8 @@ function activityMatchesPlace(activity, place) {
 }
 
 function buildPlaceTags(place, relatedCount) {
-  const score = toNumber(place.score)
-  const reviewCount = toNumber(place.reviewCount)
+  const score = (localReviewSummary(place)?.score ?? -1)
+  const reviewCount = (localReviewSummary(place)?.count ?? 0)
   const source = [
     cleanText(place.name),
     cleanText(place.address),
@@ -47,8 +43,8 @@ function buildPlaceTags(place, relatedCount) {
 }
 
 function buildRecommendReason(place, relatedCount, latestActivity) {
-  const score = toNumber(place.score)
-  const reviewCount = toNumber(place.reviewCount)
+  const score = (localReviewSummary(place)?.score ?? -1)
+  const reviewCount = (localReviewSummary(place)?.count ?? 0)
 
   if (relatedCount > 0) {
     return `有 ${relatedCount} 个近期活动`
@@ -96,8 +92,8 @@ export function buildActivityPlaceRecommendations(places, activities, limit = 8)
         return Number(b.hasActivityLink) - Number(a.hasActivityLink)
       }
       if (b.relatedCount !== a.relatedCount) return b.relatedCount - a.relatedCount
-      if (toNumber(b.score) !== toNumber(a.score)) return toNumber(b.score) - toNumber(a.score)
-      if (toNumber(b.reviewCount) !== toNumber(a.reviewCount)) return toNumber(b.reviewCount) - toNumber(a.reviewCount)
+      if ((localReviewSummary(b)?.score ?? -1) !== (localReviewSummary(a)?.score ?? -1)) return (localReviewSummary(b)?.score ?? -1) - (localReviewSummary(a)?.score ?? -1)
+      if ((localReviewSummary(b)?.count ?? 0) !== (localReviewSummary(a)?.count ?? 0)) return (localReviewSummary(b)?.count ?? 0) - (localReviewSummary(a)?.count ?? 0)
       return toTimestamp(b.latestActivity?.activityTime) - toTimestamp(a.latestActivity?.activityTime)
     })
     .slice(0, limit)

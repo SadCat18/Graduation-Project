@@ -33,10 +33,10 @@ export const sourceDate = source => source.collectedAt || source.collectedDate |
 export const clone = value => JSON.parse(JSON.stringify(value))
 export function parseBudget(value) {
   const text = String(value).trim()
-  if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new Error('预算请输入正数，最多两位小数')
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new Error('预算请输入大于0的人民币金额（元），最多两位小数')
   const [yuan, fraction = ''] = text.split('.')
   const cents = Number(yuan) * 100 + Number(fraction.padEnd(2, '0'))
-  if (!Number.isSafeInteger(cents) || cents <= 0) throw new Error('预算须为有效正整数分')
+  if (!Number.isSafeInteger(cents) || cents <= 0) throw new Error('预算须为大于0且在可计算范围内的人民币金额（元）')
   return cents
 }
 // A single sequence for all mutations prevents late recommend/replace/save responses.

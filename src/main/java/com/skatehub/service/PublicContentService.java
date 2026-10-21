@@ -13,6 +13,8 @@ import com.skatehub.pojo.Banner;
 import com.skatehub.pojo.News;
 import com.skatehub.pojo.Notice;
 import com.skatehub.pojo.Place;
+import com.skatehub.pojo.place.LocalReviewSummary;
+import com.skatehub.pojo.place.PublicPlaceView;
 import com.skatehub.pojo.Post;
 import com.skatehub.pojo.Video;
 import com.skatehub.pojo.skate.SkateTrick;
@@ -109,9 +111,14 @@ public class PublicContentService {
                 .orElseThrow(() -> new BizException("资讯不存在或未审核通过"));
     }
 
-    public List<Place> places() {
-        return placeRepository.findAllByOrderByScoreDescCreateTimeDesc().stream()
-                .filter(place -> PlaceVerificationStatus.isApprovedForPublic(place.getVerificationStatus()))
+    public List<PublicPlaceView> places() {
+        List<Place> places=placeRepository.findAllByOrderByScoreDescCreateTimeDesc().stream()
+                .filter(place -> PlaceVerificationStatus.isApprovedForPublic(place.getVerificationStatus())).toList();
+        Map<Long,LocalReviewSummary> summaries=placeReviewService.localReviewSummaries(places.stream().map(Place::getPlaceId).toList());
+        return places.stream().map(place->new PublicPlaceView(place,summaries.get(place.getPlaceId())))
+                .sorted(Comparator.comparing((PublicPlaceView view)->view.localReviewSummary().score(),Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(view->view.place().getCreateTime(),Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(view->view.place().getPlaceId()))
                 .toList();
     }
 
@@ -129,6 +136,7 @@ public class PublicContentService {
         map.put("score", place.getScore());
         map.put("reviewCount", place.getReviewCount());
         map.put("createTime", place.getCreateTime());
+        map.put("localReviewSummary", placeReviewService.localReviewSummaries(List.of(placeId)).get(placeId));
         map.put("latestReview", placeReviewService.latestReview(placeId));
         map.put("suitableLevel", suitableLevel(place));
         map.put("obstacleTags", obstacleTags(place));
@@ -181,7 +189,7 @@ public class PublicContentService {
                         "/activities/" + activity.getActivityId(), activity.getCreateTime()))
                 .forEach(results::add);
 
-        places().stream()
+        places().stream().map(PublicPlaceView::place)
                 .filter(place -> containsAny(searchableText(place), normalizedQuery))
                 .limit(8)
                 .map(place -> searchResult("PLACE", place.getPlaceId(), place.getName(), place.getIntro(),

@@ -11,6 +11,10 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+    // Same universe as searchPublicPosts: posts currently have no public-status/deletion predicate.
+    @Query("select distinct p.category from Post p where p.category is not null and trim(p.category) <> ''")
+    List<String> findPublicCategories();
+
     Page<Post> findAllByOrderByIsTopDescCreateTimeDesc(Pageable pageable);
 
     Page<Post> findByCategoryOrderByIsTopDescCreateTimeDesc(String category, Pageable pageable);

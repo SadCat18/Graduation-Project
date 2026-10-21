@@ -1,0 +1,218 @@
+{
+  "evidenceLayer": "MOCKMVC_REAL_SERVICES_ISOLATED_H2_SYNTHETIC_FIXTURES_NOT_LIVE_HTTP_MYSQL_PRODUCTION",
+  "/api/skate/training-plans/3": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "scheduleCoverage": {
+        "declaredDays": 7,
+        "complete": false,
+        "availableDays": [
+          1,
+          2,
+          3
+        ],
+        "missingDays": [
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      "plan": {
+        "planId": 3,
+        "planName": "Synthetic plan",
+        "planType": null,
+        "difficultyLevel": null,
+        "durationDays": 7,
+        "description": null,
+        "coverUrl": null,
+        "creatorId": null,
+        "status": "1",
+        "createTime": [
+          2026,
+          10,
+          21,
+          13,
+          35,
+          32,
+          131360000
+        ],
+        "updateTime": [
+          2026,
+          10,
+          21,
+          13,
+          35,
+          32,
+          131360000
+        ]
+      },
+      "tasks": [
+        {
+          "taskId": 7,
+          "planId": 3,
+          "dayNo": 1,
+          "taskTitle": "Synthetic day",
+          "taskContent": null,
+          "targetMinutes": null,
+          "trickIds": null,
+          "sortOrder": 0
+        },
+        {
+          "taskId": 8,
+          "planId": 3,
+          "dayNo": 2,
+          "taskTitle": "Synthetic day",
+          "taskContent": null,
+          "targetMinutes": null,
+          "trickIds": null,
+          "sortOrder": 0
+        },
+        {
+          "taskId": 9,
+          "planId": 3,
+          "dayNo": 3,
+          "taskTitle": "Synthetic day",
+          "taskContent": null,
+          "targetMinutes": null,
+          "trickIds": null,
+          "sortOrder": 0
+        }
+      ]
+    }
+  },
+  "/api/public/places": {
+    "code": 200,
+    "message": "success",
+    "data": [
+      {
+        "placeId": 1,
+        "name": "Synthetic no local ratings",
+        "address": null,
+        "intro": "Synthetic flat ground",
+        "score": 4.9,
+        "reviewCount": 203,
+        "submittedByUserId": null,
+        "verificationStatus": "APPROVED",
+        "verificationNote": "Synthetic legacy note",
+        "verifiedByAdminId": null,
+        "verifiedTime": null,
+        "createTime": [
+          2026,
+          1,
+          1,
+          0,
+          0
+        ],
+        "localReviewSummary": {
+          "score": null,
+          "count": 0,
+          "source": "LOCAL_REVIEWS"
+        }
+      }
+    ]
+  },
+  "/api/public/places/1": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "address": null,
+      "suitableLevel": "BEGINNER",
+      "placeId": 1,
+      "score": 4.9,
+      "localReviewSummary": {
+        "score": null,
+        "count": 0,
+        "source": "LOCAL_REVIEWS"
+      },
+      "latestReview": null,
+      "reviewCount": 203,
+      "createTime": [
+        2026,
+        1,
+        1,
+        0,
+        0
+      ],
+      "safetyTips": [
+        "Check ground, weather, and pedestrian flow before skating."
+      ],
+      "intro": "Synthetic flat ground",
+      "name": "Synthetic no local ratings",
+      "obstacleTags": [
+        "flat"
+      ],
+      "relatedVideos": []
+    }
+  },
+  "/api/public/posts/categories": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "filterOptions": [
+        {
+          "key": "技巧交流",
+          "label": "技巧交流"
+        },
+        {
+          "key": "活动讨论",
+          "label": "活动讨论"
+        },
+        {
+          "key": "经验分享",
+          "label": "经验分享"
+        },
+        {
+          "key": "装备分享",
+          "label": "装备分享"
+        },
+        {
+          "key": "装备讨论",
+          "label": "装备讨论"
+        },
+        {
+          "key": "路线分享",
+          "label": "路线分享"
+        }
+      ],
+      "createOptions": [
+        {
+          "key": "技巧交流",
+          "label": "技巧交流"
+        },
+        {
+          "key": "装备讨论",
+          "label": "装备讨论"
+        },
+        {
+          "key": "路线分享",
+          "label": "路线分享"
+        },
+        {
+          "key": "活动讨论",
+          "label": "活动讨论"
+        },
+        {
+          "key": "经验分享",
+          "label": "经验分享"
+        }
+      ],
+      "aliasMap": {}
+    }
+  },
+  "/api/skate/equipments/categories": {
+    "code": 200,
+    "message": "success",
+    "data": [
+      {
+        "key": "工具",
+        "label": "工具"
+      },
+      {
+        "key": "砂纸",
+        "label": "砂纸"
+      }
+    ]
+  }
+}

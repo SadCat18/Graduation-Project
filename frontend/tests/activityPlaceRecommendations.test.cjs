@@ -3,18 +3,19 @@ const fs = require('fs')
 const path = require('path')
 
 const sourcePath = path.resolve(__dirname, '../src/utils/activityPlaceRecommendations.js')
-let source = fs.readFileSync(sourcePath, 'utf8')
+const summarySource = fs.readFileSync(path.resolve(__dirname, '../src/utils/localReviews.js'), 'utf8').replace(/export function /g, 'function ')
+let source = fs.readFileSync(sourcePath, 'utf8').replace(/^import .*$/gm, '')
 source = source
   .replace(/export function /g, 'function ')
   .replace(/export \{[^}]+\}\s*$/m, '')
 
-const moduleScope = new Function(`${source}; return { buildActivityPlaceRecommendations };`)()
+const moduleScope = new Function(`${summarySource}; ${source}; return { buildActivityPlaceRecommendations };`)()
 const { buildActivityPlaceRecommendations } = moduleScope
 
 const places = [
-  { placeId: 1, name: '评分最高公园', address: '上海市', score: 4.9, reviewCount: 20 },
-  { placeId: 2, name: '成都校内滑点', address: '成都市武侯区', score: 4.5, reviewCount: 8 },
-  { placeId: 3, name: '人民广场滑点', address: '成都市锦江区', score: 4.2, reviewCount: 4 }
+  { placeId: 1, name: '评分最高公园', address: '上海市', score: 0, reviewCount: 0, localReviewSummary: {score:4.9,count:20,source:'LOCAL_REVIEWS'} },
+  { placeId: 2, name: '成都校内滑点', address: '成都市武侯区', score: 5, reviewCount: 99, localReviewSummary: {score:4.5,count:8,source:'LOCAL_REVIEWS'} },
+  { placeId: 3, name: '人民广场滑点', address: '成都市锦江区', score: 5, reviewCount: 999, localReviewSummary: {score:4.2,count:4,source:'LOCAL_REVIEWS'} }
 ]
 
 const activities = [
@@ -49,5 +50,5 @@ const fallback = buildActivityPlaceRecommendations(places, [], 2)
 assert.deepStrictEqual(
   fallback.map(item => item.placeId),
   [1, 2],
-  'falls back to score-ordered places when no current activities reference places'
+  'falls back to local-review-summary-ordered places when no current activities reference places'
 )

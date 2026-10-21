@@ -1,6 +1,7 @@
 ﻿<script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { localImageFallback } from './utils/imageFallback'
 import AppIcon from './components/AppIcon.vue'
 import AppToast from './components/AppToast.vue'
 import { api } from './api'
@@ -200,6 +201,7 @@ watch(() => route.path, () => {
       >
         <img
           class="police-icon"
+          @error="localImageFallback($event, '/fallback/decoration.svg')"
           src="https://www.beian.gov.cn/img/ghs.png"
           alt=""
           width="20"

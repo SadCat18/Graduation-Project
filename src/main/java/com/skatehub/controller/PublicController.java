@@ -2,7 +2,7 @@ package com.skatehub.controller;
 
 import com.skatehub.pojo.News;
 import com.skatehub.pojo.Notice;
-import com.skatehub.pojo.Place;
+import com.skatehub.pojo.place.PublicPlaceView;
 import com.skatehub.pojo.Video;
 import com.skatehub.pojo.Banner;
 import com.skatehub.service.ActivityService;
@@ -41,6 +41,11 @@ public class PublicController {
                                                               @RequestParam(required = false) @Min(1) @Max(10000) Integer page,
                                                               @RequestParam(required = false) @Min(1) @Max(50) Integer size) {
         return ApiResponse.success(postService.list(keyword, category, sort, page, size));
+    }
+
+    @GetMapping("/posts/categories")
+    public ApiResponse<Map<String,Object>> postCategories() {
+        return ApiResponse.success(postService.categories());
     }
 
     @GetMapping("/posts/{id}")
@@ -113,7 +118,7 @@ public class PublicController {
     }
 
     @GetMapping("/places")
-    public ApiResponse<List<Place>> places() {
+    public ApiResponse<List<PublicPlaceView>> places() {
         return ApiResponse.success(publicContentService.places());
     }
 

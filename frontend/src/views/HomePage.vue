@@ -397,6 +397,8 @@ onDeactivated(() => {
             :key="banner.bannerId ?? index"
             type="button"
             :class="['dot', { active: index === currentSlide }]"
+            :aria-label="`切换到第${index + 1}张：${banner.title || '轮播内容'}`"
+            :aria-current="index === currentSlide ? 'true' : undefined"
             @click.stop="setCurrentSlide(index)"
           />
         </div>

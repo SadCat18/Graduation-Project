@@ -175,7 +175,7 @@ test('REFERENCE-01 mock replay: 600 references, dates/fees, compare, explicit sa
   })
   await findReferences(page)
   for(const amount of ['580.00','323.00','446.00'])await expect(page.getByText(`参考估价 ¥${amount}`,{exact:true})).toBeVisible()
-  await expect(page.getByText(referenceNotice,{exact:true})).toHaveCount(3);await expect(page.getByText(/采集 2026-10-09/).first()).toBeVisible();await expect(page.locator('a[href="https://www.dobyheart.com/"]').first()).toBeVisible()
+  await expect(page.getByText(referenceNotice,{exact:true})).toHaveCount(3);await page.getByText('查看配件来源',{exact:true}).first().click();await expect(page.getByText(/采集 2026-10-09/).first()).toBeVisible();await expect(page.locator('a[href="https://www.dobyheart.com/"]').first()).toBeVisible()
   await page.screenshot({path:path.join(evidence,'REFERENCE-01-frontend-600-desktop.png'),fullPage:true})
   await page.getByRole('button',{name:'加入对比',exact:true}).first().click();await page.getByRole('tab',{name:/配件组装/}).click();await page.getByRole('button',{name:'加入对比',exact:true}).first().click();await page.getByRole('button',{name:'重新计算并对比',exact:true}).click()
   await expect(page.getByRole('table')).toContainText('参考估价 ¥580.00');await expect(page.getByRole('table')).toContainText('已知参考小计 ¥786.20');await page.getByRole('table').screenshot({path:path.join(evidence,'REFERENCE-01-frontend-comparison.png')})

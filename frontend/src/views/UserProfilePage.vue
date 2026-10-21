@@ -12,7 +12,7 @@
     <template v-else>
       <section ref="heroEl" class="profile-identity" aria-labelledby="profile-name">
         <div class="identity-avatar-wrap">
-          <img class="profile-avatar" :src="normalizeMediaUrl(profile.avatar) || defaultAvatar" alt="" />
+          <img class="profile-avatar" :src="normalizeMediaUrl(profile.avatar) || defaultAvatar" alt="" @error="localImageFallback($event, defaultAvatar)" />
           <span class="online-mark" aria-label="在线"></span>
         </div>
 
@@ -132,11 +132,8 @@
               <h2>关系速览</h2>
               <span class="rail-dot">{{ profile.followerCount || 0 }}</span>
             </div>
-            <p>已有 <strong>{{ formatCount(profile.followerCount) }}</strong> 位滑手关注 TA</p>
-            <div class="avatar-stack" aria-label="粉丝关系示意">
-              <img :src="normalizeMediaUrl(profile.avatar) || defaultAvatar" alt="" />
-              <div class="stack-count">+{{ Math.max(Number(profile.followerCount || 0) - 1, 0) }}</div>
-            </div>
+            <p v-if="Number(profile.followerCount || 0) === 0">暂无粉丝</p>
+            <p v-else>已有 <strong>{{ formatCount(profile.followerCount) }}</strong> 位滑手关注 TA</p>
           </section>
 
           <section class="rail-card card">
@@ -188,11 +185,12 @@ import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { getToken } from '../utils/auth'
+import { localImageFallback } from '../utils/imageFallback'
 import { normalizeMediaUrl } from '../utils/url'
 
 const route = useRoute()
 const router = useRouter()
-const defaultAvatar = 'https://api.dicebear.com/7.x/thumbs/svg?seed=skatehub'
+const defaultAvatar = '/fallback/avatar.svg'
 
 const profile = ref({})
 const currentUser = ref(null)

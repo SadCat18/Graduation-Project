@@ -1,9 +1,10 @@
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import AiLoadingOverlay from '../components/AiLoadingOverlay.vue'
 import { api } from '../api'
+import { usePublicCategories } from '../utils/publicCategories'
 import { getToken } from '../utils/auth'
 
 const router = useRouter()
@@ -15,7 +16,8 @@ const selectedImages = ref([])
 const previewUrls = ref([])
 const aiResult = ref(null)
 const maxImageCount = 9
-const categoryOptions = ['技巧交流', '装备讨论', '路线分享', '活动讨论', '经验分享']
+const { options: categoryOptions, loading: categoriesLoading, error: categoriesError, load: loadCategories } = usePublicCategories('create')
+onMounted(loadCategories)
 const aiLoadingSteps = ['整理标题', '分析正文语气', '优化表达结构', '生成分类建议', '补全摘要与风险提示']
 
 const postForm = reactive({
@@ -213,9 +215,12 @@ onBeforeUnmount(() => {
 
       <div class="form-grid publish-step" :style="{ '--motion-index': 0 }">
         <input v-model="postForm.title" placeholder="帖子标题（如：新手 Ollie 训练心得）" />
-        <input v-model="postForm.category" placeholder="分类（技巧交流/装备讨论/路线分享）" />
+        <input v-model="postForm.category" list="post-category-suggestions" placeholder="分类（可自由输入）" />
       </div>
 
+      <datalist id="post-category-suggestions"><option v-for="item in categoryOptions" :key="item.key" :value="item.key">{{ item.label }}</option></datalist>
+      <p v-if="categoriesLoading" role="status">分类建议加载中…</p>
+      <p v-if="categoriesError" role="alert">分类建议加载失败：{{ categoriesError }} <button type="button" @click="loadCategories">重试分类建议</button></p>
       <textarea class="publish-step" :style="{ '--motion-index': 1 }" v-model="postForm.content" placeholder="写下你的滑板内容..." />
 
       <div v-if="publishWarnings.length" class="prepublish-warning publish-step" :style="{ '--motion-index': 2 }">
@@ -258,7 +263,7 @@ onBeforeUnmount(() => {
             <div class="ai-category-row">
               <span class="ai-category-chip">{{ aiResult.category || '暂无分类建议' }}</span>
               <span
-                v-if="aiResult.category && categoryOptions.includes(aiResult.category)"
+                v-if="aiResult.category && categoryOptions.some(item => item.key === aiResult.category)"
                 class="muted"
               >
                 可直接应用到当前分类

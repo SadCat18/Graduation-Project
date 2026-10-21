@@ -31,6 +31,11 @@ public class EquipmentService {
     private final UserEquipmentFavoriteRepository favoriteRepository;
     private final UserGrowthService userGrowthService;
 
+    public List<Map<String,String>> categories() {
+        return equipmentRepository.findPublicCategories().stream().filter(value->value!=null&&!value.isBlank())
+                .distinct().sorted().map(value->Map.of("key",value,"label",value)).toList();
+    }
+
     public PageResult<Map<String, Object>> list(Integer page, Integer size, Long userId, String category, String brand, String priceRange, String suitableLevel) {
         int currentPage = InputValidator.page(page);
         int currentSize = InputValidator.size(size);

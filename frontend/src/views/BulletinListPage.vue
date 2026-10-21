@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
+import { absoluteDate, bulletinTiming } from '../utils/publicDisplay'
 import { firstImage } from '../utils/url'
 import { BULLETIN_SORT_OPTIONS, BULLETIN_TYPES } from '../constants/bulletin'
 
@@ -25,22 +26,6 @@ function shortText(text, max = 90) {
   const value = String(text || '').trim().replace(/\s+/g, ' ')
   if (!value) return '点击查看本条快讯详情。'
   return value.length > max ? `${value.slice(0, max)}...` : value
-}
-
-function relativeTime(value) {
-  if (!value) return '未知时间'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value).replace('T', ' ')
-  const diff = Date.now() - d.getTime()
-  const hour = 1000 * 60 * 60
-  const day = hour * 24
-  if (diff < hour) {
-    const m = Math.max(1, Math.floor(diff / (1000 * 60)))
-    return `${m} 分钟前`
-  }
-  if (diff < day) return `${Math.floor(diff / hour)} 小时前`
-  if (diff < day * 2) return '昨天'
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function tagClass(type) {
@@ -135,7 +120,7 @@ onMounted(loadData)
           <h4>{{ topItem.title }}</h4>
           <p class="top-summary">{{ shortText(topItem.content, 120) }}</p>
           <div class="meta-row">
-            <span class="meta-time">{{ relativeTime(topItem.createTime) }}</span>
+            <span class="meta-time">{{ absoluteDate(topItem.createTime) }} · {{ bulletinTiming(topItem) }}</span>
             <span class="meta-author">{{ topItem.publisherName || '匿名发布' }}</span>
             <span class="meta-tag" :class="tagClass(topItem.bulletinType)">{{ topItem.bulletinType || '社区快讯' }}</span>
           </div>
@@ -157,7 +142,7 @@ onMounted(loadData)
               <h4>{{ item.title }}</h4>
               <p class="summary">{{ shortText(item.content) }}</p>
               <div class="meta-row">
-                <span class="meta-time">{{ relativeTime(item.createTime) }}</span>
+                <span class="meta-time">{{ absoluteDate(item.createTime) }} · {{ bulletinTiming(item) }}</span>
                 <span class="meta-author">{{ item.publisherName || '匿名发布' }}</span>
                 <span class="meta-tag" :class="tagClass(item.bulletinType)">{{ item.bulletinType || '社区快讯' }}</span>
               </div>
@@ -177,7 +162,7 @@ onMounted(loadData)
               @click="goDetail(item.bulletinId)"
             >
               <p>{{ item.title }}</p>
-              <span>{{ relativeTime(item.createTime) }}</span>
+              <span>{{ absoluteDate(item.createTime) }} · {{ bulletinTiming(item) }}</span>
             </div>
           </div>
           <p v-if="!latestItems.length" class="muted">暂无数据</p>

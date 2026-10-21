@@ -16,13 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AiPostAssistantService {
 
-    private static final List<String> ALLOWED_CATEGORIES = List.of(
-            "技巧交流",
-            "装备讨论",
-            "路线分享",
-            "活动讨论",
-            "经验分享"
-    );
+    private static final List<String> ALLOWED_CATEGORIES = com.skatehub.util.PostCategoryOptions.CREATE;
 
     private final AiGatewayService aiGatewayService;
 
@@ -59,7 +53,7 @@ public class AiPostAssistantService {
         return "你是滑板社区的发帖助手。请根据用户提供的标题和正文，输出结构化 JSON，"
                 + "帮助用户优化社区帖子。你必须只返回 JSON，不要输出任何额外说明、前缀、后缀或 Markdown 代码块。"
                 + "JSON 字段必须包含：title、content、category、summary、riskTips。"
-                + "其中 category 必须从以下分类中选择一个：技巧交流、装备讨论、路线分享、活动讨论、经验分享。"
+                + "其中 category 必须从以下分类中选择一个：" + String.join("、", ALLOWED_CATEGORIES) + "。"
                 + "title 要更清晰自然，适合社区展示；content 要优化表达、增强可读性；"
                 + "summary 要生成一句话摘要；riskTips 要返回字符串数组，若没有明显风险请返回空数组。";
     }

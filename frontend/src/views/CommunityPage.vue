@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
+import { usePublicCategories } from '../utils/publicCategories'
 import { getToken } from '../utils/auth'
 import { loadCachedPublic } from '../utils/requestCache'
 import { parseImages } from '../utils/url'
@@ -24,9 +25,9 @@ const commentInputs = reactive({})
 const commentMap = reactive({})
 const postUiState = reactive({})
 const keyword = ref('')
-const selectedCategory = ref('全部')
+const selectedCategory = ref('')
 const selectedSort = ref('latest')
-const categoryOptions = ['全部', '新手教学', '技巧交流', '装备分享', '路线分享', '赛事讨论', '同城约板', '日常交流', '经验分享']
+const { options: categoryOptions, loading: categoriesLoading, error: categoriesError, load: loadCategories } = usePublicCategories('filter')
 const sortOptions = [
   { label: '最新', value: 'latest' },
   { label: '热门', value: 'hot' },
@@ -37,7 +38,7 @@ const sortOptions = [
 const isLoggedIn = computed(() => !!getToken())
 const totalPages = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)))
 const listSummary = computed(() => {
-  const categoryText = selectedCategory.value === '全部' ? '全部分类' : selectedCategory.value
+  const categoryText = selectedCategory.value === '' ? '全部分类' : selectedCategory.value
   const sortText = sortOptions.find(item => item.value === selectedSort.value)?.label || '最新'
   return `${categoryText} · ${sortText}排序 · 共 ${total.value || 0} 条`
 })
@@ -93,7 +94,7 @@ async function loadPosts() {
   loading.value = true
   error.value = ''
   try {
-    const categoryParam = selectedCategory.value === '全部' ? '' : selectedCategory.value
+    const categoryParam = selectedCategory.value
     if (selectedSort.value === 'recommended' && getToken()) {
       const rec = await api.recommendations()
       let list = rec?.posts || []
@@ -240,6 +241,7 @@ watch([selectedCategory, selectedSort], async () => {
 onMounted(async () => {
   await Promise.allSettled([
     loadPosts(),
+    loadCategories(),
     loadSideData()
   ])
 })
@@ -285,15 +287,18 @@ onMounted(async () => {
               搜索
             </button>
           </div>
+          <p v-if="categoriesLoading" role="status">分类加载中…</p>
+          <p v-if="categoriesError" role="alert">分类加载失败：{{ categoriesError }} <button type="button" @click="loadCategories">重试分类</button></p>
           <div class="chip-row" aria-label="帖子分类">
+            <button type="button" :class="['filter-chip', { active: selectedCategory === '' }]" @click="selectCategory('')">全部</button>
             <button
               v-for="c in categoryOptions"
-              :key="c"
+              :key="c.key"
               type="button"
-              :class="['filter-chip', { active: selectedCategory === c }]"
-              @click="selectCategory(c)"
+              :class="['filter-chip', { active: selectedCategory === c.key }]"
+              @click="selectCategory(c.key)"
             >
-              {{ c }}
+              {{ c.label }}
             </button>
           </div>
           <div class="sort-row" aria-label="排序方式">

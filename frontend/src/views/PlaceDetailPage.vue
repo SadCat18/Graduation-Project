@@ -3,6 +3,8 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
+import { localReviewSummary, reviewScoreText, reviewCountText } from '../utils/localReviews'
+import { placeTagLabel } from '../utils/publicDisplay'
 import { getToken } from '../utils/auth'
 import { ACTIVITY_EXPIRY_FILTER, filterActivitiesByExpiry } from '../utils/activityExpiry'
 import { normalizeMediaUrl } from '../utils/url'
@@ -21,13 +23,12 @@ const form = reactive({ score: 5, content: '', images: '' })
 const imageUploading = ref(false)
 
 const isLoggedIn = computed(() => !!getToken())
-const scoreValue = computed(() => {
-  const score = Number(place.value?.score || 0)
-  return Number.isFinite(score) ? score : 0
-})
-const scoreText = computed(() => scoreValue.value.toFixed(1))
-const scorePercent = computed(() => `${Math.max(0, Math.min(scoreValue.value, 5)) * 20}%`)
-const reviewCount = computed(() => Number(place.value?.reviewCount || reviews.value.length || 0))
+const reviewsLoading = ref(false), reviewsError = ref('')
+let reviewSequence = 0
+const scoreValue = computed(() => localReviewSummary(place.value)?.score ?? null)
+const scoreText = computed(() => reviewScoreText(place.value))
+const scorePercent = computed(() => `${(scoreValue.value ?? 0) * 20}%`)
+const reviewCount = computed(() => localReviewSummary(place.value)?.count ?? '暂不可用')
 const placeTags = computed(() => inferPlaceTags(place.value))
 const introSections = computed(() => buildIntroSections(place.value))
 const reviewGallery = computed(() => {
@@ -35,7 +36,7 @@ const reviewGallery = computed(() => {
   return images.slice(0, 5)
 })
 const placeStats = computed(() => [
-  { label: '综合评分', value: scoreText.value },
+  { label: '本站评分', value: scoreText.value },
   { label: '评价数量', value: reviewCount.value },
   { label: '近期活动', value: relatedActivities.value.length },
   { label: '适合等级', value: levelLabel(place.value?.suitableLevel) }
@@ -118,9 +119,9 @@ async function loadData() {
   relatedActivities.value = []
   relatedVideos.value = []
   try {
-    const [detail, list] = await Promise.all([api.placeDetail(placeId.value), api.placeReviews(placeId.value)])
+    const detail = await api.placeDetail(placeId.value)
     place.value = detail
-    reviews.value = list || []
+    await loadReviews()
     relatedVideos.value = Array.isArray(detail?.relatedVideos) ? detail.relatedVideos.slice(0, 4) : []
     await loadRelatedActivities(detail)
     await loadRelatedVideos(detail)
@@ -129,6 +130,18 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+}
+
+async function loadReviews() {
+  const id = placeId.value, sequence = ++reviewSequence
+  reviewsLoading.value = true; reviewsError.value = ''; reviews.value = []
+  try {
+    const list = await api.placeReviews(id)
+    if (!Array.isArray(list)) throw new Error('评价资料格式不可用')
+    if (sequence === reviewSequence && id === placeId.value) reviews.value = list
+  } catch (e) {
+    if (sequence === reviewSequence && id === placeId.value) reviewsError.value = e?.message || '评价加载失败'
+  } finally { if (sequence === reviewSequence && id === placeId.value) reviewsLoading.value = false }
 }
 
 async function loadRelatedVideos(detail) {
@@ -244,7 +257,7 @@ watch(placeId, () => {
             {{ place.address || '暂无地址' }}
           </p>
           <div class="place-tag-row">
-            <span v-for="tag in placeTags" :key="tag">{{ tag }}</span>
+            <span v-for="tag in placeTags" :key="tag">{{ placeTagLabel(tag) }}</span>
           </div>
           <div class="hero-actions">
             <button class="btn-primary" @click="goActivities">查看附近活动</button>
@@ -253,10 +266,10 @@ watch(placeId, () => {
         </div>
 
         <div class="place-score-panel">
-          <span>综合评分</span>
-          <strong>{{ scoreText }}</strong>
+          <span>本站评分</span>
+          <strong :class="{ 'unrated-score': scoreValue == null }">{{ scoreText }}</strong>
           <div class="score-track" aria-hidden="true"><i :style="{ width: scorePercent }"></i></div>
-          <p>{{ reviewCount }} 条评价 · {{ relatedActivities.length }} 个近期活动</p>
+          <p>{{ reviewCountText(place) }} · {{ relatedActivities.length }} 个近期活动</p>
         </div>
       </section>
 
@@ -282,14 +295,14 @@ watch(placeId, () => {
               <div>
                 <span>障碍物标签</span>
                 <p>
-                  <em v-for="tag in place.obstacleTags || []" :key="tag">{{ tag }}</em>
-                  <em v-if="!(place.obstacleTags || []).length">open-space</em>
+                  <em v-for="tag in place.obstacleTags || []" :key="tag">{{ placeTagLabel(tag) }}</em>
+                  <em v-if="!(place.obstacleTags || []).length">开放平地</em>
                 </p>
               </div>
               <div>
                 <span>安全提示</span>
                 <p>
-                  <em v-for="tip in place.safetyTips || []" :key="tip">{{ tip }}</em>
+                  <em v-for="tip in place.safetyTips || []" :key="tip">{{ placeTagLabel(tip) }}</em>
                   <em v-if="!(place.safetyTips || []).length">练习前观察路面、人流和天气。</em>
                 </p>
               </div>
@@ -307,7 +320,7 @@ watch(placeId, () => {
               <h3>相关约板活动</h3>
               <button class="btn-soft" @click="goActivities">去活动页</button>
             </div>
-            <div v-if="!relatedActivities.length" class="empty-tip">当前没有关联的未过期活动，可以先收藏场地，等新活动上线。</div>
+            <div v-if="!relatedActivities.length" class="empty-tip">当前没有关联的未过期活动，可以去活动页更换关键词，或发布约板活动。</div>
             <div v-else class="activity-card-grid">
               <article v-for="(item, index) in relatedActivities" :key="item.activityId" class="activity-spot-card motion-card" :style="{ '--motion-index': index }">
                 <span class="activity-time">{{ formatTime(item.activityTime) }}</span>
@@ -389,9 +402,11 @@ watch(placeId, () => {
           <div class="review-list">
             <div class="section-head">
               <h3>最新评价</h3>
-              <span class="section-note">{{ reviews.length }} 条</span>
+              <span v-if="!reviewsLoading && !reviewsError" class="section-note">{{ reviews.length }} 条</span>
             </div>
-            <div v-if="!reviews.length" class="empty-tip">还没有评价，来发布第一条吧。</div>
+            <p v-if="reviewsLoading" role="status">评价加载中…</p>
+            <p v-if="reviewsError" role="alert">评价加载失败：{{ reviewsError }} <button type="button" @click="loadReviews">重试评价</button></p>
+            <div v-if="!reviewsLoading && !reviewsError && !reviews.length" class="empty-tip">还没有评价，来发布第一条吧。</div>
             <article v-for="item in reviews" :key="item.reviewId" class="review-card">
               <div class="review-top">
                 <strong>{{ item.username }}</strong>
@@ -513,6 +528,11 @@ watch(placeId, () => {
 .place-score-panel strong {
   font-size: 52px;
   line-height: 1;
+}
+
+.place-score-panel strong.unrated-score {
+  font-size: 20px;
+  line-height: 1.4;
 }
 
 .place-score-panel p {
