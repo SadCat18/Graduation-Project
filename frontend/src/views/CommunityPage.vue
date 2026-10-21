@@ -1,11 +1,11 @@
 ﻿<script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
 import { usePublicCategories } from '../utils/publicCategories'
-import { getToken } from '../utils/auth'
+import { getAuthChangedEventName, getRole, getToken } from '../utils/auth'
 import { loadCachedPublic } from '../utils/requestCache'
 import { parseImages } from '../utils/url'
 
@@ -21,6 +21,14 @@ const notices = ref([])
 const newsList = ref([])
 const loading = ref(false)
 const error = ref('')
+let postsSequence = 0, disposed = false
+function invalidatePostsRead() { postsSequence++; loading.value = false }
+window.addEventListener(getAuthChangedEventName(), invalidatePostsRead)
+onBeforeUnmount(() => {
+  disposed = true
+  invalidatePostsRead()
+  window.removeEventListener(getAuthChangedEventName(), invalidatePostsRead)
+})
 const commentInputs = reactive({})
 const commentMap = reactive({})
 const postUiState = reactive({})
@@ -91,44 +99,44 @@ function updatePostLocally(postId, updater) {
 }
 
 async function loadPosts() {
+  if (disposed) return
+  const sequence = ++postsSequence
+  const context = Object.freeze({ category: selectedCategory.value, sort: selectedSort.value, keyword: keyword.value.trim(), page: page.value, token: getToken(), role: getRole() })
+  const current = () => !disposed && sequence === postsSequence && context.token === getToken() && context.role === getRole()
   loading.value = true
   error.value = ''
   try {
-    const categoryParam = selectedCategory.value
-    if (selectedSort.value === 'recommended' && getToken()) {
+    let nextPosts, nextTotal
+    if (context.sort === 'recommended' && context.token) {
       const rec = await api.recommendations()
+      if (!current()) return
       let list = rec?.posts || []
-      if (keyword.value.trim()) {
-        const kw = keyword.value.trim().toLowerCase()
+      if (context.keyword) {
+        const kw = context.keyword.toLowerCase()
         list = list.filter(item => String(item.title || '').toLowerCase().includes(kw) || String(item.content || '').toLowerCase().includes(kw))
       }
-      if (categoryParam) {
-        list = list.filter(item => item.category === categoryParam)
-      }
-      total.value = list.length
-      const start = (page.value - 1) * pageSize
-      posts.value = list.slice(start, start + pageSize)
+      if (context.category) list = list.filter(item => item.category === context.category)
+      nextTotal = list.length
+      const start = (context.page - 1) * pageSize
+      nextPosts = list.slice(start, start + pageSize)
     } else {
-      const res = await api.posts({
-        page: page.value,
-        size: pageSize,
-        keyword: keyword.value.trim(),
-        category: categoryParam,
-        sort: selectedSort.value === 'recommended' ? 'hot' : selectedSort.value
-      })
-      total.value = Number(res.total || 0)
-      posts.value = res.list || []
+      const res = await api.posts({ page: context.page, size: pageSize, keyword: context.keyword, category: context.category, sort: context.sort === 'recommended' ? 'hot' : context.sort })
+      if (!current()) return
+      nextTotal = Number(res.total || 0)
+      nextPosts = res.list || []
     }
-    syncPostUiState(posts.value)
-    if (page.value > totalPages.value) {
+    if (!current()) return
+    total.value = nextTotal
+    posts.value = nextPosts
+    syncPostUiState(nextPosts)
+    if (context.page > totalPages.value) {
       page.value = totalPages.value
       await loadPosts()
-      return
     }
   } catch (e) {
-    error.value = e.message || '帖子加载失败'
+    if (current()) error.value = e?.message || '帖子加载失败'
   } finally {
-    loading.value = false
+    if (current()) loading.value = false
   }
 }
 
@@ -236,7 +244,7 @@ async function sendComment(postId) {
 watch([selectedCategory, selectedSort], async () => {
   page.value = 1
   await loadPosts()
-})
+}, { flush: 'sync' })
 
 onMounted(async () => {
   await Promise.allSettled([
