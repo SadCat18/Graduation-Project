@@ -33,7 +33,11 @@ public class AiKnowledgeChunkSyncService {
     private final VideoRepository videoRepository;
     private final PostRepository postRepository;
 
+    @org.springframework.transaction.annotation.Transactional
     public int syncPublicKnowledge() {
+        chunkRepository.findByPublicVisibleOrderByUpdateTimeDesc("1").stream()
+            .filter(c -> "TRAINING_TASK".equals(c.getSourceType()) || "TRAINING_PLAN".equals(c.getSourceType()))
+            .forEach(c -> { c.setPublicVisible("0"); chunkRepository.save(c); });
         List<AiKnowledgeChunk> chunks = new ArrayList<>();
         skateTrickRepository.findByStatusOrderBySortOrderAscTrickIdAsc("1")
                 .forEach(item -> chunks.add(chunk("TRICK", item.getTrickId(), item.getTrickName(), item.getDescription(),
@@ -46,7 +50,8 @@ public class AiKnowledgeChunkSyncService {
         trainingPlanRepository.findByStatusOrderByPlanIdAsc("1")
                 .forEach(item -> chunks.add(chunk("TRAINING_PLAN", item.getPlanId(), item.getPlanName(), item.getDescription(),
                         item.getPlanType(), "/skate", level(item.getDifficultyLevel()))));
-        trainingTaskRepository.findAll()
+        java.util.Set<Long> visiblePlans=trainingPlanRepository.findByStatusOrderByPlanIdAsc("1").stream().map(TrainingPlan::getPlanId).collect(java.util.stream.Collectors.toSet());
+        trainingTaskRepository.findAll().stream().filter(t -> visiblePlans.contains(t.getPlanId()))
                 .forEach(item -> chunks.add(chunk("TRAINING_TASK", item.getTaskId(), item.getTaskTitle(), item.getTaskContent(),
                         item.getTrickIds(), "/skate", null)));
         videoRepository.findAllByOrderByCreateTimeDesc()

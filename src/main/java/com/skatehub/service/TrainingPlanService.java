@@ -33,6 +33,8 @@ public class TrainingPlanService {
     private final UserTrainingPlanRepository userPlanRepository;
     private final UserTrainingRecordRepository recordRepository;
     private final UserGrowthService userGrowthService;
+    private final com.skatehub.dao.UserRepository userRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     public List<TrainingPlan> listPlans() {
         return planRepository.findByStatusOrderByPlanIdAsc("1");
@@ -71,6 +73,10 @@ public class TrainingPlanService {
     @Transactional
     public Map<String, Object> join(CurrentUser currentUser, Long planId) {
         Long userId = requireUserId(currentUser);
+        lockUser(userId);
+        if (jdbc.queryForObject("select count(*) from tb_guidance_active where user_id=?", Long.class, userId) > 0) {
+            throw new com.skatehub.service.training.GuidanceException(409, "PLAN_CONFLICT", "请先退出或完成训练指导计划");
+        }
         activePlan(planId);
         UserTrainingPlan userPlan = userPlanRepository
                 .findFirstByUserIdAndPlanIdAndStatusOrderByCreateTimeDesc(userId, planId, "IN_PROGRESS")
@@ -92,9 +98,11 @@ public class TrainingPlanService {
     @Transactional
     public void quit(CurrentUser currentUser, Long userPlanId) {
         Long userId = requireUserId(currentUser);
+        lockUser(userId);
         InputValidator.positiveId(userPlanId, "用户训练计划ID");
         UserTrainingPlan userPlan = userPlanRepository.findByUserPlanIdAndUserId(userPlanId, userId)
                 .orElseThrow(() -> new BizException("训练计划记录不存在"));
+        if (!"LEGACY".equals(userPlan.getMode())) throw new BizException("请使用训练指导入口退出计划");
         if (!"IN_PROGRESS".equals(userPlan.getStatus())) {
             throw new BizException("当前训练计划不可退出");
         }
@@ -104,24 +112,28 @@ public class TrainingPlanService {
 
     public Map<String, Object> current(CurrentUser currentUser) {
         Long userId = requireUserId(currentUser);
-        return userPlanRepository.findFirstByUserIdAndStatusOrderByCreateTimeDesc(userId, "IN_PROGRESS")
-                .map(this::toUserPlanProgress)
-                .orElseGet(HashMap::new);
+        Map<String,Object> result=userPlanRepository.findFirstByUserIdAndModeAndStatusOrderByCreateTimeDesc(userId, "LEGACY", "IN_PROGRESS")
+                .map(this::toUserPlanProgress).orElseGet(HashMap::new);
+        if(jdbc.queryForObject("select count(*) from tb_guidance_active where user_id=?",Long.class,userId)>0) result.put("guidanceApi","/api/user/training-guidance/current");
+        return result;
     }
 
     @Transactional
     public Map<String, Object> completeTask(CurrentUser currentUser, Long taskId, TrainingTaskCompleteRequest request) {
         Long userId = requireUserId(currentUser);
+        lockUser(userId);
         InputValidator.positiveId(taskId, "训练任务ID");
         TrainingTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BizException("训练任务不存在"));
         TrainingPlan plan = activePlan(task.getPlanId());
         UserTrainingPlan userPlan = userPlanRepository
                 .findFirstByUserIdAndPlanIdAndStatusOrderByCreateTimeDesc(userId, task.getPlanId(), "IN_PROGRESS")
-                .orElseThrow(() -> new BizException("请先加入该训练计划"));
+                .orElseGet(() -> userPlanRepository.findFirstByUserIdAndPlanIdAndModeOrderByCreateTimeDesc(userId, task.getPlanId(), "LEGACY")
+                        .filter(p -> "COMPLETED".equals(p.getStatus())).orElseThrow(() -> new BizException("请先加入该训练计划")));
+        if (!"LEGACY".equals(userPlan.getMode())) throw new BizException("请使用训练指导入口");
 
         if (recordRepository.existsByUserPlanIdAndTaskId(userPlan.getUserPlanId(), taskId)) {
-            return progressResult(userPlan, false, 0, 0, 0);
+            return progressResult(userPlan, "COMPLETED".equals(userPlan.getStatus()), 0, 0, userRepository.findById(userId).map(u -> u.getExp() == null ? 0 : u.getExp()).orElse(0));
         }
 
         UserTrainingRecord record = new UserTrainingRecord();
@@ -133,10 +145,21 @@ public class TrainingPlanService {
         record.setMediaUrls(trimToNull(request.getMediaUrls()));
         recordRepository.save(record);
 
-        int totalExp = userGrowthService.grantExp(userId, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", taskId, TASK_EXP);
-        record.setExpAwarded(totalExp > 0 ? TASK_EXP : 0);
+        var taskAward = userGrowthService.grantExpResult(userId, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", taskId, TASK_EXP);
+        int totalExp = taskAward.totalExp();
+        record.setExpAwarded(taskAward.delta());
 
-        int completedDays = Math.max(userPlan.getCompletedDays() == null ? 0 : userPlan.getCompletedDays(), task.getDayNo());
+        recordRepository.flush();
+        var completedIds = recordRepository.findByUserPlanIdOrderByCreateTimeAsc(userPlan.getUserPlanId()).stream()
+                .map(UserTrainingRecord::getTaskId).collect(java.util.stream.Collectors.toSet());
+        var allTasks = taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(task.getPlanId());
+        int completedDays = 0;
+        for (int day = 1; day <= Math.max(1, plan.getDurationDays()); day++) {
+            int d = day;
+            var dayTasks = allTasks.stream().filter(t -> java.util.Objects.equals(t.getDayNo(), d)).toList();
+            if (dayTasks.isEmpty() || dayTasks.stream().anyMatch(t -> !completedIds.contains(t.getTaskId()))) break;
+            completedDays = day;
+        }
         userPlan.setCompletedDays(completedDays);
         userPlan.setCurrentDay(completedDays + 1);
 
@@ -144,8 +167,8 @@ public class TrainingPlanService {
         int planExp = 0;
         if (completedPlan) {
             userPlan.setStatus("COMPLETED");
-            totalExp = userGrowthService.grantExp(userId, "TRAINING_PLAN_COMPLETE", "USER_TRAINING_PLAN", userPlan.getUserPlanId(), PLAN_EXP);
-            planExp = totalExp > 0 ? PLAN_EXP : 0;
+            var planAward = userGrowthService.grantExpResult(userId, "TRAINING_PLAN_COMPLETE", "USER_TRAINING_PLAN", userPlan.getUserPlanId(), PLAN_EXP);
+            totalExp = planAward.totalExp(); planExp = planAward.delta();
         }
         userPlanRepository.save(userPlan);
         TrainingTask nextTask = completedPlan ? null : nextTask(userPlan);
@@ -187,7 +210,9 @@ public class TrainingPlanService {
             return null;
         }
         int currentDay = userPlan.getCurrentDay() == null ? 1 : userPlan.getCurrentDay();
+        var completed=recordRepository.findByUserPlanIdOrderByCreateTimeAsc(userPlan.getUserPlanId()).stream().map(UserTrainingRecord::getTaskId).collect(java.util.stream.Collectors.toSet());
         return taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(userPlan.getPlanId()).stream()
+                .filter(task -> !completed.contains(task.getTaskId()))
                 .filter(task -> task.getDayNo() != null && task.getDayNo() >= currentDay)
                 .findFirst()
                 .orElse(null);
@@ -218,6 +243,10 @@ public class TrainingPlanService {
             throw new BizException("用户未登录，请先认证");
         }
         return currentUser.id();
+    }
+
+    private void lockUser(Long id) {
+        userRepository.findByIdForUpdate(id).orElseThrow(() -> new BizException("用户不存在"));
     }
 
     private String trimToNull(String value) {

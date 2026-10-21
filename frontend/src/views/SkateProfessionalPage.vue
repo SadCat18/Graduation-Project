@@ -602,6 +602,7 @@ onMounted(loadAll)
       </aside>
 
       <article class="module-panel">
+        <RouterLink to="/training-guidance">进入我的训练指导 · 建立个人计划、记录与回顾</RouterLink>
         <h2>{{ selectedPlanDetail?.plan?.planName || '推荐训练计划' }}</h2>
         <p v-if="planLoading" role="status">训练详情加载中…</p>
         <p v-if="planError" role="alert">训练详情加载失败：{{ planError }} <button type="button" @click="showPlan(requestedPlan)">重试训练详情</button></p>

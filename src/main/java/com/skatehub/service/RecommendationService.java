@@ -185,6 +185,7 @@ public class RecommendationService {
 
     private List<Map<String, Object>> recommendTrainingPlans(Long userId, User user, String style) {
         Set<Long> completedOrActivePlanIds = userTrainingPlanRepository.findByUserIdOrderByCreateTimeDesc(userId).stream()
+                .filter(p -> "LEGACY".equals(p.getMode()))
                 .map(UserTrainingPlan::getPlanId)
                 .collect(Collectors.toSet());
         boolean hasTrainingRecords = !userTrainingRecordRepository.findByUserIdOrderByCreateTimeDesc(userId).isEmpty();

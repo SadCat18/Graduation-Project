@@ -1,0 +1,1 @@
+module.exports={testDir:'./tests/http',testMatch:'training-guidance-review.spec.cjs',workers:1,retries:0,timeout:90000,reporter:'list',use:{baseURL:'http://127.0.0.1:4173',channel:process.env.PLAYWRIGHT_CHANNEL||'msedge'},webServer:{command:'node tests/support/reference-static-server.cjs',url:'http://127.0.0.1:4173',reuseExistingServer:false,timeout:30000}}

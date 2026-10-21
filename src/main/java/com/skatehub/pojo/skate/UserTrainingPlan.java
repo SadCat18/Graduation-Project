@@ -22,8 +22,11 @@ public class UserTrainingPlan {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "plan_id", nullable = false)
+    @Column(name = "plan_id")
     private Long planId;
+
+    @Column(nullable = false, length = 12)
+    private String mode = "LEGACY";
 
     @Column(name = "start_date")
     private LocalDate startDate;
