@@ -73,6 +73,14 @@ public class PostService {
                 messageNotifyService, userGrowthService, eventPublisher, new ModerationRuleService());
     }
 
+    public Map<String,Object> categories() {
+        java.util.SortedSet<String> available=new java.util.TreeSet<>(com.skatehub.util.PostCategoryOptions.CREATE);
+        postRepository.findPublicCategories().stream().filter(value->value!=null&&!value.isBlank()).forEach(available::add);
+        return Map.of("filterOptions",available.stream().map(value->Map.of("key",value,"label",value)).toList(),
+                "createOptions",com.skatehub.util.PostCategoryOptions.CREATE.stream().map(value->Map.of("key",value,"label",value)).toList(),
+                "aliasMap",Map.of());
+    }
+
     public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
         int currentPage = InputValidator.page(page);
         int currentSize = InputValidator.size(size);

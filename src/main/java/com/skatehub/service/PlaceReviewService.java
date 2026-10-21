@@ -8,6 +8,7 @@ import com.skatehub.pojo.Place;
 import com.skatehub.pojo.PlaceReview;
 import com.skatehub.pojo.User;
 import com.skatehub.pojo.place.PlaceReviewCreateRequest;
+import com.skatehub.pojo.place.LocalReviewSummary;
 import com.skatehub.util.BizException;
 import com.skatehub.util.CurrentUser;
 import com.skatehub.util.InputValidator;
@@ -60,6 +61,19 @@ public class PlaceReviewService {
         return placeReviewRepository.findByPlaceIdOrderByCreateTimeDesc(placeId).stream()
                 .map(this::toReviewVO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly=true)
+    public Map<Long,LocalReviewSummary> localReviewSummaries(java.util.Collection<Long> placeIds) {
+        if(placeIds.isEmpty())return Map.of();
+        Map<Long,LocalReviewSummary> result=new HashMap<>();
+        for(Long id:placeIds)result.put(id,LocalReviewSummary.empty());
+        for(var row:placeReviewRepository.aggregateLocalReviews(placeIds)){
+            long count=row.getReviewCount();
+            BigDecimal score=count==0?null:BigDecimal.valueOf(row.getScoreTotal()).divide(BigDecimal.valueOf(count),1,RoundingMode.HALF_UP);
+            result.put(row.getPlaceId(),new LocalReviewSummary(score,count,"LOCAL_REVIEWS"));
+        }
+        return result;
     }
 
     public Map<String, Object> latestReview(Long placeId) {

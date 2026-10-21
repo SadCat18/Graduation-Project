@@ -7,6 +7,8 @@ export const api = {
   userLogin: (data) => http.post('/api/auth/login/user', data),
   adminLogin: (data) => http.post('/api/auth/login/admin', data),
 
+  postCategories: () => http.get('/api/public/posts/categories'),
+  equipmentCategories: () => http.get('/api/skate/equipments/categories'),
   posts: (params) => http.get('/api/public/posts', { params }),
   postDetail: (id) => http.get(`/api/public/posts/${id}`),
   comments: (id) => http.get(`/api/public/posts/${id}/comments`),

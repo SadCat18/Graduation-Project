@@ -1,0 +1,141 @@
+{
+  "supplementVersion": "2026-10-21-d01-review-v1",
+  "candidateType": "RECORDED_SPEC_REVIEW_ONLY",
+  "baseDatasetVersion": "2026-10-10-reference-01-v1",
+  "baseSha256": "e24d950b94a04e22fefefe2c190e9a11c163dc3c34b2973a787c0e87677eba8c",
+  "autoImport": false,
+  "noCatalogMutationRequired": true,
+  "proposedCatalogChanges": [],
+  "facts": [
+    {
+      "entityKey": "HW-002--length-25-4mm-phillips",
+      "productKey": "HW-002",
+      "field": "specs.lengthMm",
+      "value": 25.4,
+      "rawValue": [
+        "1英寸"
+      ],
+      "sourcePath": "equipment.json#/records/36/spec/lengths",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-002--length-25-4mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-002--length-25-4mm-phillips",
+      "productKey": "HW-002",
+      "field": "specs.headType",
+      "value": "Phillips十字",
+      "rawValue": [
+        "Phillips十字"
+      ],
+      "sourcePath": "equipment.json#/records/36/spec/head_types",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-002--length-25-4mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-002--length-25-4mm-phillips",
+      "productKey": "HW-002",
+      "field": "specs.nutsIncluded",
+      "value": true,
+      "rawValue": 8,
+      "sourcePath": "equipment.json#/records/36/spec/nuts_included",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-002--length-25-4mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-002--length-25-4mm-phillips",
+      "productKey": "HW-002",
+      "field": "recordedPackaging",
+      "value": {
+        "bolts": 8,
+        "nuts": 8
+      },
+      "sourcePath": "equipment.json#/records/36/spec",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-002--length-25-4mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "Existing rawSpec and overseas price unit; not a domestic quote or new compatibility rule.",
+      "disposition": "RECORDED_SUPPLEMENT_ONLY"
+    },
+    {
+      "entityKey": "HW-003--length-31-75mm-phillips",
+      "productKey": "HW-003",
+      "field": "specs.lengthMm",
+      "value": 31.75,
+      "rawValue": [
+        "1 1/4英寸"
+      ],
+      "sourcePath": "equipment.json#/records/37/spec/lengths",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-003--length-31-75mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-003--length-31-75mm-phillips",
+      "productKey": "HW-003",
+      "field": "specs.headType",
+      "value": "Phillips十字",
+      "rawValue": [
+        "Phillips十字"
+      ],
+      "sourcePath": "equipment.json#/records/37/spec/head_types",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-003--length-31-75mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-003--length-31-75mm-phillips",
+      "productKey": "HW-003",
+      "field": "specs.nutsIncluded",
+      "value": true,
+      "rawValue": 8,
+      "sourcePath": "equipment.json#/records/37/spec/nuts_included",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-003--length-31-75mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "1 inch = 25.4 mm; single recorded length/head type; 8 nuts recorded. No live re-verification.",
+      "disposition": "ALREADY_TRANSCRIBED_NO_CHANGE_REQUIRED"
+    },
+    {
+      "entityKey": "HW-003--length-31-75mm-phillips",
+      "productKey": "HW-003",
+      "field": "recordedPackaging",
+      "value": {
+        "bolts": 8,
+        "nuts": 8
+      },
+      "sourcePath": "equipment.json#/records/37/spec",
+      "url": "https://nhsskatedirect.com/products/genuine-parts-1-25-in-phillips-hardware-black-pk-8-independent",
+      "collectedDate": "2026-10-09",
+      "applicableVariant": "HW-003--length-31-75mm-phillips",
+      "verificationStatus": "RECORDED",
+      "basis": "Existing rawSpec and overseas price unit; not a domestic quote or new compatibility rule.",
+      "disposition": "RECORDED_SUPPLEMENT_ONLY"
+    }
+  ],
+  "remaining": [
+    "NO_CN_HARDWARE_PRICE",
+    "NO_CN_RISER_PRICE",
+    "INSTALLATION_RULES_PENDING"
+  ],
+  "notice": "This is not an import dataset. Known fields already exist; no version bump, prices, thresholds or VERIFIED promotion."
+}

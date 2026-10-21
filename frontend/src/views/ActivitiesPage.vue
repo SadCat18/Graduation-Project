@@ -15,6 +15,8 @@ import {
   filterActivitiesByExpiry,
   getActivityStatusLabel
 } from '../utils/activityExpiry'
+import { regionOptions } from '../utils/regions'
+import { reviewScoreText, reviewCountText, localReviewSummary } from '../utils/localReviews'
 import { buildActivityPlaceRecommendations } from '../utils/activityPlaceRecommendations'
 
 defineOptions({ name: 'ActivitiesPage' })
@@ -23,6 +25,7 @@ const router = useRouter()
 
 const list = ref([])
 const places = ref([])
+const placesLoading = ref(false), placesError = ref('')
 const loading = ref(false)
 const loadError = ref('')
 const mapRequested = ref(false)
@@ -39,6 +42,10 @@ const mapRef = ref(null)
 const provinceOptions = ref([])
 const cityOptions = ref([])
 const districtOptions = ref([])
+const regionLoading = reactive({ province: false, city: false, district: false })
+const regionError = reactive({ province: '', city: '', district: '' })
+const regionReady = reactive({ province: false, city: false, district: false })
+const regionSequence = { province: 0, city: 0, district: 0 }
 const filter = reactive({
   province: '',
   city: '',
@@ -95,15 +102,9 @@ function goActivityDetail(activityId) {
   router.push(`/activities/${activityId}`)
 }
 
-function placeScore(place) {
-  const score = Number(place?.score || 0)
-  return Number.isFinite(score) ? score.toFixed(1) : '0.0'
-}
-
+const placeScore = reviewScoreText
 function placeScorePercent(place) {
-  const score = Number(place?.score || 0)
-  if (!Number.isFinite(score)) return '0%'
-  return `${Math.max(0, Math.min(score, 5)) * 20}%`
+  return `${(localReviewSummary(place)?.score ?? 0) * 20}%`
 }
 
 async function filterByPlace(place) {
@@ -117,11 +118,6 @@ async function loadData() {
   loadError.value = ''
   try {
     const params = buildQueryParams()
-    const placePromise = getCachedResource(
-      'public:places',
-      () => api.places(),
-      PLACE_CACHE_TTL
-    )
     let activities
     if (isLoggedIn.value) {
       try {
@@ -137,15 +133,24 @@ async function loadData() {
       activities = await api.publicActivities(params)
     }
 
-    const placeList = await placePromise
     list.value = filterActivitiesByExpiry(activities.list || [], filter.expiry)
-    places.value = placeList || []
     renderActivityMarkers()
   } catch (e) {
     loadError.value = e?.message || '活动加载失败，请稍后重试'
   } finally {
     loading.value = false
   }
+}
+
+async function loadPlaces() {
+  if (placesLoading.value) return
+  placesLoading.value = true; placesError.value = ''
+  try {
+    const data = await getCachedResource('public:places', () => api.places(), PLACE_CACHE_TTL)
+    if (!Array.isArray(data)) throw new Error('场地资料格式不可用')
+    places.value = data
+  } catch (e) { placesError.value = e?.message || '场地加载失败' }
+  finally { placesLoading.value = false }
 }
 
 async function applyFilter() {
@@ -158,8 +163,7 @@ async function clearFilter() {
   filter.district = ''
   filter.keyword = ''
   filter.expiry = ACTIVITY_EXPIRY_FILTER.ACTIVE
-  cityOptions.value = []
-  districtOptions.value = []
+  resetRegion('city'); resetRegion('district')
   await loadData()
 }
 
@@ -195,91 +199,41 @@ async function cancelSign(item) {
   await loadData()
 }
 
-function searchDistrict(keyword, level = 'country', subdistrict = 1) {
-  return new Promise((resolve) => {
-    if (!window.AMap?.DistrictSearch) {
-      resolve([])
-      return
-    }
-    const districtSearch = new window.AMap.DistrictSearch({
-      level,
-      subdistrict,
-      showbiz: false,
-      extensions: 'base'
-    })
-    districtSearch.search(keyword, (status, result) => {
-      if (status !== 'complete') {
-        resolve([])
-        return
-      }
-      resolve(result?.districtList || [])
-    })
-  })
+function resetRegion(level) {
+  regionSequence[level]++
+  regionLoading[level] = false
+  regionReady[level] = false
+  regionError[level] = ''
+  ;({ city: cityOptions, district: districtOptions })[level].value = []
 }
-
-async function loadProvinceOptions() {
-  const districtList = await searchDistrict('中国', 'country', 1)
-  const provinces = districtList?.[0]?.districtList || []
-  provinceOptions.value = provinces.map(item => item.name).filter(Boolean)
+async function loadRegion(level) {
+  const sequence = ++regionSequence[level], province = filter.province, city = filter.city
+  regionLoading[level] = true
+  regionError[level] = ''
+  regionReady[level] = false
+  const current = () => sequence === regionSequence[level] && (level === 'province' || province === filter.province) && (level !== 'district' || city === filter.city)
+  try {
+    const options = await regionOptions(level, province, city)
+    if (!current()) return
+    ;({ province: provinceOptions, city: cityOptions, district: districtOptions })[level].value = options
+    regionReady[level] = true
+  } catch (e) {
+    if (current()) regionError[level] = e?.message || '地区资料加载失败'
+  } finally { if (current()) regionLoading[level] = false }
 }
-
-async function loadCityOptions(provinceName) {
-  if (!provinceName) {
-    cityOptions.value = []
-    districtOptions.value = []
-    return
-  }
-  const districtList = await searchDistrict(provinceName, 'province', 1)
-  const children = districtList?.[0]?.districtList || []
-
-  let cities = children
-    .map(item => item.name)
-    .filter(Boolean)
-    .filter(name => name !== '市辖区')
-
-  if (!cities.length || children[0]?.level === 'district') {
-    cities = [provinceName]
-  }
-
-  cityOptions.value = Array.from(new Set(cities))
-  if (!cityOptions.value.includes(filter.city)) {
-    filter.city = ''
-  }
-}
-
-async function loadDistrictOptions(cityName) {
-  if (!cityName) {
-    districtOptions.value = []
-    return
-  }
-  const districtList = await searchDistrict(cityName, 'city', 1)
-  const children = districtList?.[0]?.districtList || []
-  const districts = children
-    .map(item => item.name)
-    .filter(Boolean)
-    .filter(name => name !== '市辖区')
-
-  districtOptions.value = Array.from(new Set(districts))
-  if (!districtOptions.value.includes(filter.district)) {
-    filter.district = ''
-  }
-}
-
 async function onProvinceChange() {
-  filter.city = ''
-  filter.district = ''
-  districtOptions.value = []
-  await loadCityOptions(filter.province)
+  filter.city = ''; filter.district = ''
+  resetRegion('city'); resetRegion('district')
+  if (filter.province) await loadRegion('city')
 }
-
 async function onCityChange() {
-  filter.district = ''
-  await loadDistrictOptions(filter.city)
+  filter.district = ''; resetRegion('district')
+  if (filter.city) await loadRegion('district')
 }
 
 async function initMap() {
   await nextTick()
-  if (!mapRef.value || mapInstance) return
+  if (!mapRef.value || mapInstance || mapLoading.value) return
 
   try {
     mapLoading.value = true
@@ -292,14 +246,17 @@ async function initMap() {
     })
     citySearchInstance = new AMap.CitySearch()
     citySearchInstance.getLocalCity((status, result) => {
-      if (status === 'complete' && result?.city) {
+      if (status === 'complete' && result?.city && mapInstance) {
         mapInstance.setCity(result.city)
       }
     })
-    await loadProvinceOptions()
     mapReady.value = true
     renderActivityMarkers()
   } catch (error) {
+    mapInstance?.destroy()
+    mapInstance = null
+    citySearchInstance = null
+    mapReady.value = false
     mapError.value = error?.message || '地图加载失败，请检查网络或高德 Key 配置'
   } finally {
     mapLoading.value = false
@@ -389,6 +346,8 @@ watch(mobilePanel, async (next) => {
 onMounted(async () => {
   onResize()
   window.addEventListener('resize', onResize)
+  loadRegion('province')
+  loadPlaces()
   await loadData()
 })
 onActivated(() => {
@@ -400,6 +359,7 @@ onDeactivated(() => {
 })
 
 onBeforeUnmount(() => {
+  Object.keys(regionSequence).forEach(level => regionSequence[level]++)
   window.removeEventListener('resize', onResize)
   window.clearTimeout(actionMessageTimer)
   activityMarkers.forEach(marker => marker.setMap(null))
@@ -431,15 +391,15 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="filter-row">
-          <select v-model="filter.province" :disabled="!mapReady" @focus="requestMap" @change="onProvinceChange">
-            <option value="">{{ mapReady ? '选择省份' : '加载地图后可选省份' }}</option>
+          <select v-model="filter.province" :disabled="!regionReady.province || regionLoading.province" aria-label="省份（用于选择城市）" @change="onProvinceChange">
+            <option value="">省份（用于选择城市）</option>
             <option v-for="item in provinceOptions" :key="item" :value="item">{{ item }}</option>
           </select>
-          <select v-model="filter.city" :disabled="!filter.province" @change="onCityChange">
+          <select v-model="filter.city" :disabled="!filter.province || !regionReady.city || regionLoading.city" aria-label="城市" @change="onCityChange">
             <option value="">{{ filter.province ? '选择城市' : '请先选择省份' }}</option>
             <option v-for="item in cityOptions" :key="item" :value="item">{{ item }}</option>
           </select>
-          <select v-model="filter.district" :disabled="!filter.city">
+          <select v-model="filter.district" :disabled="!filter.city || !regionReady.district || regionLoading.district" aria-label="区县">
             <option value="">{{ filter.city ? '选择区县（可选）' : '请先选择城市' }}</option>
             <option v-for="item in districtOptions" :key="item" :value="item">{{ item }}</option>
           </select>
@@ -455,6 +415,12 @@ onBeforeUnmount(() => {
           <button @click="clearFilter">重置</button>
         </div>
 
+        <p class="muted">省份仅用于选择城市；地区资料为固定版本，未覆盖的地区可使用关键词查找活动。</p>
+        <div v-for="(label, level) in { province: '省份', city: '城市', district: '区县' }" :key="level">
+          <p v-if="regionLoading[level]" role="status">{{ label }}资料加载中…</p>
+          <p v-if="regionError[level]" role="alert">{{ label }}：{{ regionError[level] }} <button type="button" @click="loadRegion(level)">重试{{ label }}资料</button></p>
+          <p v-if="regionReady[level] && !({ province: provinceOptions, city: cityOptions, district: districtOptions })[level].length">当前资料无下级{{ label }}选项。</p>
+        </div>
         <div v-if="loading" class="skate-loading-state">
           <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
           <p>正在加载同城约板活动...</p>
@@ -525,14 +491,14 @@ onBeforeUnmount(() => {
         <div v-if="!mapRequested" class="map-lazy-panel">
           <AppIcon name="map" :size="28" />
           <strong>地图按需加载</strong>
-          <p>先浏览活动列表；需要定位场地或选择省市区时再加载地图资源。</p>
-          <button class="btn-primary" @click="requestMap">加载地图与地区筛选</button>
+          <p>先浏览活动列表；需要定位场地时再加载地图资源，地区筛选独立可用。</p>
+          <button class="btn-primary" @click="requestMap">加载地图</button>
         </div>
         <div v-if="mapRequested && mapLoading && !mapReady && !mapError" class="skate-loading-state map-loading-state">
           <div class="skate-loading-board"><SkateboardSketch class="skate-loading-sketch" /></div>
           <p>地图加载中...</p>
         </div>
-        <p v-if="mapError" class="error">{{ mapError }}</p>
+        <p v-if="mapError" class="error">{{ mapError }} <button type="button" @click="requestMap">重试地图</button></p>
         <div v-if="mapRequested" ref="mapRef" class="amap-container"></div>
       </div>
 
@@ -544,7 +510,9 @@ onBeforeUnmount(() => {
           </div>
           <span class="place-summary">{{ placeRecommendationSummary }}</span>
         </div>
-        <p v-if="!recommendedPlaces.length" class="muted place-empty">当前暂无推荐场地，稍后再来看看。</p>
+        <p v-if="placesLoading" role="status">场地加载中…</p>
+        <p v-if="placesError" role="alert">场地加载失败：{{ placesError }} <button type="button" @click="loadPlaces">重试场地</button></p>
+        <p v-if="!placesLoading && !placesError && !recommendedPlaces.length" class="muted place-empty">当前暂无推荐场地，稍后再来看看。</p>
         <div class="motion-list place-motion-list">
           <div
             v-for="(p, index) in recommendedPlaces"
@@ -563,7 +531,7 @@ onBeforeUnmount(() => {
             </p>
             <div class="place-score-row" aria-hidden="true">
               <span class="score-track"><i :style="{ width: placeScorePercent(p) }"></i></span>
-              <span>{{ p.reviewCount || 0 }} 条评价</span>
+              <span>{{ reviewCountText(p) }}</span>
             </div>
             <div class="place-tags">
               <span v-for="tag in p.placeTags" :key="`${p.placeId}-${tag}`">{{ tag }}</span>
@@ -906,8 +874,11 @@ onBeforeUnmount(() => {
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 42px;
-  height: 34px;
+  min-width: 42px;
+  padding: 5px 8px;
+  font-size: 13px;
+  text-align: center;
+  min-height: 34px;
   border-radius: 12px;
   background: #111827;
   color: #fff;

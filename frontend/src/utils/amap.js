@@ -47,7 +47,9 @@ export function loadAMap() {
     return mapLoaderPromise
   }
 
+  let timeout
   mapLoaderPromise = new Promise((resolve, reject) => {
+    timeout = setTimeout(() => reject(new Error('高德地图加载超时')), 15000)
     ensureSecurityConfig()
 
     setupAmapErrorGuard()
@@ -66,7 +68,16 @@ export function loadAMap() {
     script.onload = () => { if (amapErrorGuard) amapErrorGuard.abort(); resolve(window.AMap) }
     script.onerror = () => { if (amapErrorGuard) amapErrorGuard.abort(); reject(new Error('高德地图脚本加载失败')) }
     document.head.appendChild(script)
-  })
+  }).then(amap => {
+    if (!amap?.Map) throw new Error('高德地图接口不可用')
+    return amap
+  }).catch(error => {
+    document.querySelector('script[data-amap-loader="1"]')?.remove()
+    if (amapErrorGuard) amapErrorGuard.abort()
+    amapErrorGuard = null
+    mapLoaderPromise = null
+    throw error
+  }).finally(() => clearTimeout(timeout))
 
   return mapLoaderPromise
 }

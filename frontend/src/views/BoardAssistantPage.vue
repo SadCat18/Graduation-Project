@@ -5,6 +5,8 @@ import { boardApi } from '../api/board'
 import { getRole, getToken } from '../utils/auth'
 import BoardDemandForm from '../components/board/BoardDemandForm.vue'
 import BoardEvaluation from '../components/board/BoardEvaluation.vue'
+import { itemSpecs, planSection } from '../board/presentation'
+import BoardChecks from '../components/board/BoardChecks.vue'
 import BoardPricing from '../components/board/BoardPricing.vue'
 import { categoryLabels, clearContinuation, clone, errorText, labelState, money, isReference, optionLabel, reasonLabel, planIdentity, readContinuation, requestGate, selectionDiff, storeContinuation } from '../board/state'
 import '../board/board.css'
@@ -17,7 +19,9 @@ const name = ref('我的选板方案'), note = ref(''), saveReady = ref(false)
 const resume = readContinuation()
 const bucket = computed(() => results.value?.[tab.value])
 const bucketLabels = { complete: '成品整板', assembly: '配件组装' }
-const visiblePlans = computed(() => (bucket.value?.plans || []).slice(0, 3))
+const sectionLabels = { reference: '完整参考组装（参考估价）', referenceComplete: '成品参考结果（按原资料分类）', exact: '精确价 / 厂家成品结果', pending: '资料待补 / 待确认', incompatible: '明确不兼容（阻断）' }
+const planSections = computed(() => Object.entries(sectionLabels).filter(([key]) => key !== (tab.value === 'assembly' ? 'referenceComplete' : 'reference')).map(([key, title]) => ({ key, title, plans: (bucket.value?.plans || []).map((plan, index) => ({ plan, index })).filter(({ plan }) => planSection(plan) === key) })))
+const minimumComplete = computed(() => bucket.value?.minimumFeasiblePlan && !['pending', 'incompatible'].includes(planSection(bucket.value.minimumFeasiblePlan)))
 const comparisonKeys = computed(() => new Set(comparison.value.map(planIdentity)))
 const emptyBucketMessage = computed(() => {
   if (bucket.value?.state === 'BUDGET_INSUFFICIENT') return '当前预算内没有完整可行方案。不会自动提高预算。'
@@ -29,12 +33,7 @@ function installationLabel(plan) {
   if (plan.kind !== 'COMPLETE') return '组装 / 需自行安装'
   return isReference(plan) ? '成品整板 / 按原资料分类' : '成品整板 / 厂家安装'
 }
-function itemSpecText(item) {
-  const width = item.specs?.widthInch || item.specs?.deckWidthInch || ''
-  const diameter = item.specs?.diameterMm || ''
-  const hardness = `${item.specs?.hardnessValue || ''}${item.specs?.hardnessScale || ''}`
-  return [width, width ? 'inch' : '', diameter, diameter ? 'mm' : '', hardness].filter(Boolean).join(' ')
-}
+function itemSpecText(item) { return itemSpecs(item).map(spec => `${spec.label} ${spec.value}`).join(' · ') }
 function replacementLabel(plan) {
   return plan.items?.find(item => item.category === replacementCategory.value)?.label
 }
@@ -226,7 +225,7 @@ onMounted(async () => {
         <p v-for="(count, reason) in bucket.excludedCounts || {}" :key="reason">
           筛除原因 {{ reasonLabel(reason) }}：{{ count }}
         </p>
-        <article v-if="bucket.minimumFeasiblePlan" class="board-item">
+        <article v-if="minimumComplete" class="board-item">
           <h3>
             本次搜索内最低可行方案
           </h3>
@@ -238,15 +237,17 @@ onMounted(async () => {
             查看最低方案
           </button>
         </article>
-        <div class="board-grid">
-          <article v-for="(plan, i) in visiblePlans" :key="planIdentity(plan)" class="board-item">
+        <section v-for="section in planSections" :key="section.key" :data-section="section.key">
+          <h3>{{ section.title }}（{{ section.plans.length }}）</h3>
+          <p v-if="!section.plans.length" class="muted">{{ section.key === 'reference' ? '当前没有完整参考组装方案；国内价格与安装规则等真实资料仍待补充。' : '本分区暂无结果。' }}</p>
+          <div class="board-grid">
+          <article v-for="{ plan, index: i } in section.plans" :key="planIdentity(plan)" class="board-item">
             <h3>
               {{ tab === 'complete' ? '成品整板' : '组装方案' }} {{ i + 1 }}
             </h3>
             <BoardPricing :evaluation="plan" />
-            <p>
-              {{ labelState(plan.validationState) }}
-            </p>
+            <p>{{ labelState(plan.validationState) }}</p>
+            <p v-if="plan.budgetDeltaCents < 0" class="board-error">超出预算 {{ money(Math.abs(plan.budgetDeltaCents)) }}，不属于预算内可用方案。</p>
             <p v-for="reason in plan.reasons || []" :key="reason">
               {{ reasonLabel(reason) }}
             </p>
@@ -262,7 +263,8 @@ onMounted(async () => {
               </button>
             </div>
           </article>
-        </div>
+          </div>
+        </section>
       </div>
     </section>
     <section v-if="comparison.length" class="card">
@@ -337,9 +339,7 @@ onMounted(async () => {
                 <p v-for="m in p.missing || []" :key="m">
                   {{ reasonLabel(m, isReference(p)) }}
                 </p>
-                <p v-for="(c,j) in p.checks || []" :key="j">
-                  {{ labelState(c.state) }}：{{ c.explanation }}
-                </p>
+                <BoardChecks :checks="p.checks || []" />
               </td>
             </tr>
           </tbody>

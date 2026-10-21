@@ -3,6 +3,9 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
+import { usePublicCategories } from '../utils/publicCategories'
+import { sourceLinkLabel } from '../utils/publicDisplay'
+import { safeSource } from '../board/state'
 import { getToken } from '../utils/auth'
 
 defineOptions({ name: 'SkateProfessionalPage' })
@@ -22,6 +25,12 @@ const selectedPlanDetail = ref(null)
 const currentTraining = ref(null)
 const events = ref([])
 const equipments = ref([])
+const equipmentLoading = ref(false), equipmentError = ref('')
+let equipmentSequence = 0
+const { options: equipmentCategories, loading: categoriesLoading, error: categoriesError, load: loadCategories } = usePublicCategories('equipment')
+const planLoading = ref(false), planError = ref(''), requestedPlan = ref(null)
+let planSequence = 0
+const coverage = computed(() => selectedPlanDetail.value?.scheduleCoverage)
 const videos = ref([])
 
 const checkinForm = reactive({
@@ -159,7 +168,7 @@ async function activateTab(tabKey) {
   const loaders = {
     training: loadPlans,
     events: loadEvents,
-    equipment: loadEquipments
+    equipment: () => Promise.all([loadEquipments(), loadCategories()])
   }
   const loader = loaders[tabKey]
   if (!loader) return
@@ -228,7 +237,14 @@ async function loadPlans() {
 }
 
 async function showPlan(plan) {
-  selectedPlanDetail.value = await api.skateTrainingPlanDetail(plan.planId)
+  const sequence = ++planSequence
+  requestedPlan.value = plan; selectedPlanDetail.value = null; planLoading.value = true; planError.value = ''
+  try {
+    const detail = await api.skateTrainingPlanDetail(plan.planId)
+    if (!detail?.plan || !Array.isArray(detail.tasks)) throw new Error('训练资料格式不可用')
+    if (sequence === planSequence) selectedPlanDetail.value = detail
+  } catch (e) { if (sequence === planSequence) planError.value = e?.message || '训练详情加载失败' }
+  finally { if (sequence === planSequence) planLoading.value = false }
 }
 
 async function loadCurrentTraining() {
@@ -341,8 +357,14 @@ async function loadEquipments() {
   const params = { page: 1, size: 30 }
   if (equipmentFilter.category) params.category = equipmentFilter.category
   if (equipmentFilter.suitableLevel) params.suitableLevel = equipmentFilter.suitableLevel
-  const data = await api.skateEquipments(params)
-  equipments.value = data?.list || []
+  const sequence = ++equipmentSequence
+  equipmentLoading.value = true; equipmentError.value = ''
+  try {
+    const data = await api.skateEquipments(params)
+    if (!Array.isArray(data?.list)) throw new Error('装备资料格式不可用')
+    if (sequence === equipmentSequence) equipments.value = data.list
+  } catch (e) { if (sequence === equipmentSequence) equipmentError.value = e?.message || '装备加载失败' }
+  finally { if (sequence === equipmentSequence) equipmentLoading.value = false }
 }
 
 async function loadVideos() {
@@ -524,6 +546,7 @@ onMounted(loadAll)
         </h2>
         <p class="muted">{{ selectedTrick?.description || '从左侧动作列表开始记录你的练习。' }}</p>
 
+        <p v-if="!isLoggedIn" role="note">提交动作打卡需要登录，填写前请先登录；本页不会自动保存输入。</p>
         <div class="form-grid">
           <label>练习时长
             <input v-model.number="checkinForm.practiceMinutes" type="number" min="1" max="600">
@@ -580,6 +603,17 @@ onMounted(loadAll)
 
       <article class="module-panel">
         <h2>{{ selectedPlanDetail?.plan?.planName || '推荐训练计划' }}</h2>
+        <p v-if="planLoading" role="status">训练详情加载中…</p>
+        <p v-if="planError" role="alert">训练详情加载失败：{{ planError }} <button type="button" @click="showPlan(requestedPlan)">重试训练详情</button></p>
+        <section v-if="selectedPlanDetail" class="coverage-notice" aria-label="任务资料覆盖">
+          <template v-if="coverage && Number.isInteger(coverage.declaredDays) && coverage.declaredDays > 0 && Array.isArray(coverage.availableDays) && Array.isArray(coverage.missingDays)">
+            <strong>计划{{ coverage.declaredDays }}天，已有{{ coverage.availableDays.length }}天任务，{{ coverage.complete === true ? '任务资料完整覆盖' : '剩余资料待补充' }}</strong>
+            <p v-if="coverage.missingDays.length">缺少第 {{ coverage.missingDays.join('、') }} 天任务资料。</p>
+            <p v-for="(diagnostic, index) in coverage.diagnostics || []" :key="index">资料异常：{{ diagnostic.code }} · day {{ diagnostic.dayNo ?? '未知' }}</p>
+          </template>
+          <strong v-else>任务覆盖资料暂不可确认，不能视为完整计划。</strong>
+          <p>以下为现有真实任务；缺日是资料待补充，登录不会补齐缺少的任务。</p>
+        </section>
         <p class="muted">{{ selectedPlanDetail?.plan?.description || '选择一个计划查看每日任务。' }}</p>
         <button v-if="selectedPlanDetail?.plan" class="btn-primary" type="button" :disabled="actionLoading" @click="joinPlan(selectedPlanDetail.plan.planId)">加入训练计划</button>
 
@@ -658,14 +692,9 @@ onMounted(loadAll)
 
     <div v-if="activeTab === 'equipment'" class="stack-panel">
       <div class="filter-bar">
-        <select v-model="equipmentFilter.category">
+        <select v-model="equipmentFilter.category" aria-label="装备分类">
           <option value="">全部分类</option>
-          <option value="板面">板面</option>
-          <option value="桥">桥</option>
-          <option value="轮子">轮子</option>
-          <option value="轴承">轴承</option>
-          <option value="护具">护具</option>
-          <option value="滑板鞋">滑板鞋</option>
+          <option v-for="item in equipmentCategories" :key="item.key" :value="item.key">{{ item.label }}</option>
         </select>
         <select v-model="equipmentFilter.suitableLevel">
           <option value="">全部水平</option>
@@ -676,6 +705,10 @@ onMounted(loadAll)
         <button type="button" @click="loadEquipments">筛选装备</button>
       </div>
 
+      <p v-if="equipmentLoading" role="status">装备加载中…</p>
+      <p v-if="equipmentError" role="alert">装备加载失败：{{ equipmentError }} <button type="button" @click="loadEquipments">重试装备</button></p>
+      <p v-if="categoriesLoading" role="status">装备分类加载中…</p>
+      <p v-if="categoriesError" role="alert">装备分类加载失败：{{ categoriesError }} <button type="button" @click="loadCategories">重试装备分类</button></p>
       <div class="card-grid">
         <article v-for="item in equipments" :key="item.equipment.equipmentId" class="feature-card equipment-card">
           <img
@@ -695,7 +728,7 @@ onMounted(loadAll)
               <button type="button" :class="{ 'btn-primary': !item.favorited }" @click="toggleFavorite(item)">
                 {{ item.favorited ? '取消收藏' : '收藏装备' }}
               </button>
-              <a v-if="item.equipment.buyUrl" class="external-link" :href="item.equipment.buyUrl" target="_blank" rel="noopener noreferrer">外部链接</a>
+              <a v-if="safeSource(item.equipment.buyUrl)" class="external-link" :href="safeSource(item.equipment.buyUrl)" target="_blank" rel="noopener noreferrer">{{ sourceLinkLabel(item.equipment.buyUrl) }}</a>
             </div>
           </div>
         </article>

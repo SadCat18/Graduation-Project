@@ -74,6 +74,11 @@ class BoardReferenceStorageTest {
   Path p=Path.of("target/test-evidence/board/REFERENCE-01/actual-600-service-examples.json");Files.createDirectories(p.getParent());Files.writeString(p,evidence.toPrettyString());
   Files.writeString(p.resolveSibling("actual-600-api-examples.json"),api.toPrettyString());
  }
+ @Test void publicRemediationPreservesOneCentBoundaryAndUnknownAssemblyTotal(){
+  JsonNode exact=calculation.recommend(demand("BALANCED",32300).put("recommendationType","COMPLETE")).path("complete");assertThat(exact.path("state").asText()).isEqualTo("OK");assertThat(exact.path("plans").get(0).path("totalCents").asLong()).isEqualTo(32300);
+  JsonNode cent=calculation.recommend(demand("BALANCED",32299).put("recommendationType","COMPLETE")).path("complete");assertThat(cent.path("state").asText()).isEqualTo("BUDGET_INSUFFICIENT");assertThat(cent.path("shortfallCents").asLong()).isEqualTo(1);
+  JsonNode partial=calculation.recommend(demand("ACTION",60000)).path("assembly").path("plans").get(0);assertThat(partial.path("knownSubtotalCents").asLong()).isEqualTo(78620);assertThat(partial.path("totalCents").isNull()).isTrue();assertThat(partial.path("budgetDeltaCents").isNull()).isTrue();
+ }
  @Test void lowBudgetReportsReferenceShortfall() {
   JsonNode r=calculation.recommend(demand("ACTION",10000)).path("complete");assertThat(r.path("state").asText()).isEqualTo("BUDGET_INSUFFICIENT");assertThat(r.path("shortfallCents").asLong()).isEqualTo(22300);assertThat(r.path("minimumFeasiblePlan").path("pricingMode").asText()).isEqualTo("REFERENCE");
  }

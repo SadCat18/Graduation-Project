@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
+import { absoluteDate, bulletinTiming } from '../utils/publicDisplay'
 import { normalizeMediaUrl } from '../utils/url'
 import { getToken } from '../utils/auth'
 
@@ -63,7 +64,7 @@ async function reportBulletin() {
         <button class="btn-soft" @click="reportBulletin">举报快讯</button>
       </div>
       <h2>{{ detail.title }}</h2>
-      <p class="muted meta">{{ detail.createTime?.replace('T', ' ') }} · {{ detail.publisherName || '匿名发布' }} · {{ detail.bulletinType || '社区快讯' }}</p>
+      <p class="muted meta">{{ absoluteDate(detail.createTime) }} · {{ bulletinTiming(detail) }} · {{ detail.publisherName || '匿名发布' }} · {{ detail.bulletinType || '社区快讯' }}</p>
       <div v-if="imageList.length" class="image-grid">
         <img v-for="img in imageList" :key="img" :src="img" alt="快讯图片" loading="lazy" decoding="async" />
       </div>
