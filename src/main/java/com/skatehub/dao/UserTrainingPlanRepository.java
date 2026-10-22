@@ -16,5 +16,9 @@ public interface UserTrainingPlanRepository extends JpaRepository<UserTrainingPl
 
     List<UserTrainingPlan> findByUserIdOrderByCreateTimeDesc(Long userId);
 
+    Optional<UserTrainingPlan> findFirstByUserIdAndModeAndStatusOrderByCreateTimeDesc(Long userId, String mode, String status);
+
+    Optional<UserTrainingPlan> findFirstByUserIdAndPlanIdAndModeOrderByCreateTimeDesc(Long userId, Long planId, String mode);
+
     long countByUserIdAndStatus(Long userId, String status);
 }

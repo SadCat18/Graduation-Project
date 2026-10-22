@@ -24,6 +24,8 @@ const VideoWatchPage = () => import(/* webpackChunkName: "view-videos" */ '../vi
 const SkateProfessionalPage = () => import(/* webpackChunkName: "view-skate" */ '../views/SkateProfessionalPage.vue')
 
 const routes = [
+  { path: '/training-guidance', component: () => import('../views/TrainingGuidancePage.vue'), meta: { requiresAuth: true } },
+  { path: '/admin/training-guidance', component: () => import('../views/admin/TrainingGuidanceAdminPage.vue'), meta: { requiresAuth: true, adminOnly: true, wideLayout: true } },
   { path: '/board-assistant', component: () => import('../views/BoardAssistantPage.vue') },
   { path: '/profile/board-plans', component: () => import('../views/BoardPlansPage.vue'), meta: { requiresAuth: true } },
   { path: '/login', component: LoginPage },

@@ -2434,6 +2434,7 @@ onBeforeUnmount(() => {
         <AdminDonutChart :items="analytics.bulletinTypeRatio || []" :error="adminLoadError" @refresh="refreshCurrentTab" />
       </div>
 
+      <RouterLink to="/admin/training-guidance" class="btn-soft">训练内容与版本管理</RouterLink>
       <BoardAssistantPanel v-if="tab === 'boardAssistant'" />
       <AdminReviewPanel
         v-if="tab === 'reviewCenter'"

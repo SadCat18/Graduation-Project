@@ -1,0 +1,11 @@
+.training-page { display:grid; gap:18px; max-width:1120px; margin:auto; padding:18px; min-width:0; }
+.training-page h1 { font-size:30px; margin:0; }.training-page h2 { font-size:22px; }.training-head,.training-actions,.training-tabs { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.training-form { display:grid; gap:14px; grid-template-columns:repeat(2,minmax(0,1fr)); }.training-form label { display:grid; gap:6px; }.training-form fieldset,.training-form>p,.training-form>button { grid-column:1/-1; }.training-form fieldset label { display:inline-flex; align-items:center; margin:6px; }
+.training-page input,.training-page select,.training-page textarea { max-width:100%; min-width:0; }.training-page textarea { width:100%; min-height:100px; }.training-page input[type=checkbox] { width:1rem; height:1rem; padding:0; flex-shrink:0; }
+.training-item { border-top:1px solid var(--line,#ddd); padding:14px 0; overflow-wrap:anywhere; }.training-warning { padding:14px; border:1px solid #ce9c57; background:#fff8eb; border-radius:10px; }.training-stats { display:flex; gap:18px; flex-wrap:wrap; }.training-page details { margin:9px 0; }.training-page summary { cursor:pointer; padding:8px 0; }.training-page blockquote { margin:12px 0; padding:10px; border-left:3px solid #648879; }
+.training-table { overflow:auto; }.training-table table { width:100%; border-collapse:collapse; }.training-table td,.training-table th { border-bottom:1px solid #ddd; padding:8px; text-align:left; vertical-align:top; }.training-json { font-family:monospace; min-height:420px!important; }.training-page button:focus-visible,.training-page summary:focus-visible { outline:3px solid #0f766e;outline-offset:3px; }.training-page pre { white-space:pre-wrap; overflow-wrap:anywhere; }.training-page fieldset { border:1px solid var(--line,#ddd); border-radius:8px; }
+@media(max-width:640px) { .training-form { grid-template-columns:1fr; }.training-page { padding:10px; }.training-head { align-items:flex-start; } }
+
+.training-page button { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+
+.training-page > *, .training-page .card { min-width:0; }

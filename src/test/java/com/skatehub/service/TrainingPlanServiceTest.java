@@ -35,6 +35,11 @@ class TrainingPlanServiceTest {
     @Mock private UserTrainingPlanRepository userPlanRepository;
     @Mock private UserTrainingRecordRepository recordRepository;
     @Mock private UserGrowthService userGrowthService;
+    @Mock private com.skatehub.dao.UserRepository userRepository;
+    @Mock private org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @org.junit.jupiter.api.BeforeEach void lockFixture() {
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(new com.skatehub.pojo.User()));
+    }
 
     @InjectMocks
     private TrainingPlanService trainingPlanService;
@@ -50,6 +55,9 @@ class TrainingPlanServiceTest {
         TrainingPlan plan = new TrainingPlan();
         plan.setPlanId(2L);
         plan.setDurationDays(1);
+        when(taskRepository.findByPlanIdOrderByDayNoAscSortOrderAscTaskIdAsc(2L)).thenReturn(List.of(task));
+        UserTrainingRecord existing=new UserTrainingRecord(); existing.setTaskId(9L);
+        when(recordRepository.findByUserPlanIdOrderByCreateTimeAsc(55L)).thenReturn(List.of(existing));
         plan.setStatus("1");
         when(planRepository.findById(2L)).thenReturn(Optional.of(plan));
 
@@ -68,8 +76,8 @@ class TrainingPlanServiceTest {
             saved.setRecordId(66L);
             return saved;
         });
-        when(userGrowthService.grantExp(USER_ID, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", 9L, 8)).thenReturn(108);
-        when(userGrowthService.grantExp(USER_ID, "TRAINING_PLAN_COMPLETE", "USER_TRAINING_PLAN", 55L, 30)).thenReturn(138);
+        when(userGrowthService.grantExpResult(USER_ID, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", 9L, 8)).thenReturn(new UserGrowthService.GrantResult(true,8,108));
+        when(userGrowthService.grantExpResult(USER_ID, "TRAINING_PLAN_COMPLETE", "USER_TRAINING_PLAN", 55L, 30)).thenReturn(new UserGrowthService.GrantResult(true,30,138));
 
         TrainingTaskCompleteRequest request = new TrainingTaskCompleteRequest();
         request.setPracticeMinutes(30);
@@ -125,8 +133,10 @@ class TrainingPlanServiceTest {
                 .thenReturn(Optional.of(userPlan));
         when(recordRepository.existsByUserPlanIdAndTaskId(55L, 9L)).thenReturn(false);
         when(recordRepository.save(any(UserTrainingRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userGrowthService.grantExp(USER_ID, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", 9L, 8)).thenReturn(108);
+        when(userGrowthService.grantExpResult(USER_ID, "TRAINING_TASK_COMPLETE", "TRAINING_TASK", 9L, 8)).thenReturn(new UserGrowthService.GrantResult(true,8,108));
 
+        UserTrainingRecord existing=new UserTrainingRecord(); existing.setTaskId(9L);
+        when(recordRepository.findByUserPlanIdOrderByCreateTimeAsc(55L)).thenReturn(List.of(existing));
         var result = trainingPlanService.completeTask(currentUser(), 9L, new TrainingTaskCompleteRequest());
 
         assertThat(result.get("completedPlan")).isEqualTo(false);

@@ -1,0 +1,9 @@
+CREATE TABLE tb_guidance_source (
+ source_id VARCHAR(100) NOT NULL, version BIGINT NOT NULL,
+ status VARCHAR(16) NOT NULL, document LONGTEXT NOT NULL,
+ PRIMARY KEY(source_id,version)
+);
+INSERT INTO tb_guidance_source(source_id,version,status,document) VALUES('station-stance',1,'AVAILABLE','{"id":"station-stance","version":1,"type":"STATION_TEXT","title":"站姿与安全准备","status":"AVAILABLE","locator":"database/seed-ai-coach-rag-knowledge.sql:84-90","excerpt":"穿戴头盔、护腕、护膝和护肘。原地练习屈膝降低重心。疼痛或肿胀时停止练习。","limitations":"本站已有文字的保守整理，未经专业教练或医学认证；不含已核验教学视频。建议分钟是可调整的安排示例，不是效果、强度或掌握阈值。用户自查不能证明客观能力。"}');
+INSERT INTO tb_guidance_source(source_id,version,status,document) VALUES('station-glide',1,'AVAILABLE','{"id":"station-glide","version":1,"type":"STATION_TEXT","title":"低速滑行与脚刹文字","status":"AVAILABLE","locator":"database/seed-ai-coach-rag-knowledge.sql:92-98","excerpt":"前脚保持在前螺丝附近，后脚轻触地面逐渐摩擦。","limitations":"本站已有文字的保守整理，未经专业教练或医学认证；不含已核验教学视频。建议分钟是可调整的安排示例，不是效果、强度或掌握阈值。用户自查不能证明客观能力。"}');
+INSERT INTO tb_guidance_source(source_id,version,status,document) VALUES('station-brake',1,'AVAILABLE','{"id":"station-brake","version":1,"type":"STATION_TEXT","title":"Foot Brake 脚刹文字","status":"AVAILABLE","locator":"database/seed-ai-coach-rag-knowledge.sql:12-16","excerpt":"先把重心留在前脚，后脚轻放到地面逐渐摩擦减速，不要突然踩死。练习时选择平整空旷地面。","limitations":"本站已有文字的保守整理，未经专业教练或医学认证；不含已核验教学视频。建议分钟是可调整的安排示例，不是效果、强度或掌握阈值。用户自查不能证明客观能力。"}');
+INSERT INTO tb_guidance_source(source_id,version,status,document) VALUES('station-turn',1,'AVAILABLE','{"id":"station-turn","version":1,"type":"STATION_TEXT","title":"Kickturn 转向文字","status":"AVAILABLE","locator":"database/seed-ai-coach-rag-knowledge.sql:18-22","excerpt":"轻压后脚让前轮离地，再用肩膀和髋部带动板头转向。重点是小角度、保持膝盖弯曲。","limitations":"本站已有文字的保守整理，未经专业教练或医学认证；不含已核验教学视频。建议分钟是可调整的安排示例，不是效果、强度或掌握阈值。用户自查不能证明客观能力。"}');

@@ -90,7 +90,9 @@ public class AiCoachRagService {
     }
 
     private void addTrainingTasks(List<AiCoachRagChunk> chunks, List<String> tokens) {
+        java.util.Set<Long> visiblePlans=trainingPlanRepository.findByStatusOrderByPlanIdAsc("1").stream().map(TrainingPlan::getPlanId).collect(java.util.stream.Collectors.toSet());
         for (TrainingTask task : trainingTaskRepository.findAll()) {
+            if(!visiblePlans.contains(task.getPlanId())) continue;
             String title = firstNonBlank(task.getTaskTitle(), "Training task");
             String content = joinText(task.getTaskContent(), "第" + valueOrZero(task.getDayNo()) + "天",
                     minutesText(task.getTargetMinutes()), task.getTrickIds());

@@ -1,0 +1,89 @@
+{
+  "kind": "CONTRACT_SYNTHETIC_EXAMPLES_NOT_RUNTIME_EVIDENCE",
+  "previewRequest": {
+    "templateId": 1,
+    "templateVersion": 1,
+    "goal": "基础控板",
+    "selfLevel": "BEGINNER",
+    "trainingDays": [
+      2,
+      4,
+      6
+    ],
+    "sessionMinutes": 20,
+    "startDate": "2026-10-22"
+  },
+  "feedbackRequest": {
+    "requestKey": "example-feedback-0001",
+    "expectedVersion": 1,
+    "instanceId": 101,
+    "practiceDate": "2026-10-22",
+    "completion": "PARTIAL",
+    "actualMinutes": 8,
+    "difficulty": "HARD",
+    "selfChecks": [
+      {
+        "questionId": "balance-center",
+        "answer": "UNSURE"
+      },
+      {
+        "questionId": "controlled-stop",
+        "answer": "NO"
+      }
+    ],
+    "reasons": [
+      "TIME_SHORTAGE",
+      "MOVEMENT_DIFFICULTY"
+    ],
+    "note": "演示数据：可用时间不足，转向需要巩固"
+  },
+  "feedbackResponseShape": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "record": {
+        "id": 1,
+        "createdAt": "2026-10-22T10:00:00+08:00",
+        "practiceDate": "2026-10-22",
+        "completion": "PARTIAL",
+        "actualMinutes": 8,
+        "expAwarded": 0
+      },
+      "plan": {
+        "id": 1,
+        "version": 2,
+        "status": "IN_PROGRESS",
+        "timezone": "Asia/Shanghai"
+      },
+      "review": {
+        "summary": "记录部分完成；自查不确定，先巩固。",
+        "references": []
+      },
+      "safetyAlerts": [],
+      "suggestions": [
+        {
+          "id": 1,
+          "type": "SPLIT",
+          "status": "PENDING",
+          "basePlanVersion": 2,
+          "ruleId": "TIME_SHORTAGE",
+          "ruleVersion": 1,
+          "triggerReasons": [
+            "TIME_SHORTAGE"
+          ],
+          "affectedTaskIds": [
+            101
+          ],
+          "before": {},
+          "after": {},
+          "diff": [],
+          "allowedActions": [
+            "ACCEPT",
+            "REJECT"
+          ],
+          "blockedReasons": []
+        }
+      ]
+    }
+  }
+}

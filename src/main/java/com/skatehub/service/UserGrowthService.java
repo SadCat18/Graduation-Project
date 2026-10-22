@@ -42,32 +42,28 @@ public class UserGrowthService {
 
     @Transactional
     public int grantExp(Long userId, String actionType, String targetType, Long targetId, int expGain) {
-        if (userId == null || expGain <= 0) return 0;
+        return grantExpResult(userId, actionType, targetType, targetId, expGain).totalExp();
+    }
+
+    public record GrantResult(boolean awarded, int delta, int totalExp) {}
+
+    @Transactional
+    public GrantResult grantExpResult(Long userId, String actionType, String targetType, Long targetId, int expGain) {
+        if (userId == null || expGain <= 0) return new GrantResult(false, 0, 0);
         User user = userRepository.findByIdForUpdate(userId).orElse(null);
-        if (user == null) return 0;
-
-        String normalizedTargetType = targetType == null ? "NONE" : targetType;
-        Long normalizedTargetId = targetId == null ? 0L : targetId;
-
-        boolean exists = userGrowthLogRepository
-                .findByUserIdAndActionTypeAndTargetTypeAndTargetId(userId, actionType, normalizedTargetType, normalizedTargetId)
-                .isPresent();
+        if (user == null) return new GrantResult(false, 0, 0);
+        String type = targetType == null ? "NONE" : targetType;
+        Long id = targetId == null ? 0L : targetId;
         int current = user.getExp() == null ? 0 : user.getExp();
-        if (exists) return current;
-
+        if (userGrowthLogRepository.findByUserIdAndActionTypeAndTargetTypeAndTargetId(userId, actionType, type, id).isPresent()) {
+            return new GrantResult(false, 0, current);
+        }
         UserGrowthLog log = new UserGrowthLog();
-        log.setUserId(userId);
-        log.setActionType(actionType);
-        log.setTargetType(normalizedTargetType);
-        log.setTargetId(normalizedTargetId);
-        log.setExpGain(expGain);
-        log.setCreateTime(LocalDateTime.now(clock));
+        log.setUserId(userId); log.setActionType(actionType); log.setTargetType(type); log.setTargetId(id);
+        log.setExpGain(expGain); log.setCreateTime(LocalDateTime.now(clock));
         userGrowthLogRepository.save(log);
-
-        int totalExp = current + expGain;
-        user.setExp(totalExp);
-        userRepository.save(user);
-        return totalExp;
+        user.setExp(current + expGain); userRepository.save(user);
+        return new GrantResult(true, expGain, current + expGain);
     }
 
     public void fillGrowthInfo(User user) {
