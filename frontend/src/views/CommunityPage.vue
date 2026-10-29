@@ -1,10 +1,10 @@
 ﻿<script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import SkateboardSketch from '../components/SkateboardSketch.vue'
 import { api } from '../api'
-import { usePublicCategories } from '../utils/publicCategories'
+import { categoryGroup, categoryMatches, usePublicCategories } from '../utils/publicCategories'
 import { getAuthChangedEventName, getRole, getToken } from '../utils/auth'
 import { loadCachedPublic } from '../utils/requestCache'
 import { parseImages } from '../utils/url'
@@ -12,9 +12,14 @@ import { parseImages } from '../utils/url'
 defineOptions({ name: 'CommunityPage' })
 
 const router = useRouter()
+const route = useRoute()
+const queryText = (value, max=80) => typeof value === 'string' && value.length <= max && !/[\u0000-\u001f<>]/.test(value) ? value : ''
+const queryPage = value => /^\d{1,6}$/.test(String(value)) && Number(value)>0 ? Number(value) : 1
+const querySort = value => ['latest','hot','recommended','likes','comments'].includes(value) ? value : 'latest'
+let syncingQuery = false
 
 const posts = ref([])
-const page = ref(1)
+const page = ref(queryPage(route.query.page))
 const pageSize = 6
 const total = ref(0)
 const notices = ref([])
@@ -32,10 +37,21 @@ onBeforeUnmount(() => {
 const commentInputs = reactive({})
 const commentMap = reactive({})
 const postUiState = reactive({})
-const keyword = ref('')
-const selectedCategory = ref('')
-const selectedSort = ref('latest')
-const { options: categoryOptions, loading: categoriesLoading, error: categoriesError, load: loadCategories } = usePublicCategories('filter')
+const keyword = ref(queryText(route.query.keyword,200))
+const selectedCategory = ref(queryText(route.query.category))
+const selectedSort = ref(querySort(route.query.sort))
+const { options: categoryOptions, metadata: categoryMetadata, legacyOptions, loading: categoriesLoading, error: categoriesError, load: fetchCategories } = usePublicCategories('filter')
+const categoryNotice=ref('')
+function knownCategory(value) { return !value || [...categoryOptions.value,...legacyOptions.value].some(c=>c.key===value) || Object.hasOwn(categoryMetadata.value?.aliasMap || {},value) }
+async function loadCategories() {
+  await fetchCategories()
+  if (categoryMetadata.value && !knownCategory(selectedCategory.value)) { categoryNotice.value='该筛选标签暂不可用，已显示全部帖子。';selectedCategory.value='' }
+}
+function syncUrl() {
+  if (route.path !== '/community') return
+  const query={...route.query,category:selectedCategory.value || undefined,sort:selectedSort.value,page:String(page.value),keyword:keyword.value.trim() || undefined}
+  router.push({path:'/community',query})
+}
 const sortOptions = [
   { label: '最新', value: 'latest' },
   { label: '热门', value: 'hot' },
@@ -46,7 +62,7 @@ const sortOptions = [
 const isLoggedIn = computed(() => !!getToken())
 const totalPages = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)))
 const listSummary = computed(() => {
-  const categoryText = selectedCategory.value === '' ? '全部分类' : selectedCategory.value
+  const categoryText = selectedCategory.value === '' ? '全部分类' : knownCategory(selectedCategory.value) ? selectedCategory.value : '正在核对筛选标签'
   const sortText = sortOptions.find(item => item.value === selectedSort.value)?.label || '最新'
   return `${categoryText} · ${sortText}排序 · 共 ${total.value || 0} 条`
 })
@@ -108,6 +124,9 @@ async function loadPosts() {
   try {
     let nextPosts, nextTotal
     if (context.sort === 'recommended' && context.token) {
+      if (!categoryMetadata.value) await loadCategories()
+      if (!current()) return
+      if (!categoryMetadata.value) throw new Error('主题资料暂不可用，请重试分类后再筛选推荐')
       const rec = await api.recommendations()
       if (!current()) return
       let list = rec?.posts || []
@@ -115,7 +134,7 @@ async function loadPosts() {
         const kw = context.keyword.toLowerCase()
         list = list.filter(item => String(item.title || '').toLowerCase().includes(kw) || String(item.content || '').toLowerCase().includes(kw))
       }
-      if (context.category) list = list.filter(item => item.category === context.category)
+      list = [...new Map(list.map(item=>[item.postId,item])).values()].filter(item=>categoryMatches(item.category,context.category,categoryMetadata.value))
       nextTotal = list.length
       const start = (context.page - 1) * pageSize
       nextPosts = list.slice(start, start + pageSize)
@@ -131,6 +150,7 @@ async function loadPosts() {
     syncPostUiState(nextPosts)
     if (context.page > totalPages.value) {
       page.value = totalPages.value
+      syncUrl()
       await loadPosts()
     }
   } catch (e) {
@@ -142,12 +162,14 @@ async function loadPosts() {
 
 async function applyKeywordSearch() {
   page.value = 1
+  syncUrl()
   await loadPosts()
 }
 
 async function changePage(nextPage) {
   if (nextPage < 1 || nextPage > totalPages.value || nextPage === page.value) return
   page.value = nextPage
+  syncUrl()
   await loadPosts()
 }
 
@@ -242,9 +264,18 @@ async function sendComment(postId) {
 }
 
 watch([selectedCategory, selectedSort], async () => {
+  if (syncingQuery) return
   page.value = 1
+  syncUrl()
   await loadPosts()
 }, { flush: 'sync' })
+watch(() => [route.path,route.query], () => {
+  if (route.path !== '/community') return
+  const requested=queryText(route.query.category),category=categoryMetadata.value && !knownCategory(requested) ? '' : requested,sort=querySort(route.query.sort),nextPage=queryPage(route.query.page),kw=queryText(route.query.keyword,200)
+  if (category===selectedCategory.value && sort===selectedSort.value && nextPage===page.value && kw===keyword.value.trim()) return
+  syncingQuery=true;selectedCategory.value=category;selectedSort.value=sort;page.value=nextPage;keyword.value=kw;syncingQuery=false
+  loadPosts()
+})
 
 onMounted(async () => {
   await Promise.allSettled([
@@ -296,6 +327,7 @@ onMounted(async () => {
             </button>
           </div>
           <p v-if="categoriesLoading" role="status">分类加载中…</p>
+          <p v-if="categoryNotice" role="status">{{ categoryNotice }}</p>
           <p v-if="categoriesError" role="alert">分类加载失败：{{ categoriesError }} <button type="button" @click="loadCategories">重试分类</button></p>
           <div class="chip-row" aria-label="帖子分类">
             <button type="button" :class="['filter-chip', { active: selectedCategory === '' }]" @click="selectCategory('')">全部</button>
@@ -303,12 +335,13 @@ onMounted(async () => {
               v-for="c in categoryOptions"
               :key="c.key"
               type="button"
-              :class="['filter-chip', { active: selectedCategory === c.key }]"
+              :class="['filter-chip', { active: (categoryMetadata?.aliasMap?.[selectedCategory] || selectedCategory) === c.key }]"
               @click="selectCategory(c.key)"
             >
               {{ c.label }}
             </button>
           </div>
+          <details v-if="legacyOptions.length"><summary>更多标签{{ legacyOptions.some(c=>c.key===selectedCategory) ? ` · ${selectedCategory}` : '' }}</summary><div class="chip-row"><button v-for="c in legacyOptions" :key="c.key" type="button" :aria-pressed="selectedCategory === c.key" @click="selectCategory(c.key)">{{ c.label }}</button></div></details>
           <div class="sort-row" aria-label="排序方式">
             <button
               v-for="s in sortOptions"
@@ -327,7 +360,7 @@ onMounted(async () => {
           <p>正在滑向最新帖子...</p>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
-        <div v-if="!loading && !posts.length" class="empty-state">
+        <div v-if="!loading && !error && !posts.length" class="empty-state">
           <p>暂无帖子，换个筛选条件或发布第一条滑板动态。</p>
         </div>
 
@@ -355,7 +388,7 @@ onMounted(async () => {
                   <div class="post-title-block">
                     <div class="post-tags">
                       <span v-if="item.isTop === '1'" class="tag hot-tag">置顶</span>
-                      <span class="tag">{{ item.category || '未分类' }}</span>
+                      <span class="tag">主题：{{ item.categoryGroup || categoryGroup(item.category,categoryMetadata) }}</span><span v-if="item.category && item.category !== (item.categoryGroup || categoryGroup(item.category,categoryMetadata))" class="tag">原标签：{{ item.category }}</span>
                     </div>
                     <h4 class="clickable-title" @click="goPostDetail(item.postId)">{{ item.title }}</h4>
                   </div>

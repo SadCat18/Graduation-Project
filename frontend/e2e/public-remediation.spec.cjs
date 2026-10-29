@@ -63,7 +63,7 @@ test('F02/F08/F09/D01 real DOM fields, zero/precision comparison and null-price 
  })
  await page.goto('/board-assistant');const budget=page.getByPlaceholder('例如 600.00')
  await budget.fill('0');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.locator('#budget-error')).toContainText('元');await budget.fill('600');await expect(page.locator('#budget-error')).toHaveCount(0)
- await page.getByRole('button',{name:'查找方案',exact:true}).click();await page.getByRole('tab',{name:'配件组装（3）'}).click();await expect(page.locator('[data-section="reference"]')).toContainText('当前没有完整参考组装方案');await expect(page.locator('[data-section="pending"]')).toContainText('已知部分至少超预算186.20元');await expect(page.locator('[data-section="pending"]')).toContainText('完整总价未知')
+ await page.getByRole('button',{name:'查找方案',exact:true}).click();await page.getByRole('tab',{name:'配件组装（3）'}).click();await expect(page.locator('[data-section="reference"]')).toHaveCount(0);await expect(page.locator('[data-section="pending"]')).toContainText('已知部分至少超预算186.20元');await expect(page.locator('[data-section="pending"]')).toContainText('完整总价未知')
  await page.getByRole('button',{name:'加入对比',exact:true}).first().click();await page.getByRole('button',{name:'重新计算并对比'}).click();await expect(page.locator('table')).toContainText('厚度（mm） 3.175');await expect(page.locator('table')).toContainText('厚度（mm） 0');expect(errors).toEqual([])
 })
 test('F03/F06/UX02 coverage, business-code category failure retry and truthful source link',async({page})=>{
@@ -71,8 +71,8 @@ test('F03/F06/UX02 coverage, business-code category failure retry and truthful s
   if(u.pathname==='/api/skate/equipments/categories'&&++categories===1){await route.fulfill({json:{code:500,message:'SYNTHETIC_CATEGORIES_FAILED'}});return true}
   if(u.pathname==='/api/skate/equipments')return {total:60,list:[{equipment:{equipmentId:1,equipmentName:'SYNTHETIC工具',category:'工具',buyUrl:'https://www.dobyheart.com/'}}]}
  })
- await page.goto('/skate');await expect(page.getByText('提交动作打卡需要登录，填写前请先登录；本页不会自动保存输入。')).toBeVisible();await page.getByRole('button',{name:'训练计划',exact:true}).click();await expect(page.getByLabel('任务资料覆盖')).toContainText('计划7天，已有3天任务，剩余资料待补充');await expect(page.locator('.task-row')).toHaveCount(3)
- await page.getByRole('button',{name:'装备库',exact:true}).click();await expect(page.getByRole('button',{name:'重试装备分类'})).toBeVisible();await page.getByRole('button',{name:'重试装备分类'}).click();await expect(page.getByLabel('装备分类').locator('option[value="工具"]')).toHaveCount(1);await expect(page.getByLabel('装备分类').locator('option[value="砂纸"]')).toHaveCount(1);await expect(page.getByRole('link',{name:'站点首页'})).toHaveAttribute('href','https://www.dobyheart.com/');expect(errors).toEqual([])
+ await page.goto('/skate');await expect(page.getByText('提交动作打卡需要登录，填写前请先登录；本页不会自动保存输入。')).toBeVisible();await page.getByRole('tab',{name:'训练计划',exact:true}).click();await expect(page.getByLabel('任务资料覆盖')).toContainText('计划7天，已有3天任务，剩余资料待补充');await expect(page.locator('.task-row')).toHaveCount(3)
+ await page.getByRole('tab',{name:'装备库',exact:true}).click();await expect(page.getByRole('button',{name:'重试装备分类'})).toBeVisible();await page.getByRole('button',{name:'重试装备分类'}).click();await expect(page.getByLabel('装备分类').locator('option[value="工具"]')).toHaveCount(1);await expect(page.getByLabel('装备分类').locator('option[value="砂纸"]')).toHaveCount(1);await expect(page.getByRole('link',{name:'站点首页'})).toHaveAttribute('href','https://www.dobyheart.com/');expect(errors).toEqual([])
 })
 test('F04 same summary list/detail and failed reviews are not zero, raw tags remain associated',async({page})=>{
  let reviews=0;const errors=await setup(page,async(u,_req,route)=>{
@@ -108,7 +108,7 @@ test('protected budgets 323/322.99/100, type filter and reset comparison on fres
   }
   if(u.pathname.endsWith('/board-assistant/compare'))return {evaluations:[clone(recorded.ACTION.response.complete.plans[1])]}
  })
- await page.setViewportSize({width:390,height:844});await page.goto('/board-assistant');await page.getByPlaceholder('例如 600.00').fill('323');await page.getByPlaceholder('仅记录，不参与排序').fill('42');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.getByText('参考估价 ¥323.00',{exact:true})).toBeVisible()
+ await page.setViewportSize({width:390,height:844});await page.goto('/board-assistant');await page.getByPlaceholder('例如 600.00').fill('323');await page.locator('summary').filter({hasText:'补充信息（选填）'}).click();await page.getByPlaceholder('仅记录，不参与排序').fill('42');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.getByText('参考估价 ¥323.00',{exact:true})).toBeVisible()
  await page.getByRole('button',{name:'加入对比',exact:true}).first().click();await page.getByRole('button',{name:'重新计算并对比'}).click();await expect(page.locator('table')).toBeVisible()
  await page.getByPlaceholder('例如 600.00').fill('322.99');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.getByText('参考预算差额 ¥0.01',{exact:true})).toBeVisible();await expect(page.locator('table')).toHaveCount(0)
  await page.getByPlaceholder('例如 600.00').fill('100');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.getByText('参考预算差额 ¥223.00',{exact:true})).toBeVisible();await page.getByLabel('推荐类型').selectOption('ASSEMBLY');await page.getByRole('button',{name:'查找方案',exact:true}).click();await expect(page.getByRole('tab',{name:'配件组装（3）'})).toHaveAttribute('aria-selected','true')

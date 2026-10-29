@@ -11,7 +11,7 @@ vi.mock('../api',()=>({api:m.api}))
 vi.mock('../utils/regions',()=>({regionOptions:m.regions}))
 vi.mock('../utils/amap',()=>({loadAMap:m.amap,amapKeyTail:()=>''}))
 vi.mock('../utils/requestCache',()=>({getCachedResource:(_key,load)=>load(),loadCachedPublic:(_key,load)=>load()}))
-vi.mock('vue-router',()=>({useRouter:()=>({push:m.push}),useRoute:()=>({params:{id:3}})}))
+vi.mock('vue-router',()=>({useRouter:()=>({push:m.push}),useRoute:()=>({params:{id:3},query:{},path:'/skate'})}))
 let w
 const mountPage=C=>{w=mount(C,{global:{stubs:{RouterLink:true,AppIcon:true,SkateboardSketch:true,AiLoadingOverlay:true}}});return w}
 const button=text=>w.findAll('button').find(b=>b.text()===text)

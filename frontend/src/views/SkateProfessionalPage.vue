@@ -1,17 +1,22 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import EquipmentTypeArt from '../components/EquipmentTypeArt.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { api } from '../api'
 import { usePublicCategories } from '../utils/publicCategories'
 import { sourceLinkLabel } from '../utils/publicDisplay'
 import { safeSource } from '../board/state'
+import { guideSpecText } from '../board/presentation'
 import { getToken } from '../utils/auth'
 
 defineOptions({ name: 'SkateProfessionalPage' })
 
 const router = useRouter()
-const activeTab = ref('tricks')
+const route = useRoute()
+const validTab = value => ['tricks','training','events','equipment'].includes(value) ? value : 'tricks'
+const activeTab = ref(validTab(route.query.tab))
+function navigateTab(tab) { activateTab(tab); router.push({path:'/skate',query:{...route.query,tab}}) }
 const loading = ref(false)
 const actionLoading = ref(false)
 const error = ref('')
@@ -139,12 +144,6 @@ function requireLogin() {
   if (isLoggedIn.value) return true
   router.push('/login')
   return false
-}
-
-function useEquipmentImageFallback(event) {
-  const image = event.currentTarget
-  image.onerror = null
-  image.src = '/equipment/maple-deck-80.png'
 }
 
 async function loadAll() {
@@ -454,7 +453,8 @@ function statusLabel(status) {
   }[status] || status || '未知'
 }
 
-onMounted(loadAll)
+watch(() => route.query.tab, value => { if (route.path === '/skate' && activeTab.value !== validTab(value)) activateTab(validTab(value)) })
+onMounted(async () => { await loadAll(); await activateTab(validTab(route.query.tab)) })
 </script>
 
 <template>
@@ -492,7 +492,7 @@ onMounted(loadAll)
             <small>{{ stage.progress }}% 任务进度</small>
           </div>
           <div class="stage-links">
-            <button v-for="trick in stage.tricks" :key="trick.trickId" class="btn-soft trick-name-chip" @click="chooseTrick(trick.trickId); activeTab = 'tricks'">
+            <button v-for="trick in stage.tricks" :key="trick.trickId" class="btn-soft trick-name-chip" @click="chooseTrick(trick.trickId); navigateTab('tricks')">
               <span>{{ trickEnglishName(trick.trickName) }}</span>
               <small v-if="trickChineseName(trick.trickName)">{{ trickChineseName(trick.trickName) }}</small>
             </button>
@@ -510,7 +510,7 @@ onMounted(loadAll)
         :key="tab.key"
         type="button"
         :class="['tab-button', { active: activeTab === tab.key }]"
-        @click="activateTab(tab.key)"
+        :aria-selected="activeTab === tab.key" role="tab" @click="navigateTab(tab.key)"
       >
         <AppIcon :name="tab.icon" :size="17" />
         {{ tab.label }}
@@ -712,19 +712,13 @@ onMounted(loadAll)
       <p v-if="categoriesError" role="alert">装备分类加载失败：{{ categoriesError }} <button type="button" @click="loadCategories">重试装备分类</button></p>
       <div class="card-grid">
         <article v-for="item in equipments" :key="item.equipment.equipmentId" class="feature-card equipment-card">
-          <img
-            v-if="item.equipment.coverUrl"
-            :src="item.equipment.coverUrl"
-            alt=""
-            loading="lazy"
-            decoding="async"
-            @error="useEquipmentImageFallback"
-          >
+          <EquipmentTypeArt :category="item.equipment.category" :name="item.equipment.equipmentName" />
           <div>
-            <span class="pill">{{ item.equipment.category }} · {{ item.equipment.priceRange }}</span>
+            <span class="pill">{{ item.equipment.category }} · 选购指南</span>
             <h3>{{ item.equipment.equipmentName }}</h3>
+            <p class="muted">类别知识与选购示例，不是已核价商品SKU。{{ item.equipment.priceRange ? `资料参考范围：${item.equipment.priceRange}；实际商品价格请查看来源。` : '' }}</p>
             <p>{{ item.equipment.description }}</p>
-            <p class="muted">{{ item.equipment.specParams }}</p>
+            <p class="muted">{{ guideSpecText(item.equipment.specParams) }}</p>
             <div class="action-row">
               <button type="button" :class="{ 'btn-primary': !item.favorited }" @click="toggleFavorite(item)">
                 {{ item.favorited ? '取消收藏' : '收藏装备' }}

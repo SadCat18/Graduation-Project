@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "auditTask": "PUBLIC-REMEDIATION-20261023",
+  "authority": "frozen C02 and independent audit snapshots, not a fresh request by backend",
+  "auditStatusSha256": "4669d461d84c5d75dbfc7e79186ce04eed5cb9ff0e447577cbb01fc668d1e0b0",
+  "entries": [
+    {
+      "id": "shortys-allen",
+      "url": "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+      "checkedAt": "2026-10-23T23:59:15+0800",
+      "verifiedFields": [],
+      "status": 200,
+      "finalUrl": "https://www.shortysinc.com/products/shortys-original-phillips-allen-hardware",
+      "contentType": "text/html; charset=utf-8",
+      "sha256": "db6d46647798457a7ba101ae365f79f780e682b9d9968c275b6ac7af955b4390",
+      "retrieval": "retrieved-not-yet-field-verified",
+      "textBytes": 2085,
+      "fieldVerification": {
+        "status": "field-verified",
+        "fields": [
+          {
+            "field": "headType",
+            "value": "Allen",
+            "scope": "this Allen product page title and listed variants"
+          },
+          {
+            "field": "boltsPerPack",
+            "value": 8,
+            "scope": "Original Hardware family pack description"
+          },
+          {
+            "field": "lowProfileNutsPerPack",
+            "value": 8,
+            "scope": "same description, explicitly nuts not bolt head profile"
+          },
+          {
+            "field": "listedLengthsInch",
+            "value": [
+              1,
+              1.125,
+              1.25
+            ],
+            "scope": "Allen variant labels, not domestic stock/prices"
+          }
+        ],
+        "excerpt": "Each pack contains 8 bolts, 8 low profile nuts and a free sticker. Available in Phillips and Allen head."
+      }
+    },
+    {
+      "id": "shortys-phillips",
+      "url": "https://www.shortysinc.com/products/shortys-original-phillips-head-hardware",
+      "checkedAt": "2026-10-23T23:59:15+0800",
+      "verifiedFields": [],
+      "retrieval": "not-verified-unreachable",
+      "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1006)>",
+      "fieldVerification": {
+        "status": "not-verified",
+        "fields": [],
+        "limitations": [
+          "Independent Phillips URL failed TLS. Allen page mentions Phillips at family scope; do not call the separate Phillips variant page verified."
+        ]
+      }
+    },
+    {
+      "id": "dooks",
+      "url": "https://www.shortysinc.com/products/dooks-riser-pads",
+      "checkedAt": "2026-10-23T23:59:15+0800",
+      "verifiedFields": [],
+      "status": 200,
+      "finalUrl": "https://www.shortysinc.com/products/dooks-riser-pads",
+      "contentType": "text/html; charset=utf-8",
+      "sha256": "eb1cd1245356bf90c89a61f6f94ff873567e9a93c38adbbc3db87f7a714fa988",
+      "retrieval": "retrieved-not-yet-field-verified",
+      "textBytes": 1835,
+      "fieldVerification": {
+        "status": "field-verified",
+        "fields": [
+          {
+            "field": "heightMm",
+            "value": [
+              3.175,
+              6.35,
+              12.7
+            ],
+            "scope": "official1/8,1/4,1/2 inch × exact25.4mm/inch conversion"
+          },
+          {
+            "field": "holePattern",
+            "value": "old/new school double pattern",
+            "scope": "official description"
+          }
+        ],
+        "unknown": [
+          "padsPerSet",
+          "domesticPrice"
+        ],
+        "excerpt": "Double hole pattern for old and new school boards and trucks. Available in 1/8\", 1/4\" and 1/2\".",
+        "limitations": [
+          "Set/5 Set Box is not evidence of pads per set. Existing candidate already has all three exact metric thicknesses."
+        ]
+      }
+    },
+    {
+      "id": "krux-guide",
+      "url": "https://kruxtrucks.com/size-guide",
+      "checkedAt": "2026-10-23T23:59:18+0800",
+      "verifiedFields": [],
+      "status": 200,
+      "finalUrl": "https://kruxtrucks.com/size-guide",
+      "contentType": "text/html; charset=UTF-8",
+      "sha256": "6eddf24f10e761cbc3ac2f49ba3f2f127c660f467ca8c7134dc32b80fe0df61c",
+      "retrieval": "retrieved-not-yet-field-verified",
+      "textBytes": 1780,
+      "fieldVerification": {
+        "status": "field-verified",
+        "fields": [
+          {
+            "field": "axleWidthInch",
+            "value": 8.0,
+            "scope": "Krux8.0 size row"
+          },
+          {
+            "field": "suggestedDeckRangeInch",
+            "value": [
+              7.75,
+              8.25
+            ],
+            "scope": "manufacturer Suggested Deck Size, advice not a hard compatibility boundary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "krux-k5",
+      "url": "https://nhsskatedirect.com/products/k5-polished-silver-standard-krux-skateboard-trucks",
+      "checkedAt": "2026-10-23T23:59:20+0800",
+      "verifiedFields": [],
+      "status": 200,
+      "finalUrl": "https://nhsskatedirect.com/products/k5-polished-silver-standard-krux-skateboard-trucks",
+      "contentType": "text/html; charset=utf-8",
+      "sha256": "31cfe9dbfd1cf7c98f82ea8ef9da6658cd80fda22b22b559431a4a4617336380",
+      "retrieval": "retrieved-not-yet-field-verified",
+      "textBytes": 10353,
+      "fieldVerification": {
+        "status": "partial",
+        "fields": [
+          {
+            "field": "truckHeightMm",
+            "value": 55,
+            "scope": "rendered K5 Standard product details with default axle7.60; NOT independently selected8.00"
+          },
+          {
+            "field": "retailUnit",
+            "value": "one truck; pair requires2units",
+            "scope": "official US retailer states all Krux trucks sold singly"
+          }
+        ],
+        "excludedTransfers": [
+          {
+            "field": "weightGrams",
+            "value": 331,
+            "reason": "default7.60, not8.0"
+          },
+          {
+            "field": "price",
+            "reason": "default variant/overseas retail, no transfer to8.0 CNY"
+          }
+        ],
+        "limitations": [
+          "8.0 exact variant height not separately verified here. Official store unit does not silently overwrite a domestic quote explicitly estimated as a pair."
+        ]
+      }
+    },
+    {
+      "id": "dbh-catalogue",
+      "url": "https://www.dobyheart.com/product.html",
+      "checkedAt": "2026-10-23T23:59:20+0800",
+      "verifiedFields": [],
+      "retrieval": "not-verified-unreachable",
+      "error": "HTTP Error 403: Forbidden",
+      "fieldVerification": {
+        "status": "not-verified",
+        "fields": [],
+        "limitations": [
+          "HTTP403. Do not label report DBH graphics/52mm100A claims independently verified. Existing52mm/100A remains RECORDED; width/contact patch remain unknown."
+        ]
+      }
+    }
+  ],
+  "unknowns": [
+    "DBH official403: graphics are original-record identities, not verified manufacturer SKUs",
+    "Phillips independent TLS failure: no independently verified exact lengths",
+    "Dooks pads per set and domestic price unknown",
+    "Krux8.0 exact height/weight unknown;55mm/331g page default7.60 not transferred",
+    "DBH wheel width/contact patch unknown;52/100A stays RECORDED",
+    "Domestic generic pair estimate does not inherit overseas single-truck packaging"
+  ]
+}

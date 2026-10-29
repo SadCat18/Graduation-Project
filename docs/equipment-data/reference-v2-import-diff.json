@@ -1,0 +1,68 @@
+{
+  "baseDataset": "2026-10-10-reference-01-v1",
+  "candidateDataset": "2026-10-24-reference-02-v2",
+  "candidateSha256": "46921212b03916455767a65ae938bb95b10d9e89ab821bf47366b010cf3c399a",
+  "groups": {
+    "products": {
+      "added": [],
+      "updated": [
+        "TRUCK-006"
+      ],
+      "unchanged": 49,
+      "deleted": []
+    },
+    "variants": {
+      "added": [
+        "SET-001--graphic-circus",
+        "SET-001--graphic-zoo-party",
+        "SET-001--graphic-pj-la",
+        "SET-001--graphic-lucas-collab",
+        "HW-001--allen-1in",
+        "HW-001--allen-1-125in",
+        "HW-001--allen-1-25in",
+        "HW-001--phillips-length-unresolved"
+      ],
+      "updated": [
+        "TRUCK-006--size-8-0-k5-standard",
+        "WHEEL-009--diameter-52-hardness-100a-shape-",
+        "HW-001--purchase-variant-unresolved",
+        "RSR-001--height-3-175mm",
+        "RSR-001--height-6-35mm",
+        "RSR-001--height-12-7mm",
+        "SET-001--deck-none-complete"
+      ],
+      "unchanged": 107,
+      "deleted": []
+    },
+    "quotes": {
+      "added": [],
+      "updated": [
+        "TRUCK-006--cn-price",
+        "GRIP-002--cn-price",
+        "SET-001--cn-price",
+        "BRG-008--cn-price"
+      ],
+      "unchanged": 56,
+      "deleted": []
+    },
+    "rules": {
+      "added": [],
+      "updated": [],
+      "unchanged": 39,
+      "deleted": []
+    },
+    "templates": {
+      "added": [],
+      "updated": [
+        "TEMPLATE--action-beginner",
+        "TEMPLATE--cruise-beginner",
+        "TEMPLATE--balanced-beginner"
+      ],
+      "unchanged": 0,
+      "deleted": []
+    }
+  },
+  "productionImportPerformed": false,
+  "originalFilesModified": false,
+  "legacyKeysAutoMapped": false
+}

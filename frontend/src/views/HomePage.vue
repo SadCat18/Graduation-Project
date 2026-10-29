@@ -20,6 +20,7 @@ const activities = ref([])
 const notices = ref([])
 const bulletins = ref([])
 const newsList = ref([])
+const newsState = ref('loading'), newsError = ref('')
 const recommendPosts = ref([])
 const recommendActivities = ref([])
 const searchKeyword = ref('')
@@ -259,11 +260,16 @@ async function loadHomePrimaryData() {
   }
 }
 
+async function loadNews() {
+  newsState.value = 'loading'; newsError.value = ''
+  try { const data=await loadCachedPublic('public:news', () => api.news()); if (!Array.isArray(data)) throw new Error('资讯格式不可用'); newsList.value=data; newsState.value='ready' }
+  catch { newsState.value='error'; newsError.value='资讯暂时加载失败，请重试。' }
+}
 async function loadHomeSecondaryData() {
   const [noticeResult, bulletinResult, newsResult] = await Promise.allSettled([
     loadCachedPublic('public:notices', () => api.notices()),
     loadCachedPublic('public:bulletins:home', () => api.bulletins({ limit: 5 })),
-    loadCachedPublic('public:news', () => api.news())
+    loadNews()
   ])
 
   if (noticeResult.status === 'fulfilled') {
@@ -272,9 +278,7 @@ async function loadHomeSecondaryData() {
   if (bulletinResult.status === 'fulfilled') {
     bulletins.value = bulletinResult.value || []
   }
-  if (newsResult.status === 'fulfilled') {
-    newsList.value = newsResult.value || []
-  }
+
 }
 
 async function loadRecommendations() {
@@ -389,7 +393,7 @@ onDeactivated(() => {
               <p class="event-meta">{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</p>
             </div>
           </div>
-          <p v-if="!newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新赛事与冠军动态。</p>
+          <p v-if="newsState === 'loading'" role="status">滑板资讯加载中…</p><p v-if="newsState === 'error'" role="alert">{{ newsError }} <button type="button" @click="loadNews">重试资讯</button></p><p v-if="newsState === 'ready' && !newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新赛事与冠军动态。</p>
         </aside>
         <div class="dots">
           <button
@@ -421,7 +425,7 @@ onDeactivated(() => {
           <strong>{{ item.title }}</strong>
           <small>{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</small>
         </button>
-        <p v-if="!newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新动态。</p>
+        <p v-if="newsState === 'loading'" role="status">滑板资讯加载中…</p><p v-if="newsState === 'error'" role="alert">{{ newsError }} <button type="button" @click="loadNews">重试资讯</button></p><p v-if="newsState === 'ready' && !newsList.length" class="event-empty">暂无滑板资讯，稍后将同步最新动态。</p>
       </div>
     </section>
 
@@ -511,7 +515,7 @@ onDeactivated(() => {
       <div class="section-head">
         <div>
           <p class="section-eyebrow">NEWS</p>
-          <h3>滑板资讯</h3>
+          <h3 id="skate-news" tabindex="-1">滑板资讯</h3>
         </div>
         <button class="btn-soft" @click="$router.push('/bulletins')">更多快讯</button>
       </div>
@@ -520,7 +524,7 @@ onDeactivated(() => {
             <p class="link" @click="goNewsDetail(item.newsId)">• {{ item.title }}</p>
             <span>{{ item.createTime?.replace('T', ' ').slice(0, 10) }}</span>
           </div>
-          <p v-if="!newsList.length" class="muted">暂无滑板资讯数据。</p>
+          <p v-if="newsState === 'loading'" role="status">滑板资讯加载中…</p><p v-if="newsState === 'error'" role="alert">{{ newsError }} <button type="button" @click="loadNews">重试资讯</button></p><p v-if="newsState === 'ready' && !newsList.length" class="muted">暂无滑板资讯数据。</p>
       </div>
     </section>
 
@@ -600,7 +604,7 @@ onDeactivated(() => {
 
     <section class="card">
       <div class="section-head">
-        <h3>平台公告</h3>
+        <h3 id="site-notices" tabindex="-1">平台公告</h3>
         <button class="btn-soft" @click="$router.push('/community')">查看全部</button>
       </div>
       <div class="notice-grid">

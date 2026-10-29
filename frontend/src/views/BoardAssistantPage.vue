@@ -1,15 +1,16 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { boardApi } from '../api/board'
 import { getRole, getToken } from '../utils/auth'
 import BoardDemandForm from '../components/board/BoardDemandForm.vue'
 import BoardEvaluation from '../components/board/BoardEvaluation.vue'
-import { itemSpecs, planSection } from '../board/presentation'
+import { itemName, itemSpecs, planSection } from '../board/presentation'
 import BoardChecks from '../components/board/BoardChecks.vue'
 import BoardPricing from '../components/board/BoardPricing.vue'
 import { categoryLabels, clearContinuation, clone, errorText, labelState, money, isReference, optionLabel, reasonLabel, planIdentity, readContinuation, requestGate, selectionDiff, storeContinuation } from '../board/state'
 import '../board/board.css'
+import { focusContent } from '../utils/pageFocus'
 const router = useRouter()
 const gate = requestGate()
 const compareGate = requestGate(), comparing = ref(false), saving = ref(false), saveUnknown = ref(sessionStorage.getItem('board-plan-save-unresolved-v1') === 'true')
@@ -17,10 +18,18 @@ const demand = ref(null), results = ref(null), selected = ref(null), tab = ref('
 const comparison = ref([]), compared = ref(null), replacements = ref(null), replacementCategory = ref(''), replacementPage = ref(1), pending = ref(null)
 const name = ref('我的选板方案'), note = ref(''), saveReady = ref(false)
 const resume = readContinuation()
+const resultHeading = ref(null), detailPanel = ref(null)
+let sourceIdentity = null
+function focusAfterRender(id, target) { nextTick(() => { if (gate.current(id)) focusContent(target()) }) }
+function displayDifference(key, category) {
+ const candidates=[...(selected.value?.items || []),...(replacements.value?.list || []).flatMap(p=>p.items || [])]
+ const item=candidates.find(i=>i.variantKey===key)
+ return item ? itemName(item) : key==='移除' || key==='未选择' ? key : `${categoryLabels[category] || '配件'}规格已变更，重算后查看详情`
+}
 const bucket = computed(() => results.value?.[tab.value])
 const bucketLabels = { complete: '成品整板', assembly: '配件组装' }
 const sectionLabels = { reference: '完整参考组装（参考估价）', referenceComplete: '成品参考结果（按原资料分类）', exact: '精确价 / 厂家成品结果', pending: '资料待补 / 待确认', incompatible: '明确不兼容（阻断）' }
-const planSections = computed(() => Object.entries(sectionLabels).filter(([key]) => key !== (tab.value === 'assembly' ? 'referenceComplete' : 'reference')).map(([key, title]) => ({ key, title, plans: (bucket.value?.plans || []).map((plan, index) => ({ plan, index })).filter(({ plan }) => planSection(plan) === key) })))
+const planSections = computed(() => Object.entries(sectionLabels).filter(([key]) => key !== (tab.value === 'assembly' ? 'referenceComplete' : 'reference')).map(([key, title]) => ({ key, title, plans: (bucket.value?.plans || []).map((plan, index) => ({ plan, index })).filter(({ plan }) => planSection(plan) === key) })).filter(section => section.plans.length))
 const minimumComplete = computed(() => bucket.value?.minimumFeasiblePlan && !['pending', 'incompatible'].includes(planSection(bucket.value.minimumFeasiblePlan)))
 const comparisonKeys = computed(() => new Set(comparison.value.map(planIdentity)))
 const emptyBucketMessage = computed(() => {
@@ -35,7 +44,7 @@ function installationLabel(plan) {
 }
 function itemSpecText(item) { return itemSpecs(item).map(spec => `${spec.label} ${spec.value}`).join(' · ') }
 function replacementLabel(plan) {
-  return plan.items?.find(item => item.category === replacementCategory.value)?.label
+  return itemName(plan.items?.find(item => item.category === replacementCategory.value))
 }
 function clearComparison() { compareGate.invalidate(); comparing.value = false; compared.value = null }
 function invalidate() { if (saving.value) return; gate.invalidate(); clearComparison(); busy.value = false; pending.value = null; saveReady.value = false }
@@ -62,12 +71,12 @@ async function recommend(nextDemand) {
   clearComparison()
   const id = gate.next(); busy.value = true; error.value = ''; notice.value = ''; demand.value = clone(nextDemand)
   selected.value = null; pending.value = null; saveReady.value = false; replacements.value = null; comparison.value = []; compared.value = null; results.value = null
-  try { const data = await boardApi.recommend(nextDemand); if (gate.current(id)) { results.value = data; tab.value = nextDemand.recommendationType === 'ASSEMBLY' ? 'assembly' : 'complete' } }
+  try { const data = await boardApi.recommend(nextDemand); if (gate.current(id)) { results.value = data; tab.value = nextDemand.recommendationType === 'ASSEMBLY' ? 'assembly' : 'complete'; focusAfterRender(id, () => resultHeading.value) } }
   catch (e) { if (gate.current(id)) fail(e) }
   finally { if (gate.current(id)) busy.value = false }
 }
-function open(plan) { if (saving.value) return; invalidate(); error.value = ''; notice.value = ''; selected.value = clone(plan); replacements.value = null; replacementCategory.value = '' }
-function close() { if (saving.value) return; invalidate(); selected.value = null; replacements.value = null; error.value = ''; notice.value = '' }
+function open(plan) { if (saving.value) return; invalidate(); sourceIdentity = planIdentity(plan); error.value = ''; notice.value = ''; selected.value = clone(plan); replacements.value = null; replacementCategory.value = ''; const id=gate.next(); focusAfterRender(id, () => detailPanel.value?.querySelector('h3')) }
+function close() { if (saving.value) return; invalidate(); selected.value = null; replacements.value = null; error.value = ''; notice.value = ''; const id=gate.next(); focusAfterRender(id, () => [...document.querySelectorAll('[data-plan-id]')].find(el=>el.dataset.planId===sourceIdentity)?.querySelector('button') || resultHeading.value) }
 function toggleCompare(plan) {
   if (saving.value) return
   const key = planIdentity(plan), index = comparison.value.findIndex(p => planIdentity(p) === key)
@@ -191,11 +200,11 @@ onMounted(async () => {
       {{ notice }}
     </p>
     <section v-if="results && !selected" class="card">
-      <h2>
+      <h2 ref="resultHeading" tabindex="-1">
         推荐结果
       </h2>
       <p>
-        预算 {{ money(demand.budgetCents) }} · 用途 {{ optionLabel(demand.purpose) }} · 偏好 {{ optionLabel(demand.preference) }}
+        找到 {{ (results.complete?.plans?.length || 0) + (results.assembly?.plans?.length || 0) }} 套候选 · 预算 {{ money(demand.budgetCents) }} · 用途 {{ optionLabel(demand.purpose) }} · 偏好 {{ optionLabel(demand.preference) }}
       </p>
       <p v-if="results.searchTruncated" class="board-notice">
         搜索已截断。结果与最低价仅代表本次搜索范围，不能视为全库最低。
@@ -222,10 +231,10 @@ onMounted(async () => {
             </li>
           </ul>
         </div>
-        <p v-for="(count, reason) in bucket.excludedCounts || {}" :key="reason">
+        <p v-for="(count, reason) in Object.fromEntries(Object.entries(bucket.excludedCounts || {}).filter(([,count]) => count > 0))" :key="reason">
           筛除原因 {{ reasonLabel(reason) }}：{{ count }}
         </p>
-        <article v-if="minimumComplete" class="board-item">
+        <article v-if="minimumComplete" class="board-item" :data-plan-id="planIdentity(bucket.minimumFeasiblePlan)">
           <h3>
             本次搜索内最低可行方案
           </h3>
@@ -239,9 +248,9 @@ onMounted(async () => {
         </article>
         <section v-for="section in planSections" :key="section.key" :data-section="section.key">
           <h3>{{ section.title }}（{{ section.plans.length }}）</h3>
-          <p v-if="!section.plans.length" class="muted">{{ section.key === 'reference' ? '当前没有完整参考组装方案；国内价格与安装规则等真实资料仍待补充。' : '本分区暂无结果。' }}</p>
+
           <div class="board-grid">
-          <article v-for="{ plan, index: i } in section.plans" :key="planIdentity(plan)" class="board-item">
+          <article v-for="{ plan, index: i } in section.plans" :key="planIdentity(plan)" :data-plan-id="planIdentity(plan)" class="board-item">
             <h3>
               {{ tab === 'complete' ? '成品整板' : '组装方案' }} {{ i + 1 }}
             </h3>
@@ -252,7 +261,7 @@ onMounted(async () => {
               {{ reasonLabel(reason) }}
             </p>
             <p>
-              {{ (plan.items || []).map(item => item.label).join(' · ') }}
+              {{ (plan.items || []).map(itemName).join(' · ') }}
             </p>
             <div class="board-actions">
               <button :disabled="saving" @click="open(plan)">
@@ -346,7 +355,7 @@ onMounted(async () => {
         </table>
       </div>
     </section>
-    <section v-if="selected" class="card" data-testid="selected-plan">
+    <section v-if="selected" ref="detailPanel" class="card" data-testid="selected-plan">
       <button :disabled="saving" @click="close">
         返回推荐结果
       </button>
@@ -366,7 +375,7 @@ onMounted(async () => {
         <p v-if="replacements.searchTruncated">
           替换搜索已截断。
         </p>
-        <p v-for="(count, reason) in replacements.excludedCounts || {}" :key="reason">
+        <p v-for="(count, reason) in Object.fromEntries(Object.entries(replacements.excludedCounts || {}).filter(([,count]) => count > 0))" :key="reason">
           {{ reasonLabel(reason) }}：{{ count }}
         </p>
         <article v-for="(p,i) in replacements.list || []" :key="planIdentity(p)" class="board-item">
@@ -374,7 +383,7 @@ onMounted(async () => {
             {{ replacementLabel(p) }} · {{ labelState(p.validationState) }}
           </p>
           <p v-for="diff in selectionDiff(selected.selection,p.selection)" :key="diff.category">
-            {{ categoryLabels[diff.category] }}：{{ diff.before }} → {{ diff.after }}
+            {{ categoryLabels[diff.category] }}：{{ displayDifference(diff.before, diff.category) }} → {{ displayDifference(diff.after, diff.category) }}
           </p>
           <BoardPricing :evaluation="p" />
           <button @click="propose(p)">
@@ -398,7 +407,7 @@ onMounted(async () => {
           确认替换差异
         </h3>
         <p v-for="diff in selectionDiff(selected.selection,pending.selection)" :key="diff.category">
-          {{ categoryLabels[diff.category] }}：{{ diff.before }} → {{ diff.after }}
+          {{ categoryLabels[diff.category] }}：{{ displayDifference(diff.before, diff.category) }} → {{ displayDifference(diff.after, diff.category) }}
         </p>
         <button v-if="!pending.requiresConfirmation" :disabled="busy" @click="apply()">
           确认单项替换并重算
@@ -411,7 +420,7 @@ onMounted(async () => {
             {{ reasonLabel(a.message || a.reasonCode) }}
           </p>
           <p v-for="diff in selectionDiff(selected.selection,a.selection)" :key="diff.category">
-            {{ categoryLabels[diff.category] }}：{{ diff.before }} → {{ diff.after }}
+            {{ categoryLabels[diff.category] }}：{{ displayDifference(diff.before, diff.category) }} → {{ displayDifference(diff.after, diff.category) }}
           </p>
           <button v-if="a.selection" :disabled="busy" @click="apply(a.selection, null)">
             确认建议 {{ i+1 }} 并重算

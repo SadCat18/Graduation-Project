@@ -19,3 +19,6 @@
 .board-comparison { overflow-x: auto; }.board-comparison table { width: 100%; border-collapse: collapse; }.board-comparison th, .board-comparison td { padding: 14px; border-bottom: 1px solid var(--line); text-align: left; min-width: 145px; vertical-align: top; }
 .board-editor { display: grid; gap: 14px; }.board-editor fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }.board-editor textarea { min-height: 85px; }
 @media(max-width: 600px) { .board-form { grid-template-columns: 1fr; }.board-page .card { padding: 16px; }.board-specs { grid-template-columns: 1fr 1fr; } }
+
+.board-optional { grid-column:1/-1; }.board-optional[open] { display:grid; gap:14px; }.board-optional summary { cursor:pointer; padding:8px 0; }
+.board-page [tabindex="-1"]:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }

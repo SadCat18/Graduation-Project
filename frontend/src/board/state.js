@@ -1,6 +1,6 @@
 export const categoryLabels = { DECK: '板面', TRUCK: '桥', WHEEL: '轮子', BEARING: '轴承', GRIP: '砂纸', HARDWARE: '螺丝与螺母', RISER: '垫片', COMPLETE: '成品整板' }
 export const states = { REFERENCE_ESTIMATE: '参考估价', RECORDED_COMPATIBLE: '按资料匹配，待确认', VERIFIED: '符合已知规则', MANUFACTURER_COMPLETE: '厂家成品', INSUFFICIENT_DATA: '资料不足', DATA_INSUFFICIENT: '资料不足', INCOMPATIBLE: '明确不兼容', PASS: '符合已知规则', ADVICE: '使用建议', READY: '找到方案', OK: '找到方案', NO_CANDIDATE: '暂无候选', BUDGET_INSUFFICIENT: '预算不足', NOT_REQUESTED: '未请求此类别', DRAFT: '资料不足草稿' }
-export const labelState = value => states[value] || value || '待确认'
+export const labelState = value => states[value] || ({ OVER_BUDGET: '超出预算' }[value]) || '待确认'
 export const ruleLabels = { DECK_TRUCK_FIT:'板面与桥适配', WHEEL_TRUCK_RISER:'轮子、桥与垫片', RISER_HARDWARE_LENGTH:'垫片与螺丝长度', GRIP_COVERAGE:'砂纸覆盖', COMPLETENESS:'配件完整性', USAGE_ADVICE:'用途建议' }
 const reasonLabels = {
   ...states, ...categoryLabels, ...ruleLabels,
@@ -12,16 +12,22 @@ const reasonLabels = {
   TEMPLATE_PURPOSE_MISMATCH:'模板用途与当前需求不一致', MANUFACTURER_COMPLETE_FACT_REQUIRED:'缺少厂家完整整板依据',
   SAVED_SELECTION_NO_LONGER_AVAILABLE:'保存时选择当前已不可用', ADJUSTMENT_REQUIRED:'需要连带调整',
   PRICE_CHANGED:'价格已变化', CATALOG_CHANGED:'器材或规则已变化', VERSION_CONFLICT:'记录版本已变化',
-  SELECTION_INVALID:'未通过维护校验', BUDGET_EXCEEDED:'超出当前预算', QUOTE_EXPIRED:'报价已过期', COMPATIBILITY_PENDING:'搭配资料待确认', MISSING_PRICE_NOT_ZERO:'缺价项未按零元计入'
+  SELECTION_INVALID:'未通过维护校验', OVER_BUDGET:'超出当前预算', BUDGET_EXCEEDED:'超出当前预算', QUOTE_EXPIRED:'报价已过期', COMPATIBILITY_PENDING:'搭配资料待确认', MISSING_PRICE_NOT_ZERO:'缺价项未按零元计入'
 }
+const publicReasonText = {
+  '契约必需件数量，条件垫片与物理规则待核实。': '已按方案所需配件数量核对；是否需要垫片及实际搭配是否适用，仍需确认。',
+  '尺寸范围仅转写，端点包含性、结构和适用范围未复核；禁止执行为通过结论。': '尺寸范围来自已采集资料；上下限尺寸是否适用、结构及使用范围尚未核实，不能据此确认搭配兼容。'
+}
+export const publicSourceTitle = (value, fallback = '查看来源') => String(value || '').trim() === '冻结契约v1 §3/任务书 §5.1' ? '本工具的配件数量检查说明（非厂家适配依据）' : value || fallback
 export function reasonLabel(value, reference = false) {
   const text=String(value || '')
   if(text.includes('SYNTHETIC')) return text // Visible fixture evidence label; never real catalog data.
-  if(reference && text.endsWith('VALID_QUOTE_REQUIRED')) return text.split(':').map(part => part === 'VALID_QUOTE_REQUIRED' ? '缺少可用参考报价' : reasonLabels[part] || part).join('：')
+  if(reference && text.endsWith('VALID_QUOTE_REQUIRED')) return text.split(':').map(part => part === 'VALID_QUOTE_REQUIRED' ? '缺少可用参考报价' : reasonLabels[part] || '配件资料').join('：')
+  if(publicReasonText[text.trim()]) return publicReasonText[text.trim()]
   if(reasonLabels[text]) return reasonLabels[text]
   const parts=text.split(':')
-  if(parts.length > 1 && parts.some(p=>reasonLabels[p])) return parts.map(p=>reasonLabels[p] || p).join('：')
-  return /^[A-Z_]+$/.test(text) ? `待确认说明（${text}）` : text
+  if(parts.length > 1 && parts.some(p=>reasonLabels[p])) return parts.map(p=>reasonLabels[p] || '相关资料待确认').join('：')
+  return /^[A-Z_]+$/.test(text) || /\b[a-z0-9]+(?:[-_][a-z0-9]+){2,}\b/.test(text) ? '相关资料待确认' : text
 }
 export const optionLabel = value => ({...categoryLabels,...ruleLabels,RECORDED:'已记录，待核实',VERIFIED:'已核实（需证据）',INSUFFICIENT:'资料不足',HARD:'硬性检查',ADVICE:'使用建议',REFERENCE:'参考估价',EXACT:'精确价',RANGE:'区间价',FROM:'起步价',UNKNOWN:'未知',CN:'国内',OVERSEAS:'海外',REQUIRED:'必需',OPTIONAL:'选用',NONE:'来源明确无需',ACTION:'基础动作练习',CRUISE:'日常滑行',BALANCED:'两者兼顾',ACTION_BEGINNER:'基础动作入门',CRUISE_BEGINNER:'日常滑行入门',BALANCED_BEGINNER:'综合入门',ASSEMBLY:'组装',EASY_START:'容易上手',COMFORT:'滑行舒适',VALUE:'价格实惠',UNSURE:'不确定',UNAUTHORIZED:'未获授权',AUTHORIZED:'已获授权',BOLT_NUT_PAIR:'一组螺丝与螺母',SOURCE_DEPENDENT:'按适用来源决定',PASS:'符合已知规则',INCOMPATIBLE:'明确不兼容',INSUFFICIENT_DATA:'资料不足'}[value] || value)
 export const money = cents => Number.isSafeInteger(cents) ? `¥${(cents / 100).toFixed(2)}` : '无法完整计价'

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { localImageFallback } from './utils/imageFallback'
 import AppIcon from './components/AppIcon.vue'
+import SiteNavigation from './components/SiteNavigation.vue'
 import AppToast from './components/AppToast.vue'
 import { api } from './api'
 import { clearAuth, getAuthChangedEventName, getName, getRole, getToken } from './utils/auth'
@@ -36,15 +37,7 @@ const role = computed(() => authState.value.role)
 const username = computed(() => authState.value.name)
 
 const navItems = computed(() => {
-  const base = [
-    { to: '/', label: '首页', icon: 'home' },
-    { to: '/community', label: '社区帖子', icon: 'community' },
-    { to: '/activities', label: '同城约板', icon: 'activity' },
-    { to: '/skate', label: '滑板专业', icon: 'target' },
-    { to: '/board-assistant', label: '选板助手', icon: 'skateboard' },
-    { to: '/ai-coach', label: 'AI 滑板老师', icon: 'skateboard' },
-    { to: '/bulletins', label: '社区快讯', icon: 'news' }
-  ]
+  const base = []
   if (hasToken.value) {
     base.push({ to: '/messages', label: '私信', icon: 'message', badge: privateUnreadCount.value })
     base.push({ to: '/profile', label: '个人中心', icon: 'user' })
@@ -118,25 +111,12 @@ watch(() => route.path, () => {
 <template>
   <div class="app-shell">
     <header v-if="!isAuthPage" class="topbar">
-      <div class="brand" @click="$router.push('/')">
+      <RouterLink class="brand" to="/" aria-label="滑板知识网站首页">
         <span class="brand-icon"><AppIcon name="skateboard" :size="20" /></span>
         <span>滑板知识网站</span>
-      </div>
+      </RouterLink>
 
-      <nav class="nav-links">
-        <router-link
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="nav-link"
-          @mouseenter="prefetchRoute(item.to)"
-          @focus="prefetchRoute(item.to)"
-        >
-          <AppIcon :name="item.icon" :size="16" />
-          <span>{{ item.label }}</span>
-          <small v-if="item.badge" class="nav-badge">{{ item.badge }}</small>
-        </router-link>
-      </nav>
+      <SiteNavigation :personal="navItems" />
 
       <div class="nav-right">
         <template v-if="hasToken">
@@ -162,26 +142,13 @@ watch(() => route.path, () => {
       <RouterView v-slot="{ Component, route: viewRoute }">
         <Transition name="route-glide" mode="out-in">
           <KeepAlive include="HomePage,CommunityPage,ActivitiesPage,BulletinListPage">
-            <component :is="Component" :key="viewRoute.path" />
+            <component :is="Component" :key="viewRoute.path" :data-route-path="viewRoute.path" />
           </KeepAlive>
         </Transition>
       </RouterView>
     </main>
 
-    <nav v-if="!isAuthPage" class="mobile-bottom-nav" aria-label="移动端主导航">
-      <router-link
-        v-for="item in navItems.slice(0, 6)"
-        :key="`mobile-${item.to}`"
-        :to="item.to"
-        class="mobile-bottom-link"
-        @touchstart.passive="prefetchRoute(item.to)"
-        @focus="prefetchRoute(item.to)"
-      >
-        <AppIcon :name="item.icon" :size="18" />
-        <span>{{ item.label.replace('社区帖子', '社区').replace('同城约板', '活动').replace('AI 滑板老师', 'AI').replace('社区快讯', '快讯') }}</span>
-        <small v-if="item.badge" class="mobile-nav-badge">{{ item.badge }}</small>
-      </router-link>
-    </nav>
+    <SiteNavigation v-if="!isAuthPage" mobile :personal="navItems" />
 
     <footer class="site-footer">
       <a

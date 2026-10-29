@@ -1,5 +1,5 @@
 <script setup>
-import { referenceBudgetLowerBound } from '../../board/presentation'
+import { publicAssumption, referenceBudgetLowerBound } from '../../board/presentation'
 import BoardChecks from './BoardChecks.vue'
 import { isReference, labelState, money, optionLabel, priceLabel, reasonLabel, referenceNotice, safeSource, sourceDate } from '../../board/state'
 defineProps({ evaluation: { type: Object, required: true }, sources: { type: Boolean, default: true } })
@@ -15,7 +15,7 @@ defineProps({ evaluation: { type: Object, required: true }, sources: { type: Boo
     </template>
     <template v-if="isReference(evaluation)">
       <p class="muted">{{ referenceNotice }}</p>
-      <details v-if="evaluation.priceAssumptions?.length"><summary>参考估价假设</summary><ul><li v-for="(assumption,i) in evaluation.priceAssumptions" :key="i">{{ assumption }}</li></ul></details>
+      <details v-if="evaluation.priceAssumptions?.length"><summary>参考估价假设</summary><ul><li v-for="(assumption,i) in evaluation.priceAssumptions" :key="i">{{ publicAssumption(assumption, evaluation.items || []) }}</li></ul></details>
       <details v-if="sources"><summary>查看配件来源</summary><div v-for="(source,i) in (evaluation.items || []).flatMap(item => [...(item.sources || []), ...(item.quoteSources || [])])" :key="i" class="board-source">
         <a v-if="safeSource(source.url)" :href="safeSource(source.url)" target="_blank" rel="noopener noreferrer">{{ source.title || '查看来源' }}</a><span v-else>{{ source.title || '未提供来源链接' }}</span>
         <span> · 采集 {{ sourceDate(source) }} · {{ optionLabel(source.verificationStatus) || '待核实' }}</span>

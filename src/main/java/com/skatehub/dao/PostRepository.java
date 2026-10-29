@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(value = """
             SELECT p.*
             FROM tb_post p
-            WHERE (:category IS NULL OR :category = '' OR p.category = :category)
+            WHERE (:allCategories = true OR p.category IN (:categories) OR (:uncategorized = true AND (p.category IS NULL OR trim(p.category) = '')))
               AND (:keyword IS NULL OR :keyword = ''
                    OR LOWER(p.title) LIKE :keyword ESCAPE '!'
                    OR LOWER(p.content) LIKE :keyword ESCAPE '!')
@@ -37,16 +37,25 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             countQuery = """
                     SELECT COUNT(1)
                     FROM tb_post p
-                    WHERE (:category IS NULL OR :category = '' OR p.category = :category)
+                    WHERE (:allCategories = true OR p.category IN (:categories) OR (:uncategorized = true AND (p.category IS NULL OR trim(p.category) = '')))
                       AND (:keyword IS NULL OR :keyword = ''
                            OR LOWER(p.title) LIKE :keyword ESCAPE '!'
                            OR LOWER(p.content) LIKE :keyword ESCAPE '!')
                     """,
             nativeQuery = true)
-    Page<Post> searchPublicPosts(@Param("keyword") String keyword,
-                                 @Param("category") String category,
+    Page<Post> searchPublicPostsByCategories(@Param("keyword") String keyword,
+                                 @Param("categories") List<String> categories,
+                                 @Param("allCategories") boolean allCategories,
+                                 @Param("uncategorized") boolean uncategorized,
                                  @Param("sort") String sort,
                                  Pageable pageable);
+
+    default Page<Post> searchPublicPosts(String keyword,String category,String sort,Pageable pageable) {
+        boolean all=category==null||category.isBlank();
+        List<String> expanded=com.skatehub.util.PostCategoryOptions.expand(category,all?List.of():findPublicCategories());
+        return searchPublicPostsByCategories(keyword,expanded.isEmpty()?List.of(""):expanded,all,
+            com.skatehub.util.PostCategoryOptions.FALLBACK.equals(category),sort,pageable);
+    }
 
     @Query(value = """
             SELECT p.*
