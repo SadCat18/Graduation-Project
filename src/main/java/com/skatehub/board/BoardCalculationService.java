@@ -12,6 +12,10 @@ import static com.skatehub.board.BoardDatasetValidator.*;
 /** One calculation path for public requests, snapshots and admin trials. No external calls. */
 @Service @RequiredArgsConstructor
 public class BoardCalculationService {
+    private java.time.Clock clock=java.time.Clock.systemUTC();
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void calculationClock(java.time.Clock value) { this.clock=value; }
+
     private final BoardCatalogService catalog;
     private final BoardDatasetValidator json;
     static final int MAX_REQUEST_EVALUATIONS=2000;
@@ -64,7 +68,7 @@ public class BoardCalculationService {
         boolean physicalPackage=integer(q.get("packageQuantity"),1)&&("PIECE".equals(unit)&&!category.equals("HARDWARE")||Objects.equals(unit,requiredUnit));
         Instant collected=time(q.get("collectedAt")),validUntil=time(q.get("validUntil"));
         boolean current=collected!=null&&!collected.isAfter(now)&&validUntil!=null&&validUntil.isAfter(now);
-        return exactMarket&&knownCosts&&physicalPackage&&current;
+        return exactMarket&&knownCosts&&physicalPackage&&current&&currentReferenceTime(q,now);
     }
     ObjectNode evaluate(ObjectNode demand,ObjectNode selection,JsonNode data) {
         Map<String,JsonNode> products=rows(data,"products"),variants=rows(data,"variants"),templates=rows(data,"templates");
@@ -104,14 +108,15 @@ public class BoardCalculationService {
             purposeScore++;if(!words("UNSURE VALUE").contains(text(demand,"preference"))&&Objects.equals(text(demand,"preference"),text(r.path("conditions"),"preference")))preferenceScore++;
             checks.add(check(r,"USAGE_ADVICE","ADVICE",r.path("conditions").path("message").asText()));
         }
-        long subtotal=0;boolean priceComplete=true;Instant now=Instant.now();
+        long subtotal=0;boolean priceComplete=true;Instant now=clock.instant();
         for(var entry:picked.entrySet()) {
             String c=entry.getKey();JsonNode v=entry.getValue(),p=products.get(text(v,"productKey"));int quantity=QUANTITY.get(c);
             ObjectNode line=json.object().put("category",c).put("variantKey",text(v,"key")).put("productKey",text(v,"productKey")).put("label",v.path("label").asText()).put("requiredQuantity",quantity);line.set("specs",v.path("specs"));line.set("sources",v.path("sources"));
+            for(String field:List.of("identity","fieldEvidence","compatibilityAdvice","packaging","historicalOnly","replacements"))if(v.has(field))line.set(field,v.get(field));
             JsonNode best=null;long cost=Long.MAX_VALUE;
             for(JsonNode q:data.path("quotes"))if((Objects.equals(text(q,"variantKey"),text(v,"key"))||reference(q)&&!q.hasNonNull("variantKey"))&&Objects.equals(text(q,"sourceProductKey"),text(p,"key"))) {
                 used.add(q);
-                if(quoteEligible(q,c,now)||referenceQuote(q))try{long value=lineCost(q,quantity);if(best==null||value<cost||value==cost&&text(q,"key").compareTo(text(best,"key"))<0){best=q;cost=value;}}catch(ArithmeticException ignored){missing.add(c+":PRICE_OVERFLOW");}
+                if(enabled(v)&&enabled(p)&&(quoteEligible(q,c,now)||referenceQuote(q,now)))try{long value=lineCost(q,quantity);if(best==null||value<cost||value==cost&&text(q,"key").compareTo(text(best,"key"))<0){best=q;cost=value;}}catch(ArithmeticException ignored){missing.add(c+":PRICE_OVERFLOW");}
             }
             if(best==null){priceComplete=false;missing.add(c+":VALID_QUOTE_REQUIRED");for(String f:List.of("packageQuantity","packageCount","quoteKey","quoteVersion","amountCents","lineTotalCents","shippingCents","taxCents"))line.putNull(f);}
             else {
@@ -253,7 +258,7 @@ public class BoardCalculationService {
     }
     private long pricedItems(JsonNode e){long count=0;for(JsonNode line:e.path("items"))if(line.hasNonNull("lineTotalCents"))count++;return count;}
     private long referenceVariantCost(JsonNode v,JsonNode data){
-        long cost=Long.MAX_VALUE;for(JsonNode q:data.path("quotes"))if(referenceQuote(q)&&Objects.equals(text(q,"sourceProductKey"),text(v,"productKey"))&&(!q.hasNonNull("variantKey")||Objects.equals(text(q,"variantKey"),text(v,"key"))))cost=Math.min(cost,q.path("amountCents").longValue());return cost;
+        long cost=Long.MAX_VALUE;for(JsonNode q:data.path("quotes"))if(referenceQuote(q,clock.instant())&&Objects.equals(text(q,"sourceProductKey"),text(v,"productKey"))&&(!q.hasNonNull("variantKey")||Objects.equals(text(q,"variantKey"),text(v,"key"))))cost=Math.min(cost,q.path("amountCents").longValue());return cost;
     }
     public ObjectNode compare(JsonNode body){fields(body,"plans");JsonNode plans=body.path("plans");if(!plans.isArray()||plans.isEmpty()||plans.size()>3)bad("比较须为1至3套");JsonNode data=catalog.calculationCatalog();ArrayNode evaluations=json.array();for(JsonNode p:plans){fields(p,"demand selection");evaluations.add(evaluate(demand(p.path("demand")),selection(p.path("selection")),data));}ObjectNode result=json.object();result.set("evaluations",evaluations);result.set("comparisonFields",json.array().add("kind").add("totalCents").add("budgetDeltaCents").add("validationState").add("pricingMode").add("knownSubtotalCents").add("priceAssumptions").add("items").add("checks").add("missing"));return result;}
     public ObjectNode replacements(JsonNode body){

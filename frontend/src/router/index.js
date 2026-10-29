@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getRole, getToken } from '../utils/auth'
 import { safeBoardReturn } from '../board/state'
+import { cancelPageFocus, focusRoute } from '../utils/pageFocus'
 
 const LoginPage = () => import(/* webpackChunkName: "view-login" */ '../views/LoginPage.vue')
 const HomePage = () => import(/* webpackChunkName: "view-home" */ '../views/HomePage.vue')
@@ -54,10 +55,12 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior: focusRoute
 })
 
 router.beforeEach((to) => {
+  cancelPageFocus()
   const token = getToken()
   if ((to.path === '/login' || to.path === '/register') && token) {
     return '/'

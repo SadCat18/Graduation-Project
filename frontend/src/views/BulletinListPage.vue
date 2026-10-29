@@ -60,8 +60,10 @@ const visibleList = computed(() => {
   return data
 })
 
-const topItem = computed(() => visibleList.value[0] || null)
-const gridItems = computed(() => visibleList.value.slice(1))
+const historicalItems = computed(() => visibleList.value.filter(item=>bulletinTiming(item).startsWith('历史')))
+const currentItems = computed(() => visibleList.value.filter(item=>!bulletinTiming(item).startsWith('历史')))
+const topItem = computed(() => currentItems.value[0] || null)
+const gridItems = computed(() => currentItems.value.slice(1))
 const latestItems = computed(() => [...list.value]
   .sort((a, b) => new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime())
   .slice(0, 5))
@@ -127,6 +129,7 @@ onMounted(loadData)
         </div>
       </div>
 
+      <section v-if="historicalItems.length" class="historical-bulletins"><h3>历史活动通知</h3><p class="muted">按原发布时间归档；实际活动日期请核对原文，不作为当前活动通知。</p><article v-for="item in historicalItems" :key="item.bulletinId" class="board-item"><h4>{{ item.title }}</h4><p>{{ absoluteDate(item.createTime) }} · {{ bulletinTiming(item) }}</p><button type="button" @click="goDetail(item.bulletinId)">查看历史通知</button></article></section>
       <div class="content-layout">
         <div class="news-grid motion-list">
           <div

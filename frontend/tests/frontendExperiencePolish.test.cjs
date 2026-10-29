@@ -6,6 +6,7 @@ const src = path.resolve(__dirname, '../src')
 const read = (relativePath) => fs.readFileSync(path.join(src, relativePath), 'utf8')
 
 const app = read('App.vue')
+const navigation = read('components/SiteNavigation.vue')
 const styles = read('styles.css')
 const home = read('views/HomePage.vue')
 const coach = read('views/AiCoachPage.vue')
@@ -20,7 +21,7 @@ assert.doesNotMatch(video, mojibakePattern, 'video watch page should not contain
 assert.doesNotMatch(aiOverlay, mojibakePattern, 'AI loading overlay should not contain mojibake text')
 
 assert.match(app, /mobile-bottom-nav/, 'adds a dedicated mobile bottom navigation')
-assert.match(app, /aria-label="移动端主导航"/, 'mobile navigation is labeled for assistive technology')
+assert.match(navigation, /移动端主导航/, 'mobile navigation is labeled for assistive technology')
 assert.match(app, /<AppToast\s*\/>/, 'mounts global toast feedback')
 assert.match(app, /installToastAlertBridge/, 'bridges legacy alert feedback into toast notifications')
 assert.match(toast, /window\.alert\s*=\s*\(message\)\s*=>\s*notify\(message\)/, 'toast utility replaces alert with non-blocking feedback')

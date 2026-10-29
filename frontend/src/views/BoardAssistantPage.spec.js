@@ -49,7 +49,7 @@ describe('SYNTHETIC frontend assistant state (not real catalog acceptance)',()=>
     })
     api.save.mockImplementation(async payload=>{expect(payload.selection).toEqual(suggestion);expect(payload.expectedCalculationVersion).toBe('LINKED-FRESH');return {key:'saved',snapshotState:'VERIFIED'}})
     api.replacements.mockResolvedValue({total:1,list:[linked]});await button('替换轮子').trigger('click');await flushPromises();await button('检查替换 1').trigger('click')
-    expect(api.evaluate).not.toHaveBeenCalled();expect(wrapper.text()).toContain('SYN-V-RISER');await button('确认建议 1 并重算').trigger('click');await flushPromises()
+    expect(api.evaluate).not.toHaveBeenCalled();expect(wrapper.text()).toContain('垫片规格已变更');expect(wrapper.text()).not.toContain('SYN-V-RISER');await button('确认建议 1 并重算').trigger('click');await flushPromises()
     expect(api.evaluate.mock.calls[0][0].selection.items).toHaveLength(2);expect(api.evaluate.mock.calls[0][0]).not.toHaveProperty('expectedCalculationVersion');expect(wrapper.text()).not.toContain('价格已变化')
     await wrapper.find('form.board-item').trigger('submit');await flushPromises();expect(api.evaluate.mock.calls[1][0].expectedCalculationVersion).toBe('LINKED-FRESH');await button('确认保存当前结果').trigger('click');await flushPromises();expect(api.save).toHaveBeenCalledTimes(1)
   })

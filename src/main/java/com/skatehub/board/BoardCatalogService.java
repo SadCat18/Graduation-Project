@@ -27,6 +27,10 @@ import static com.skatehub.board.BoardDtos.*;
 @Service @RequiredArgsConstructor
 @Transactional(readOnly=true)
 public class BoardCatalogService {
+    private java.time.Clock clock=java.time.Clock.systemUTC();
+    @org.springframework.beans.factory.annotation.Autowired(required=false)
+    public void calculationClock(java.time.Clock value) { this.clock=value; }
+
     private final BoardProductRepository products;
     private final BoardVariantRepository variants;
     private final BoardQuoteRepository quotes;
@@ -166,7 +170,7 @@ public class BoardCatalogService {
         for(String group:GROUPS)for(BoardRecord row:current(group).values())if(row.isActive()){ObjectNode entry=validator.object();entry.put("resource",group);entry.set("content",validator.parse(row.getContentJson()));published.add(entry);}
         String catalogVersion=validator.hash(published);meta.setCatalogVersion(catalogVersion);
         if(action.equals("IMPORT")){ObjectNode fingerprints=(ObjectNode)validator.parse(meta.getDatasetFingerprints());fingerprints.put(text(dataset,"datasetVersion"),validator.hash(dataset));meta.setDatasetFingerprints(validator.canonical(fingerprints));}
-        meta.setUpdatedAt(Instant.now());metadata.saveAndFlush(meta);
+        meta.setUpdatedAt(clock.instant());metadata.saveAndFlush(meta);
         audit.record(adminId,"BOARD_CATALOG",null,action,"SUCCESS","created="+created+", updated="+updated+", unchanged="+unchanged);
         return new ImportResult(created,updated,unchanged,0,List.of(),report.gaps(),null,catalogVersion);
     }
@@ -185,29 +189,36 @@ public class BoardCatalogService {
         return new PageResult<>(result.getTotalElements(),list);
     }
     public JsonNode variant(String key) {
-        BoardVariant v=variants.findByKey(key).filter(BoardVariant::isActive).orElseThrow(()->new BoardRequestException(404,"规格不存在"));
+        BoardVariant v=variants.findByKey(key).filter(row->row.isActive()||validator.parse(row.getContentJson()).path("historicalOnly").asBoolean()).orElseThrow(()->new BoardRequestException(404,"规格不存在"));
         if(!v.getProduct().isActive())throw new BoardRequestException(404,"规格不存在");
         ObjectNode result=validator.object();result.set("variant",publicVariant(v));result.set("product",publicProduct(v.getProduct()));result.set("displayQuotes",displayQuotes(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getProductKey(),List.of(v)));
-        ObjectNode eligibility=validator.object();eligibility.put("exactPriceEligible",eligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("referencePriceEligible",referenceEligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("verificationStatus",v.getVerificationStatus());result.set("eligibility",eligibility);result.set("sources",publicSources(validator.parse(v.getContentJson()).path("sources")));result.put("catalogVersion",catalogVersion());return result;
+        ObjectNode eligibility=validator.object();eligibility.put("exactPriceEligible",v.isActive()&&eligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("referencePriceEligible",v.isActive()&&referenceEligible(quotes.findLatestBySourceProductKeyIn(List.of(v.getProductKey())),v.getKey()));eligibility.put("verificationStatus",v.getVerificationStatus());result.set("eligibility",eligibility);result.set("sources",publicSources(validator.parse(v.getContentJson()).path("sources")));result.put("catalogVersion",catalogVersion());return result;
     }
-    private ObjectNode publicProduct(BoardProduct p){return view(validator.parse(p.getContentJson()),"key legacyEquipmentId sourceRecordId category brand model active description suitabilityTags levelTags imageSource imageLicenseStatus version pricingMode");}
-    private ObjectNode publicVariant(BoardVariant v){return view(validator.parse(v.getContentJson()),"key productKey label active specs rawSpec verificationStatus version pricingMode");}
-    private ObjectNode view(JsonNode node,String fields){ObjectNode result=validator.object();for(String f:fields.split(" "))if(node.has(f))result.set(f,node.get(f));if(node.has("sources"))result.set("sources",publicSources(node.path("sources")));return result;}
-    private ArrayNode publicSources(JsonNode sources){ArrayNode result=validator.array();for(JsonNode s:sources)result.add(view(s,"url title collectedAt collectedDate verificationStatus"));return result;}
+    private ObjectNode publicProduct(BoardProduct p){return view(validator.parse(p.getContentJson()),"key legacyEquipmentId sourceRecordId category brand model active description suitabilityTags levelTags imageSource imageLicenseStatus version pricingMode fieldEvidence");}
+    private ObjectNode publicVariant(BoardVariant v){return view(validator.parse(v.getContentJson()),"key productKey label active specs rawSpec verificationStatus version pricingMode identity replacements historicalOnly fieldEvidence compatibilityAdvice packaging");}
+    private ObjectNode view(JsonNode node,String fields){ObjectNode result=validator.object();for(String f:fields.split(" "))if(node.has(f)) {
+            JsonNode value=node.get(f).deepCopy();
+            if(f.equals("fieldEvidence"))for(JsonNode fact:value)if(fact.isObject())((ObjectNode)fact).remove(List.of("evidenceRef","responseSha256"));
+            if(f.equals("promotion")&&value.isObject())((ObjectNode)value).remove("evidenceRef");
+            result.set(f,value);
+        }if(node.has("sources"))result.set("sources",publicSources(node.path("sources")));return result;}
+    private ArrayNode publicSources(JsonNode sources){ArrayNode result=validator.array();for(JsonNode s:sources)result.add(view(s,"url title collectedAt collectedDate verificationStatus checkedAt appliesTo fields factNature"));return result;}
     private ArrayNode displayQuotes(List<BoardQuote> rows,String productKey,List<BoardVariant> visible) {
         Set<String> keys=visible.stream().map(BoardVariant::getKey).collect(Collectors.toSet());Map<String,BoardQuote> latest=new TreeMap<>();
         for(BoardQuote q:rows)if(q.getSourceProductKey().equals(productKey))latest.merge(q.getKey(),q,(a,b)->a.getVersion()>b.getVersion()?a:b);
         ArrayNode result=validator.array();for(BoardQuote q:latest.values())if(q.getVariantKey()==null||keys.contains(q.getVariantKey())){
-            ObjectNode item=view(validator.parse(q.getContentJson()),"key variantKey version currency amountCents displayPrice priceKind market purchaseScope packageQuantity packageUnit shippingCents taxCents landedPriceConfirmed collectedAt collectedDate validUntil verificationStatus pricingMode priceAssumptions");
-            item.put("active",q.isActive());item.put("exactPriceEligible",eligible(List.of(q),q.getVariantKey()));item.put("referencePriceEligible",q.isActive()&&referenceQuote(validator.parse(q.getContentJson())));result.add(item);
+            ObjectNode item=view(validator.parse(q.getContentJson()),"key variantKey version currency amountCents displayPrice priceKind market purchaseScope packageQuantity packageUnit shippingCents taxCents landedPriceConfirmed collectedAt collectedDate validUntil verificationStatus pricingMode priceAssumptions promotion");
+            String temporal=referenceTimeStatus(validator.parse(q.getContentJson()),clock.instant());
+            item.put("referenceTemporalStatus",temporal);item.put("historicalOnly","EXPIRED".equals(temporal)||visible.stream().noneMatch(BoardVariant::isActive));
+            item.put("active",q.isActive());item.put("exactPriceEligible",eligible(List.of(q),q.getVariantKey()));item.put("referencePriceEligible",q.isActive()&&visible.stream().anyMatch(v->v.isActive()&&(q.getVariantKey()==null||q.getVariantKey().equals(v.getKey())))&&referenceQuote(validator.parse(q.getContentJson()),clock.instant()));result.add(item);
         }return result;
     }
     private boolean referenceEligible(List<BoardQuote> rows,String variantKey) {
         Map<String,BoardQuote> latest=new HashMap<>();for(BoardQuote q:rows)latest.merge(q.getKey(),q,(a,b)->a.getVersion()>b.getVersion()?a:b);
-        return latest.values().stream().anyMatch(q->q.isActive()&&(q.getVariantKey()==null||variantKey.equals(q.getVariantKey()))&&referenceQuote(validator.parse(q.getContentJson())));
+        return latest.values().stream().anyMatch(q->q.isActive()&&(q.getVariantKey()==null||variantKey.equals(q.getVariantKey()))&&referenceQuote(validator.parse(q.getContentJson()),clock.instant()));
     }
     private boolean eligible(List<BoardQuote> rows,String variantKey) {
         if(variantKey==null)return false;Map<String,BoardQuote> latest=new HashMap<>();for(BoardQuote q:rows)latest.merge(q.getKey(),q,(a,b)->a.getVersion()>b.getVersion()?a:b);
-        return latest.values().stream().anyMatch(q->variantKey.equals(q.getVariantKey())&&q.isActive()&&!reference(validator.parse(q.getContentJson()))&&"VERIFIED".equals(q.getVerificationStatus())&&"EXACT".equals(q.getPriceKind())&&"CNY".equals(q.getCurrency())&&"CN".equals(q.getMarket())&&q.isLandedPriceConfirmed()&&q.getAmountCents()!=null&&q.getPackageQuantity()!=null&&q.getPackageQuantity()>0&&q.getPackageUnit()!=null&&q.getShippingCents()!=null&&q.getTaxCents()!=null&&q.getValidUntil()!=null&&q.getValidUntil().isAfter(Instant.now()));
+        return latest.values().stream().anyMatch(q->variantKey.equals(q.getVariantKey())&&q.isActive()&&!reference(validator.parse(q.getContentJson()))&&"VERIFIED".equals(q.getVerificationStatus())&&"EXACT".equals(q.getPriceKind())&&"CNY".equals(q.getCurrency())&&"CN".equals(q.getMarket())&&q.isLandedPriceConfirmed()&&q.getAmountCents()!=null&&q.getPackageQuantity()!=null&&q.getPackageQuantity()>0&&q.getPackageUnit()!=null&&q.getShippingCents()!=null&&q.getTaxCents()!=null&&q.getValidUntil()!=null&&q.getValidUntil().isAfter(clock.instant())&&currentReferenceTime(validator.parse(q.getContentJson()),clock.instant()));
     }
 }

@@ -4,7 +4,7 @@ import Community from './CommunityPage.vue'
 import { clearAuth, setAuth } from '../utils/auth'
 const m=vi.hoisted(()=>({api:{posts:vi.fn(),recommendations:vi.fn(),postCategories:vi.fn(),notices:vi.fn(),news:vi.fn()}}))
 vi.mock('../api',()=>({api:m.api}))
-vi.mock('vue-router',()=>({useRouter:()=>({push:vi.fn()})}))
+vi.mock('vue-router',()=>({useRouter:()=>({push:vi.fn()}),useRoute:()=>({path:'/community',query:{}})}))
 vi.mock('../utils/requestCache',()=>({loadCachedPublic:(_key,load)=>load()}))
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject}}
 const rows=(prefix,count=2,category='装备讨论')=>Array.from({length:count},(_,i)=>({postId:prefix+i,title:`${prefix}${i}`,category,content:'合成竞态回归',username:'测试'}))

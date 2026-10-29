@@ -1,0 +1,206 @@
+{
+  "layer" : "REAL_SERVICE_ISOLATED_H2_NOT_HTTP_MYSQL_PRODUCTION",
+  "GET /api/public/posts/categories" : {
+    "legacyFilterOptions" : [ {
+      "label" : "拍摄",
+      "key" : "拍摄"
+    }, {
+      "label" : "文化",
+      "key" : "文化"
+    }, {
+      "label" : "未来新标签",
+      "key" : "未来新标签"
+    } ],
+    "createOptions" : [ {
+      "label" : "新手入门",
+      "key" : "新手入门"
+    }, {
+      "label" : "技巧交流",
+      "key" : "技巧交流"
+    }, {
+      "label" : "训练计划",
+      "key" : "训练计划"
+    }, {
+      "label" : "装备讨论",
+      "key" : "装备讨论"
+    }, {
+      "label" : "安全经验",
+      "key" : "安全经验"
+    }, {
+      "label" : "路线分享",
+      "key" : "路线分享"
+    }, {
+      "label" : "活动讨论",
+      "key" : "活动讨论"
+    }, {
+      "label" : "经验分享",
+      "key" : "经验分享"
+    } ],
+    "groupMap" : {
+      "拍摄" : "经验分享",
+      "文化" : "经验分享",
+      "未来新标签" : "经验分享"
+    },
+    "aliasMap" : {
+      "训练" : "训练计划",
+      "安全" : "安全经验",
+      "技巧" : "技巧交流",
+      "装备" : "装备讨论",
+      "入门" : "新手入门"
+    },
+    "filterOptions" : [ {
+      "label" : "新手入门",
+      "key" : "新手入门"
+    }, {
+      "label" : "技巧交流",
+      "key" : "技巧交流"
+    }, {
+      "label" : "训练计划",
+      "key" : "训练计划"
+    }, {
+      "label" : "装备讨论",
+      "key" : "装备讨论"
+    }, {
+      "label" : "安全经验",
+      "key" : "安全经验"
+    }, {
+      "label" : "路线分享",
+      "key" : "路线分享"
+    }, {
+      "label" : "活动讨论",
+      "key" : "活动讨论"
+    }, {
+      "label" : "经验分享",
+      "key" : "经验分享"
+    } ],
+    "fallbackGroup" : "经验分享"
+  },
+  "GET /api/public/posts?category=入门&sort=hot&page=1&size=2" : {
+    "total" : 2,
+    "list" : [ {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 2,
+      "postId" : 2,
+      "title" : "Synthetic group 2",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 781225000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "新手入门",
+      "categoryGroup" : "新手入门"
+    }, {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 1,
+      "postId" : 1,
+      "title" : "Synthetic group 1",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 780534000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "入门",
+      "categoryGroup" : "新手入门"
+    } ]
+  },
+  "GET /api/public/posts?category=新手入门&sort=hot&page=1&size=2" : {
+    "total" : 2,
+    "list" : [ {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 2,
+      "postId" : 2,
+      "title" : "Synthetic group 2",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 781225000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "新手入门",
+      "categoryGroup" : "新手入门"
+    }, {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 1,
+      "postId" : 1,
+      "title" : "Synthetic group 1",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 780534000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "入门",
+      "categoryGroup" : "新手入门"
+    } ]
+  },
+  "GET /api/public/posts?category=经验分享&sort=hot&page=1&size=2" : {
+    "total" : 3,
+    "list" : [ {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 3,
+      "postId" : 3,
+      "title" : "Synthetic group 3",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 796029000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "文化",
+      "categoryGroup" : "经验分享"
+    }, {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 1,
+      "postId" : 4,
+      "title" : "Synthetic group 1",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 796029000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "拍摄",
+      "categoryGroup" : "经验分享"
+    } ]
+  },
+  "GET /api/public/posts?category=文化&sort=hot&page=1&size=2" : {
+    "total" : 1,
+    "list" : [ {
+      "images" : null,
+      "collectCount" : 0,
+      "likeCount" : 3,
+      "postId" : 3,
+      "title" : "Synthetic group 3",
+      "userId" : 999,
+      "content" : "same keyword content",
+      "authorAvatar" : null,
+      "commentCount" : 0,
+      "createTime" : [ 2026, 10, 24, 0, 52, 53, 796029000 ],
+      "isTop" : "0",
+      "authorName" : "已注销用户",
+      "authorLevel" : 1,
+      "category" : "文化",
+      "categoryGroup" : "经验分享"
+    } ]
+  }
+}

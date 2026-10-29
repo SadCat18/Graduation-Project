@@ -614,7 +614,7 @@ onBeforeUnmount(() => {
 
 .filter-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.35fr 1fr auto auto;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1091,3 +1091,7 @@ onBeforeUnmount(() => {
 
 
 
+
+<style scoped>
+@media(min-width:981px) { .filter-row select,.filter-row input { grid-column:span 2; }.filter-row button { min-width:100px; } }
+</style>

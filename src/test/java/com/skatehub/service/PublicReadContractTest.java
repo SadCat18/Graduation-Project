@@ -73,12 +73,17 @@ class PublicReadContractTest {
  @Test void unapprovedPlacesAreNotAddedToThePublicReviewBatch(){Place hidden=place("Synthetic hidden","5.0",999);hidden.setVerificationStatus("PENDING");places.saveAndFlush(hidden);review(hidden,5);Place shown=place("Synthetic visible","4.9",203);clearInvocations(reviewRepository);var result=content.places();assertThat(result).hasSize(1);assertThat(result.get(0).place().getPlaceId()).isEqualTo(shown.getPlaceId());verify(reviewRepository).aggregateLocalReviews(argThat(ids->ids.size()==1&&ids.contains(shown.getPlaceId())));}
 
  Post post(String category){Post p=new Post();p.setUserId(999L);p.setTitle("Synthetic category");p.setContent("Fixture only");p.setCategory(category);return postRepository.saveAndFlush(p);}
- @Test void postCategoriesAreGlobalStableAndDoNotAliasOrBroadenSuggestions(){
-  for(int i=0;i<25;i++)post("历史类别"+i);post("装备讨论");post("装备分享");post(" ");post(null);
-  JsonNode result=mapper.valueToTree(posts.categories());List<String> values=new ArrayList<>();result.path("filterOptions").forEach(row->values.add(row.path("key").asText()));assertThat(values).contains("历史类别24","装备讨论","装备分享");assertThat(values).isSorted().doesNotHaveDuplicates();assertThat(result.path("aliasMap").isEmpty()).isTrue();
-  List<String> create=new ArrayList<>();result.path("createOptions").forEach(row->create.add(row.path("key").asText()));assertThat(create).containsExactlyElementsOf(PostCategoryOptions.CREATE).doesNotContain("历史类别24","装备分享");
-  assertThat(posts.list(null,"装备讨论","latest",1,1).getTotal()).isEqualTo(1);assertThat(posts.list(null,"装备分享","latest",1,1).getTotal()).isEqualTo(1);assertThat((JsonNode)mapper.valueToTree(posts.categories())).isEqualTo(result);
+ @Test void postCategoriesAreEightStableThemesWithOriginalLabelsRetained(){
+  for(int i=0;i<25;i++)post("历史类别"+i);post("装备讨论");post("装备分享");post("装备");post(" ");post(null);
+  JsonNode result=mapper.valueToTree(posts.categories());List<String> values=new ArrayList<>();result.path("filterOptions").forEach(row->values.add(row.path("key").asText()));
+  assertThat(values).containsExactlyElementsOf(PostCategoryOptions.CREATE).doesNotHaveDuplicates();assertThat(result.path("aliasMap").path("装备").asText()).isEqualTo("装备讨论");
+  assertThat(result.path("groupMap").path("装备分享").asText()).isEqualTo("经验分享");
+  assertThat(result.path("legacyFilterOptions").toString()).contains("历史类别24","装备分享");
+  assertThat(posts.list(null,"装备讨论","latest",1,1).getTotal()).isEqualTo(2);assertThat(posts.list(null,"装备","latest",1,1).getTotal()).isEqualTo(2);
+  assertThat(posts.list(null,"装备分享","latest",1,1).getTotal()).isEqualTo(1);assertThat(posts.list(null,"经验分享","latest",1,50).getTotal()).isEqualTo(28);
+  assertThat((JsonNode)mapper.valueToTree(posts.categories())).isEqualTo(result);
  }
+
  SkateEquipment item(String category,String status){SkateEquipment e=new SkateEquipment();e.setEquipmentName("Synthetic equipment");e.setCategory(category);e.setBrand("Fixture");e.setStatus(status);return equipmentRepository.saveAndFlush(e);}
  @Test void equipmentCategoriesCoverAllPagesAndUseSameVisibility(){for(int i=0;i<22;i++)item("类别"+i,"1");item("工具","1");item("砂纸","1");item("隐藏分类","0");item(" ","1");
   assertThat(equipment.categories()).extracting(row->row.get("key")).contains("工具","砂纸","类别21").doesNotContain("隐藏分类"," ").isSorted().doesNotHaveDuplicates();assertThat(equipment.list(1,1,null,null,null,null,null).getTotal()).isEqualTo(25);assertThat(equipment.list(1,1,null,"工具",null,null,null).getTotal()).isEqualTo(1);

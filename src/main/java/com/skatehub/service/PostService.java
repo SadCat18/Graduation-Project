@@ -74,11 +74,14 @@ public class PostService {
     }
 
     public Map<String,Object> categories() {
-        java.util.SortedSet<String> available=new java.util.TreeSet<>(com.skatehub.util.PostCategoryOptions.CREATE);
-        postRepository.findPublicCategories().stream().filter(value->value!=null&&!value.isBlank()).forEach(available::add);
-        return Map.of("filterOptions",available.stream().map(value->Map.of("key",value,"label",value)).toList(),
-                "createOptions",com.skatehub.util.PostCategoryOptions.CREATE.stream().map(value->Map.of("key",value,"label",value)).toList(),
-                "aliasMap",Map.of());
+        var existing=postRepository.findPublicCategories().stream().filter(v->v!=null&&!v.isBlank()).distinct().sorted().toList();
+        var themes=com.skatehub.util.PostCategoryOptions.CREATE;
+        var aliases=com.skatehub.util.PostCategoryOptions.ALIASES;
+        Map<String,String> groups=new java.util.LinkedHashMap<>();
+        existing.stream().filter(v->!themes.contains(v)&&!aliases.containsKey(v)).forEach(v->groups.put(v,com.skatehub.util.PostCategoryOptions.group(v)));
+        var options=themes.stream().map(v->Map.of("key",v,"label",v)).toList();
+        return Map.of("filterOptions",options,"createOptions",options,"aliasMap",aliases,"groupMap",groups,
+            "legacyFilterOptions",groups.keySet().stream().map(v->Map.of("key",v,"label",v)).toList(),"fallbackGroup",com.skatehub.util.PostCategoryOptions.FALLBACK);
     }
 
     public PageResult<Map<String, Object>> list(String keyword, String category, String sort, Integer page, Integer size) {
@@ -328,6 +331,7 @@ public class PostService {
         map.put("content", post.getContent());
         map.put("images", post.getImages());
         map.put("category", post.getCategory());
+        map.put("categoryGroup",com.skatehub.util.PostCategoryOptions.group(post.getCategory()));
         map.put("likeCount", post.getLikeCount());
         map.put("collectCount", post.getCollectCount());
         map.put("isTop", post.getIsTop());

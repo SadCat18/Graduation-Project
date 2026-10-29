@@ -35,6 +35,8 @@ class BoardReferenceStorageTest {
  @MockBean AdminAuditLogService audit;
  ObjectNode dataset;
  @BeforeEach void setup() throws Exception {
+  // Historical/effective reference fixture before the explicitly dated promotions ended.
+  calculation.calculationClock(java.time.Clock.fixed(java.time.Instant.parse("2026-10-10T00:00:00Z"),java.time.ZoneOffset.UTC));
   Files.createDirectories(Path.of("target/test-evidence/board/REFERENCE-01"));
   reset(audit);snapshots.deleteAllInBatch();quotes.deleteAllInBatch();variants.deleteAllInBatch();rules.deleteAllInBatch();templates.deleteAllInBatch();products.deleteAllInBatch();
   jdbc.update("update tb_board_catalog_meta set catalog_version=?,dataset_fingerprints='{}' where id=1",json.hash(json.array()));

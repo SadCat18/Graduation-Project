@@ -5,12 +5,12 @@ const path = require('path')
 const root = path.resolve(__dirname, '..')
 const apiSource = fs.readFileSync(path.join(root, 'src/api/index.js'), 'utf8')
 const routerSource = fs.readFileSync(path.join(root, 'src/router/index.js'), 'utf8')
-const appSource = fs.readFileSync(path.join(root, 'src/App.vue'), 'utf8')
+const appSource = fs.readFileSync(path.join(root, 'src/components/SiteNavigation.vue'), 'utf8')
 const pagePath = path.join(root, 'src/views/SkateProfessionalPage.vue')
 
 assert.ok(fs.existsSync(pagePath), 'skate professional page exists')
 assert.ok(routerSource.includes("path: '/skate'"), 'router exposes /skate')
-assert.ok(appSource.includes("to: '/skate'"), 'top navigation links to skate module')
+assert.ok(appSource.includes("/skate?tab=tricks"), 'top navigation links to skate module')
 
 const requiredApiMethods = [
   'skateTricks',

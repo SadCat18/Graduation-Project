@@ -19,6 +19,7 @@ public class BoardDatasetValidator {
     public static final int MAX_BYTES = 1024 * 1024;
     public static final List<String> GROUPS = List.of("products", "variants", "quotes", "rules", "templates");
     public static final Set<String> CATEGORIES = words("DECK TRUCK WHEEL BEARING GRIP HARDWARE RISER COMPLETE");
+    private static final java.util.regex.Pattern PROMOTION_DATE=java.util.regex.Pattern.compile("活动至(\\d{4}-\\d{2}-\\d{2})");
     private static final Set<String> STATUSES = words("RECORDED VERIFIED INSUFFICIENT");
     private static final Map<String,String> REQUIRED = Map.of(
             "products", "key legacyEquipmentId sourceRecordId category brand model active description suitabilityTags levelTags sources imageSource imageLicenseStatus",
@@ -98,8 +99,41 @@ public class BoardDatasetValidator {
         for(JsonNode s:node.path("sources"))if(!words("RECORDED VERIFIED").contains(text(s,"verificationStatus")))return false;
         return true;
     }
-    public static boolean referenceQuote(JsonNode node) {
-        return reference(node)&&node.path("active").asBoolean()&&recordedSources(node)&&words("RECORDED VERIFIED").contains(text(node,"verificationStatus"))&&"EXACT".equals(text(node,"priceKind"))&&"CNY".equals(text(node,"currency"))&&"CN".equals(text(node,"market"))&&integer(node.get("amountCents"),0)&&!node.path("priceAssumptions").isEmpty()&&!knownMismatchedQuote(text(node,"key"));
+    public static boolean referenceQuote(JsonNode node) { return referenceQuote(node,Instant.now()); }
+    public static boolean referenceQuote(JsonNode node,Instant now) {
+        return reference(node)&&node.path("active").asBoolean()&&recordedSources(node)&&words("RECORDED VERIFIED").contains(text(node,"verificationStatus"))&&"EXACT".equals(text(node,"priceKind"))&&"CNY".equals(text(node,"currency"))&&"CN".equals(text(node,"market"))&&integer(node.get("amountCents"),0)&&!node.path("priceAssumptions").isEmpty()&&!knownMismatchedQuote(text(node,"key"))&&currentReferenceTime(node,now);
+    }
+    public static boolean currentReferenceTime(JsonNode node,Instant now) {
+        return words("UNBOUNDED CURRENT").contains(referenceTimeStatus(node,now));
+    }
+    /** Date-only ends retain their precision. The +/-14/-12 worldwide offset envelope is a
+     * comparison bound, never an invented source timezone or a default reference-price TTL. */
+    public static String referenceTimeStatus(JsonNode node,Instant now) {
+        String status="UNBOUNDED";
+        if(node.hasNonNull("validUntil")) {
+            Instant until=time(node.get("validUntil")); if(until==null)return "UNKNOWN";
+            if(!until.isAfter(now))return "EXPIRED"; status="CURRENT";
+        }
+        List<LocalDate> ends=new ArrayList<>();
+        if(node.hasNonNull("promotion")) {
+            JsonNode p=node.path("promotion");
+            if(!p.isObject()||!"DATE".equals(text(p,"precision"))||p.hasNonNull("timezone"))return "UNKNOWN";
+            try {ends.add(LocalDate.parse(p.path("endDate").asText()));}catch(Exception e){return "UNKNOWN";}
+        }
+        // Backward compatibility for existing v1 imports: only explicit dated 活动至 facts, not collection age.
+        List<String> facts=new ArrayList<>();facts.add(node.path("rawPrice").path("price_type").asText(""));
+        for(JsonNode source:node.path("sources"))facts.add(source.path("title").asText(""));
+        for(String fact:facts) {
+            var matcher=PROMOTION_DATE.matcher(fact);
+            while(matcher.find())try{ends.add(LocalDate.parse(matcher.group(1)));}catch(Exception e){return "UNKNOWN";}
+        }
+        for(LocalDate end:ends) {
+            Instant earliest=end.plusDays(1).atStartOfDay().toInstant(ZoneOffset.ofHours(14));
+            Instant latest=end.plusDays(1).atStartOfDay().toInstant(ZoneOffset.ofHours(-12));
+            if(!now.isBefore(latest))return "EXPIRED";
+            if(!now.isBefore(earliest))status="BOUNDARY_UNCERTAIN";else if(!status.equals("BOUNDARY_UNCERTAIN"))status="CURRENT";
+        }
+        return status;
     }
     public JsonNode versioned(JsonNode input) {
         ObjectNode result = input.deepCopy(); if (!result.has("version")) result.put("version", 1); return result;
@@ -131,6 +165,12 @@ public class BoardDatasetValidator {
                 if (!node.path("active").isBoolean()) add(errors,id,"INVALID_ACTIVE","boolean required");
                 if (node.has("version") && !integer(node.get("version"),1)) add(errors,id,"INVALID_VERSION","positive Long version");
                 if (!group.equals("products") && !STATUSES.contains(text(node,"verificationStatus"))) add(errors,id,"INVALID_STATUS","verificationStatus");
+                if(node.has("fieldEvidence")) {
+                    if(!node.path("fieldEvidence").isArray())add(errors,id,"INVALID_FIELD_EVIDENCE","array required");
+                    for(JsonNode fact:node.path("fieldEvidence")) {
+                        if(!fact.isObject()||!fact.path("field").isTextual()||!fact.has("value")||time(fact.get("checkedAt"))==null||!fact.path("appliesTo").isObject()||fact.path("appliesTo").isEmpty()||!STATUSES.contains(text(fact,"verificationStatus"))||!fact.path("factNature").isTextual()||!fact.path("url").asText().matches("https?://[^/\\s]+.*"))add(errors,id,"INVALID_FIELD_EVIDENCE","field, value, source URL, independent checkedAt, scope and nature required");
+                    }
+                }
                 boolean verified = sources(node,id,errors);
                 if(node.has("pricingMode")&&!words("REFERENCE EXACT").contains(text(node,"pricingMode")))add(errors,id,"INVALID_PRICING_MODE","REFERENCE/EXACT or omit");
                 if(node.has("priceAssumptions"))stringArray(node.get("priceAssumptions"),id+".priceAssumptions",errors);
@@ -154,6 +194,7 @@ public class BoardDatasetValidator {
         for (var entry : variants.entrySet()) {
             String id=entry.getKey();JsonNode v=entry.getValue(), p=products.get(text(v,"productKey"));
             if(p==null) { add(errors,id,"DANGLING_REFERENCE","productKey");continue; }
+            variantExtensions(v,id,variants,errors);
             JsonNode spec=v.path("specs");String category=text(p,"category");String fields=category==null?"":SPECS.getOrDefault(category,"");
             if(!spec.isObject()) {add(errors,id,"INVALID_SPEC","spec object");continue;}
             require(spec,fields,id+".specs",errors);
@@ -183,6 +224,11 @@ public class BoardDatasetValidator {
             if("EXACT".equals(kind)?!integer(q.get("amountCents"),0):q.hasNonNull("amountCents")) add(errors,id,"INVALID_PRICE_AMOUNT","exact integer cents; other kinds null");
             if(!q.path("landedPriceConfirmed").isBoolean()) add(errors,id,"INVALID_LANDED_FLAG","boolean");
             for(String f:List.of("collectedAt","validUntil")) if(q.hasNonNull(f)&&time(q.get(f))==null) add(errors,id,"INVALID_TIME",f);
+            if(q.hasNonNull("promotion")) {
+                JsonNode p=q.path("promotion");
+                if(!p.isObject()||!"DATE".equals(text(p,"precision"))||p.hasNonNull("timezone")||!p.path("sourceText").isTextual()||p.path("sourceText").asText().isBlank())add(errors,id,"INVALID_PROMOTION","date-only end requires original source text, precision DATE and unknown timezone");
+                try{LocalDate.parse(p.path("endDate").asText());}catch(Exception e){add(errors,id,"INVALID_PROMOTION_DATE","YYYY-MM-DD");}
+            }
             Instant collected=time(q.get("collectedAt")), until=time(q.get("validUntil"));
             if(collected!=null&&until!=null&&!until.isAfter(collected)) add(errors,id,"INVALID_TIME_RANGE","expiry follows collection");
             if(q.path("active").asBoolean()&&reference(q)) {
@@ -289,6 +335,43 @@ public class BoardDatasetValidator {
             Set<String> types=new HashSet<>();for(JsonNode key:cond.path("ruleKeys"))types.add(text(data.get("rules").getOrDefault(key.asText(),object()),"type"));if(!reference(t)&&!types.containsAll(words("COMPLETENESS DECK_TRUCK_FIT WHEEL_TRUCK_RISER RISER_HARDWARE_LENGTH GRIP_COVERAGE")))add(errors,id,"TEMPLATE_SOURCE_PENDING","all five hard rule types required");
             if(!categories.containsAll(words("DECK TRUCK WHEEL BEARING GRIP HARDWARE")))add(errors,id,"TEMPLATE_SOURCE_PENDING","all required categories need candidates");
         }
+    }
+    /** Optional v2 descriptive facts remain separate from executable specs/rules. */
+    private void variantExtensions(JsonNode v,String id,Map<String,JsonNode> variants,List<Issue> errors) {
+        if(extensionObject(v,"identity","graphic manufacturerSku identityBasis headType lengthInch",id,errors)) {
+            JsonNode identity=v.path("identity");
+            for(String name:List.of("graphic","manufacturerSku","identityBasis","headType"))optionalText(identity,name,id+".identity",errors);
+            if(identity.hasNonNull("lengthInch")&&!number(identity.get("lengthInch"),false))add(errors,id,"INVALID_IDENTITY","lengthInch must be a positive dimension or null");
+        }
+        if(extensionObject(v,"packaging","boltsPerPack nutsPerPack nutProfile scope domesticPrice padsPerSet",id,errors)) {
+            JsonNode pack=v.path("packaging");
+            for(String name:List.of("boltsPerPack","nutsPerPack","padsPerSet"))if(pack.hasNonNull(name)&&!integer(pack.get(name),1))add(errors,id,"INVALID_PACKAGING",name+" must be a positive integer or null");
+            for(String name:List.of("nutProfile","scope"))optionalText(pack,name,id+".packaging",errors);
+            if(pack.hasNonNull("domesticPrice")&&!number(pack.get("domesticPrice"),true))add(errors,id,"INVALID_PACKAGING","domesticPrice must be nonnegative or null; it is not a calculation quote");
+        }
+        if(extensionObject(v,"compatibilityAdvice","suggestedDeckMinInch suggestedDeckMaxInch factNature hardBoundary",id,errors)) {
+            JsonNode advice=v.path("compatibilityAdvice");
+            require(advice,"suggestedDeckMinInch suggestedDeckMaxInch factNature hardBoundary",id+".compatibilityAdvice",errors);
+            if(advice.hasNonNull("suggestedDeckMinInch")||advice.hasNonNull("suggestedDeckMaxInch"))range(advice,"suggestedDeckMinInch","suggestedDeckMaxInch",false,id,errors);
+            if(!"MANUFACTURER_ADVICE".equals(text(advice,"factNature"))||!advice.path("hardBoundary").isBoolean()||advice.path("hardBoundary").asBoolean())add(errors,id,"INVALID_COMPATIBILITY_ADVICE","manufacturer advice cannot become a hard boundary");
+        }
+        if(v.has("historicalOnly")&&(!v.path("historicalOnly").isBoolean()||v.path("historicalOnly").asBoolean()&&v.path("active").asBoolean()))add(errors,id,"INVALID_HISTORICAL_FLAG","historicalOnly must be boolean; historical identities cannot be active");
+        if(v.has("replacements")) {
+            refs(v.path("replacements"),variants,id+".replacements",errors);
+            for(JsonNode key:v.path("replacements")) {
+                JsonNode target=variants.get(key.asText());
+                if(target!=null&&(key.asText().equals(id)||!Objects.equals(text(v,"productKey"),text(target,"productKey"))))add(errors,id,"INVALID_REPLACEMENT","replacement must be a different identity in the same product family");
+            }
+        }
+    }
+    private boolean extensionObject(JsonNode record,String field,String keys,String id,List<Issue> errors) {
+        if(!record.has(field))return false;
+        JsonNode node=record.get(field);
+        if(!node.isObject()){add(errors,id,"INVALID_EXTENSION",field+" must be an object");return false;}
+        allowed(node,keys,id+"."+field,errors);return true;
+    }
+    private void optionalText(JsonNode node,String field,String id,List<Issue> errors) {
+        if(node.hasNonNull(field)&&(!node.path(field).isTextual()||node.path(field).asText().isBlank()))add(errors,id,"INVALID_TEXT",field+" must be nonblank text or null");
     }
     private boolean sources(JsonNode node,String id,List<Issue> errors) {
         JsonNode sources=node.path("sources");if(!sources.isArray()||sources.isEmpty()){add(errors,id,"MISSING_SOURCE","nonempty sources");return false;}

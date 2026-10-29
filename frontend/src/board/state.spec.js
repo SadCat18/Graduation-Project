@@ -38,7 +38,7 @@ describe('board trust boundaries', () => {
   it('maps known structured gaps without inventing meaning for unknown reasons',()=>{
     expect(reasonLabel('TRUCK:VALID_QUOTE_REQUIRED')).toContain('桥：缺少有效')
     expect(reasonLabel('ACTIVE_TEMPLATE_OR_VERIFIED_DATA_REQUIRED')).toBe('缺少已启用模板或已核实器材资料')
-    expect(reasonLabel('NEW_FUTURE_CODE')).toBe('待确认说明（NEW_FUTURE_CODE）')
+    expect(reasonLabel('NEW_FUTURE_CODE')).toBe('相关资料待确认')
     expect(reasonLabel('SYNTHETIC_ONLY')).toBe('SYNTHETIC_ONLY')
   })
 })
